@@ -1,159 +1,142 @@
-# Turborepo starter
+# WeTalk
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Présentation du projet
 
-## Using this example
+Le projet WeTalk vise à développer un réseau social léger et réactif, inspiré de Twitter/X, mais optimisé pour des environnements à faibles ressources. L’objectif est de concevoir une application qui permet de publier des messages courts, d’interagir avec les autres utilisateurs, et de maintenir une expérience utilisateur rapide et fluide.
 
-Run the following command:
+L’équipe utilisera des technologies modernes pour garantir la robustesse et la scalabilité de l’application. Le back-end sera développé en Node.js avec le framework Express, gérant les requêtes via une API RESTful. Pour l'authentification et la gestion des sessions utilisateurs, nous mettrons en œuvre des JWT (JSON Web Tokens), assurant ainsi la sécurité des échanges. Le front-end sera construit en React, avec une approche mobile-first, garantissant une interface réactive et intuitive, adaptée à tous les formats d'écran.
 
-```sh
-npx create-turbo@latest
-```
+Pour simplifier le déploiement et la gestion des environnements de développement, nous utiliserons Docker pour containeriser les services. Cette approche garantit une mise en production rapide, portable et fiable tout en facilitant la gestion des dépendances.
 
-## What's inside?
+## Architecture
 
-This Turborepo includes the following packages/apps:
+L'application sera composée de plusieurs microservices interconnectés, chacun ayant une responsabilité distincte. Le schéma ci-dessous représente une base pour vous aider dans le lancement de votre projet. Si vous jugez nécessaire de retirer ou d'ajouter des services, cela est possible, mais attention à votre charge de travail.
 
-### Apps and Packages
+![Image de l'architecture cible](img_archi.png)
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+Description de l'image :
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+1. La couche Client (Front-end) : Les utilisateurs (User, Moderator, Administrator) accèdent à l'application via des appareils (PC, mobile) qui communiquent avec une interface unique développée en Next.js.
 
-### Utilities
+2. La couche Serveur (Back-end) : Les requêtes du Front passent d'abord par une API Gateway, qui sert de point d'entrée unique et redirige le trafic vers 4 microservices indépendants :
+- User Service (Gestion des utilisateurs)
+- Post Service (Gestion des publications)
+- Profil Service (Gestion des profils)
+- Auth Service (Gestion de l'authentification)
 
-This Turborepo has some additional tools already setup for you:
+3. La couche Données (Database) : Chaque microservice possède sa propre base de données dédiée pour garantir l'indépendance du système :
+- PostgreSQL pour User Service et Auth Service.
+- MongoDB pour Post Service and Profil Service.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## Technologies à utiliser
 
-### Build
+### Back-end (Node.js & Express) :
 
-To build all apps and packages, run the following command:
+#### Technologies utilisées :
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+- Node.js
+- Express.js
+- JWT (JSON Web Tokens)
+- MongoDB
+- Mongoose
+- Sequelize
+- PostgreSQL
 
-```sh
-cd my-turborepo
-turbo build
-```
+#### Sécurisation :
 
-Without global `turbo`, use your package manager:
+- Authentification JWT
+- Gestion des erreurs
+- CORS (Cross-Origin Resource Sharing)
 
-```sh
-cd my-turborepo
-npx turbo build
-npm dlx turbo build
-npm exec turbo build
-```
+#### Performance :
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+- Docker
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Front-end (React & Next.js) :
 
-```sh
-turbo build --filter=docs
-```
+#### Technologies utilisées :
 
-Without global `turbo`:
+- React.js
+- Next.js
+- Tailwind CSS
+- Axios
+- React Router
 
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
-```
+#### Réactivité et UX/UI :
 
-### Develop
+- Mobile-first
+- Responsive
+- Gestion des erreurs UI
 
-To develop all apps and packages, run the following command:
+#### Gestion des sessions :
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+- Stockage des JWT
+- Redirection après authentification
 
-```sh
-cd my-turborepo
-turbo dev
-```
+## Fonctionnalités attendu
 
-Without global `turbo`, use your package manager:
+### Gestion des Comptes & Profils
+- [ ] **Fx1. Création de comptes utilisateurs avec validation**
+  *En tant que* visiteur, *je veux* créer un compte utilisateur *afin de* pouvoir accéder aux fonctionnalités de la plateforme.
+- [ ] **Fx2. Authentification sécurisée**
+  *En tant qu'*utilisateur, *je veux* pouvoir me connecter de manière sécurisée *pour* protéger mes informations personnelles.
+- [ ] **Fx10. Profil utilisateur avec informations de base**
+  *En tant qu'*utilisateur, *je veux* une page de profil affichant mon nom, ma biographie courte et ma photo de profil *pour* me présenter aux autres.
+- [ ] **Fx4. Affichage des messages sur le profil**
+  *En tant qu'*utilisateur, *je veux* voir tous mes messages affichés sur mon profil *afin de* les consulter ou les modifier.
+- [ ] **Fx11. Liste des messages publiés par l'utilisateur sur le profil**
+  *En tant qu'*utilisateur, *je veux* voir la liste de mes messages publiés sur ma page de profil.
 
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
-```
+### Publications & Interactions
+- [ ] **Fx3. Publication de messages courts**
+  *En tant qu'*utilisateur, *je veux* publier des messages courts (ex. : 280 caractères) *pour* partager mes idées avec mes abonnés.
+- [ ] **Fx5. Flux chronologique des messages des utilisateurs suivis**
+  *En tant qu'*utilisateur, *je veux* un fil d'actualités avec les messages des utilisateurs que je suis *pour* rester à jour avec leur contenu.
+- [ ] **Fx6. Liker un post**
+  *En tant qu'*utilisateur, *je veux* liker un post *pour* montrer mon appréciation.
+- [ ] **Fx7. Répondre à un post sous forme de commentaire**
+  *En tant qu'*utilisateur, *je veux* répondre à un post *pour* partager mes réactions ou avis.
+- [ ] **Fx8. Répondre à un commentaire sur un post**
+  *En tant qu'*utilisateur, *je veux* répondre à un commentaire sur un post *pour* participer à une discussion.
+- [ ] **Fx9. Suivre ou être suivi par d'autres utilisateurs**
+  *En tant qu'*utilisateur, *je veux* pouvoir suivre d'autres utilisateurs *pour* voir leur contenu dans mon fil d'actualités.
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### Navigation & Recherche
+- [ ] **Fx12. Ajout de tags aux messages**
+  *En tant qu'*utilisateur, *je veux* ajouter des tags à mes messages *pour* les catégoriser.
+- [ ] **Fx13. Recherche de posts via des tags**
+  *En tant qu'*utilisateur, *je veux* rechercher des messages via des tags *pour* trouver du contenu pertinent.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Expérience Utilisateur & Personnalisation
+- [ ] **Fx22. Interface multi-langues**
+  *En tant qu'*utilisateur, *je veux* choisir ma langue préférée *pour* utiliser l'application confortablement.
+- [ ] **Fx23. Thème personnalisé**
+  *En tant qu'*utilisateur, *je veux* personnaliser le thème de l'application *pour* améliorer mon expérience visuelle.
 
-```sh
-turbo dev --filter=web
-```
+## Matrice de permission
 
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+| Fonctionnalité (Fx) | Visiteur | Utilisateur | Modérateur | Administrateur |
+| :--- | :---: | :---: | :---: | :---: |
+| **Fx1.** Création de comptes utilisateurs | ✅ | ❌ | ❌ | ✅ |
+| **Fx2.** Authentification sécurisée | ❌ | ✅ | ✅ | ✅ |
+| **Fx3.** Publication de messages courts | ❌ | ✅ | ✅ | ✅ |
+| **Fx4.** Affichage des messages sur le profil | ❌ | ✅ *(Sien uniquement)* | ✅ | ✅ |
+| **Fx5.** Flux chronologique des messages | ❌ | ✅ | ✅ | ✅ |
+| **Fx6.** Liker un post | ❌ | ✅ | ✅ | ✅ |
+| **Fx7.** Répondre à un post sous forme de commentaire | ❌ | ✅ | ✅ | ✅ |
+| **Fx8.** Répondre à un commentaire sur un post | ❌ | ✅ | ✅ | ✅ |
+| **Fx9.** Suivre ou être suivi par d'autres utilisateurs | ❌ | ✅ | ✅ | ✅ |
+| **Fx10.** Profil utilisateur avec informations de base | ❌ | ✅ | ✅ | ✅ |
+| **Fx11.** Liste des messages publiés sur le profil | ❌ | ✅ | ✅ | ✅ |
+| **Fx12.** Ajout de tags aux messages | ❌ | ✅ | ✅ | ✅ |
+| **Fx13.** Recherche de posts via des tags | ❌ | ✅ | ✅ | ✅ |
+| **Fx14.** Notifications pour les mentions | ❌ | ✅ | ✅ *(Modération)* | ✅ *(Admin)* |
+| **Fx15.** Notifications pour les likes | ❌ | ✅ | ❌ | ❌ |
+| **Fx16.** Notifications pour les nouveaux followers | ❌ | ✅ | ❌ | ❌ |
+| **Fx17.** Système de messages privés entre utilisateurs | ❌ | ✅ | ✅ | ✅ |
+| **Fx18.** Ajout d’images aux messages | ❌ | ✅ | ✅ | ✅ |
+| **Fx19.** Ajout de vidéos aux messages | ❌ | ✅ | ✅ | ✅ |
+| **Fx20.** Signalement de contenu inapproprié | ❌ | ✅ | ✅ | ✅ |
+| **Fx21.** Suspension ou bannissement des utilisateurs | ❌ | ❌ | ✅ | ✅ |
+| **Fx22.** Interface multi-langues | ❌ | ✅ | ✅ | ✅ |
+| **Fx23.** Thème personnalisé | ✅ | ✅ | ✅ | ✅ |
