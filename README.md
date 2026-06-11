@@ -28,6 +28,56 @@ Description de l'image :
 - PostgreSQL pour User Service et Auth Service.
 - MongoDB pour Post Service and Profil Service.
 
+### Schéma d'architecture (Mermaid)
+
+```mermaid
+flowchart TB
+    subgraph Client["🖥️ Couche Client (Front-end)"]
+        direction LR
+        U["👤 User"]
+        M["🛡️ Moderator"]
+        A["⚙️ Administrator"]
+        FE["Next.js / React<br/>(Mobile-first, Responsive)"]
+        U --> FE
+        M --> FE
+        A --> FE
+    end
+
+    subgraph Server["⚙️ Couche Serveur (Back-end)"]
+        GW["API Gateway<br/>(Point d'entrée unique · JWT · CORS)"]
+
+        subgraph Services["Microservices (Node.js / Express)"]
+            direction LR
+            AUTH["Auth Service<br/>(Authentification JWT)"]
+            USER["User Service<br/>(Gestion utilisateurs)"]
+            POST["Post Service<br/>(Publications, likes, commentaires, tags)"]
+            PROFIL["Profil Service<br/>(Profils, follow)"]
+        end
+
+        GW --> AUTH
+        GW --> USER
+        GW --> POST
+        GW --> PROFIL
+    end
+
+    subgraph Data["🗄️ Couche Données (Database)"]
+        direction LR
+        PG_AUTH[("PostgreSQL<br/>Auth DB")]
+        PG_USER[("PostgreSQL<br/>User DB")]
+        MG_POST[("MongoDB<br/>Post DB")]
+        MG_PROFIL[("MongoDB<br/>Profil DB")]
+    end
+
+    FE -->|HTTPS / REST · Axios| GW
+
+    AUTH -->|Sequelize| PG_AUTH
+    USER -->|Sequelize| PG_USER
+    POST -->|Mongoose| MG_POST
+    PROFIL -->|Mongoose| MG_PROFIL
+```
+
+> Conteneurisation : chaque service (front, gateway, microservices, bases de données) tourne dans son propre conteneur **Docker**, orchestré via `docker-compose`.
+
 ## Technologies à utiliser
 
 ### Back-end (Node.js & Express) :
