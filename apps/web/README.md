@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# WeTalk — Web
 
-## Getting Started
+Front-end du réseau social **WeTalk** (« the warm side of social »).
+Application Next.js (App Router) au sein du monorepo Turborepo.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS v4** (tokens dans `app/globals.css` via `@theme`)
+- **Polices** `next/font` : Playfair Display (titres) + DM Sans (corps)
+- **Icônes** : `lucide-react` (+ quelques SVG inline pour login/landing)
+
+## Démarrer
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# depuis la racine du monorepo
+npm install
+npm run dev -w web     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script | Rôle |
+| --- | --- |
+| `npm run dev -w web` | serveur de dev (port 3000) |
+| `npm run build -w web` | build de production |
+| `npm run lint -w web` | ESLint (max-warnings 0) |
+| `npm run check-types -w web` | typegen + `tsc --noEmit` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
+## Routes
 
-## Learn More
+| Route | Page |
+| --- | --- |
+| `/` | Landing (publique, animée) |
+| `/home` | Fil d'actualité (app) |
+| `/login` | Connexion / inscription / mot de passe oublié |
 
-To learn more about Next.js, take a look at the following resources:
+## Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/
+├─ globals.css            # design tokens (couleurs, ombres, fonts, animations)
+├─ layout.tsx             # polices + metadata racine
+├─ page.tsx               # / (landing, shell serveur + metadata)
+├─ home/page.tsx          # /home
+├─ (auth)/login/page.tsx  # /login
+├─ error.tsx · not-found.tsx
+└─ _components/
+   ├─ ui/button.tsx       # bouton de marque reutilisable
+   ├─ home/               # sidebar, rail, composer, tabs, mobile-nav
+   ├─ landing/            # landing, phone-demo, hooks, icons
+   ├─ avatar · post-card · post-actions
+lib/mock-data.ts          # donnees factices (design-only)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> Données encore mockées (`lib/mock-data.ts`) — le branchement API arrivera avec le back-end.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Import alias : `@/*` → racine de `apps/web` (ex. `@/lib/mock-data`).
