@@ -28,7 +28,7 @@
   --color-blue: #1d9bf6; /* badge verifie */
   --color-dock: #1c1a17;
 
-  /* Alias semantiques (utilises par le feed) */
+  /* Alias semantiques (texte/bordures, utilises par les composants) */
   --color-ink: #412402;
   --color-ink-soft: #854f0b;
   --color-line: #e8dfd4;
@@ -37,10 +37,15 @@
   --radius-field: 13px;
   --radius-card: 24px;
 
+  /* Ombres chaudes (brun/dore) */
+  --shadow-gold: 0 8px 20px rgba(186, 117, 23, 0.32);
+  --shadow-soft: 0 2px 10px rgba(65, 36, 2, 0.06);
+  --shadow-card: 0 24px 60px rgba(65, 36, 2, 0.1);
+
   /* Polices (variables injectees par next/font dans layout.tsx) */
   --font-head: var(--font-playfair), Georgia, serif;
   --font-body: var(--font-dmsans), system-ui, sans-serif;
-  /* alias pour le feed/welcome deja ecrits */
+  /* alias conserves pour le reste du design system */
   --font-display: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-dmsans), system-ui, sans-serif;
 }
