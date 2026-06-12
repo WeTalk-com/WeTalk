@@ -12,8 +12,8 @@ import {
   MapPin,
   Sparkle,
   X,
-  Verified,
 } from "./icons";
+import { VerifiedBadge } from "../icons";
 import { useReducedMotion } from "./hooks";
 
 const SCENES = ["Home feed", "Explore", "Create"] as const;
@@ -51,7 +51,7 @@ function HomeScene({ active }: { active: boolean }) {
           </span>
           <div className="leading-tight">
             <span className="flex items-center gap-1 text-sm font-semibold text-brown">
-              Maya Rivera <Verified className="size-3.5" />
+              Maya Rivera <VerifiedBadge className="size-3.5" />
             </span>
             <span className="text-xs text-brown-sec">@maya · 2h</span>
           </div>
