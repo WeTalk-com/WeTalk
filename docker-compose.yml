@@ -1,0 +1,140 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: wetalk-redis
+    restart: unless-stopped
+    networks:
+      - wetalk-net
+    expose:
+      - "6379"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: wetalk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - wetalk-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth-service/Dockerfile
+    container_name: wetalk-auth-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - wetalk-net
+    expose:
+      - "4000"
+
+  user-service:
+    build:
+      context: .
+      dockerfile: apps/user-service/Dockerfile
+    container_name: wetalk-user-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - wetalk-net
+    expose:
+      - "4001"
+
+  post-service:
+    build:
+      context: .
+      dockerfile: apps/post-service/Dockerfile
+    container_name: wetalk-post-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: ${MONGO_URI_POST}
+    networks:
+      - wetalk-net
+    expose:
+      - "4002"
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: wetalk-notification-service
+    restart: unless-stopped
+    env_file:
+      - .env
+      # Faut qu'on précise la DB juste ici quand on aura décidé si mongo ou postgre
+      #
+      #
+      #
+      #
+    networks:
+      - wetalk-net
+    expose:
+      - "4003"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: wetalk-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - wetalk-net
+    expose:
+      - "3000"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    container_name: wetalk-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - user-service
+      - post-service
+      - notification-service
+      - web
+    networks:
+      - wetalk-net
+
+networks:
+  wetalk-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
