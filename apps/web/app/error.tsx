@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ErrorScreen } from "./_components/ui/error-screen";
 import { Button } from "./_components/ui/button";
 
 export default function Error({
@@ -16,18 +17,14 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-canvas px-6 text-center">
-      <div>
-        <h1 className="font-head text-3xl font-extrabold text-brown">
-          Something went sideways.
-        </h1>
-        <p className="mt-2 text-brown-sec">
-          An unexpected error occurred. Try again in a moment.
-        </p>
-        <Button onClick={reset} size="lg" className="mt-6">
-          Try again
-        </Button>
-      </div>
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 overflow-hidden bg-canvas px-6 py-12 text-center">
+      <ErrorScreen code="500" label="ERROR" />
+      <p className="text-brown-sec">
+        An unexpected error occurred. Try again in a moment.
+      </p>
+      <Button onClick={reset} size="lg">
+        Try again
+      </Button>
     </main>
   );
 }
