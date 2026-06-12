@@ -28,13 +28,6 @@ export type Post = {
   shares: number;
 };
 
-export type LiveUser = {
-  id: string;
-  name: string;
-  initial: string;
-  watching: string; // "1.2K"
-};
-
 export type TrendingTopic = {
   category: string;
   tag: string;
@@ -43,18 +36,24 @@ export type TrendingTopic = {
 
 export const currentUser: User = {
   id: "me",
-  name: "Karl",
-  handle: "karl",
+  name: "Katty Abrahams",
+  handle: "kattyabra",
   initial: "K",
 };
 
 export const posts: Post[] = [
   {
     id: "p1",
-    author: { id: "u1", name: "Mara Liss", handle: "maraliss", initial: "M", verified: true },
+    author: {
+      id: "u1",
+      name: "Maya Rivera",
+      handle: "mayarivera",
+      initial: "M",
+      verified: true,
+    },
     timeAgo: "2h",
-    text: "Golden hour never misses. Shot this on the rooftop tonight.",
-    tags: ["#goldenhour", "#weetalk"],
+    text: "Chasing the golden hour across the dunes — slow mornings really do hit different.",
+    tags: ["#weetalk", "#goldenhour"],
     hasImage: true,
     imageRatio: "1600x1000",
     likes: 1245,
@@ -63,7 +62,13 @@ export const posts: Post[] = [
   },
   {
     id: "p2",
-    author: { id: "u2", name: "Theo Lang", handle: "theolang", initial: "T", verified: true },
+    author: {
+      id: "u2",
+      name: "Theo Lang",
+      handle: "theolang",
+      initial: "T",
+      verified: true,
+    },
     timeAgo: "5h",
     text: "Studio light tests for the new series. Warm tones only, always.",
     tags: ["#weetalk", "#process"],
@@ -85,11 +90,6 @@ export const posts: Post[] = [
   },
 ];
 
-export const liveNow: LiveUser[] = [
-  { id: "l1", name: "Leo Marsh", initial: "L", watching: "1.2K" },
-  { id: "l2", name: "Nina Vale", initial: "N", watching: "864" },
-];
-
 export const whoToFollow: User[] = [
   { id: "w1", name: "Jonas Beck", handle: "jonasbeck", initial: "J" },
   { id: "w2", name: "Elif Demir", handle: "elifd", initial: "E" },
@@ -100,4 +100,5 @@ export const trending: TrendingTopic[] = [
   { category: "Photography", tag: "#goldenhour", posts: "48.2K posts" },
   { category: "Trending", tag: "#weetalk", posts: "31.9K posts" },
   { category: "Design", tag: "#warmtones", posts: "12.4K posts" },
+  { category: "Travel", tag: "#slowmornings", posts: "9.1K posts" },
 ];

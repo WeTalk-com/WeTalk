@@ -47,7 +47,7 @@ export function PostActions({ likes, comments, shares }: Props) {
         type="button"
         onClick={() => setSaved((v) => !v)}
         aria-pressed={saved}
-        aria-label="Enregistrer"
+        aria-label="Save"
         className="ml-auto hover:text-gold transition-colors"
       >
         <Bookmark className={`size-5 ${saved ? "fill-gold text-gold" : ""}`} />
