@@ -1,7 +1,8 @@
-import { BadgeCheck, MoreHorizontal, ImageIcon } from "lucide-react";
-import { Avatar } from "./avatar";
+import { MoreHorizontal, ImageIcon } from "lucide-react";
+import { Card } from "./ui/card";
+import { UserChip } from "./user-chip";
 import { PostActions } from "./post-actions";
-import type { Post } from "../../lib/mock-data";
+import type { Post } from "@/lib/mock-data";
 
 /** Affiche le texte du post avec les hashtags colores en or */
 function PostText({ text, tags }: { text: string; tags: string[] }) {
@@ -21,25 +22,18 @@ export function PostCard({ post }: { post: Post }) {
   const { author } = post;
 
   return (
-    <article className="rounded-2xl bg-card border border-line p-4">
+    <Card as="article" className="p-4">
       {/* En-tete */}
       <div className="flex items-center gap-3">
-        <Avatar initial={author.initial} />
-        <div className="min-w-0">
-          <div className="flex items-center gap-1 font-semibold text-ink">
-            <span className="truncate">{author.name}</span>
-            {author.verified && (
-              <BadgeCheck className="size-4 text-gold shrink-0" />
-            )}
-          </div>
-          <div className="text-sm text-ink-soft">
-            @{author.handle} · {post.timeAgo}
-          </div>
-        </div>
+        <UserChip
+          user={author}
+          subtitle={`@${author.handle} · ${post.timeAgo}`}
+          className="min-w-0 flex-1"
+        />
         <button
           type="button"
-          aria-label="Plus d'options"
-          className="ml-auto grid place-items-center size-9 rounded-full text-ink-soft hover:bg-line/60"
+          aria-label="More options"
+          className="grid size-9 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-line/60"
         >
           <MoreHorizontal className="size-5" />
         </button>
@@ -68,6 +62,6 @@ export function PostCard({ post }: { post: Post }) {
           shares={post.shares}
         />
       </div>
-    </article>
+    </Card>
   );
 }
