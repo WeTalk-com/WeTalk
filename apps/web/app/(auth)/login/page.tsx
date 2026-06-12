@@ -1,160 +1,18 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-
-/* ------------------------------------------------------------------ */
-/* Icones SVG inline (stroke-based, strokeWidth ~1.9, rounded caps)    */
-/* ------------------------------------------------------------------ */
-
-type IconProps = { className?: string };
-
-const baseIcon = (className = "size-[18px]") => ({
-  className,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.9,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-});
-
-const MailIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <rect x="3" y="5" width="18" height="14" rx="2" />
-    <path d="m3 7 9 6 9-6" />
-  </svg>
-);
-
-const PhoneIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <rect x="6" y="2" width="12" height="20" rx="3" />
-    <path d="M11 18h2" />
-  </svg>
-);
-
-const LockIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <rect x="4" y="11" width="16" height="10" rx="2" />
-    <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-  </svg>
-);
-
-const UserIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <circle cx="12" cy="8" r="4" />
-    <path d="M4 21a8 8 0 0 1 16 0" />
-  </svg>
-);
-
-const EyeIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const EyeOffIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <path d="M9.9 5.2A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a10.4 10.4 0 0 0 4.1-.8" />
-    <path d="m9.9 9.9a3 3 0 0 0 4.2 4.2" />
-    <path d="m2 2 20 20" />
-  </svg>
-);
-
-const CheckIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <path d="m20 6-11 11-5-5" />
-  </svg>
-);
-
-const ArrowLeftIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <path d="M19 12H5" />
-    <path d="m12 19-7-7 7-7" />
-  </svg>
-);
-
-const GoogleIcon = ({ className }: IconProps) => (
-  <svg className={className ?? "size-[18px]"} viewBox="0 0 24 24">
-    <path
-      fill="#4285F4"
-      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"
-    />
-    <path
-      fill="#34A853"
-      d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"
-    />
-    <path
-      fill="#FBBC05"
-      d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"
-    />
-    <path
-      fill="#EA4335"
-      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"
-    />
-  </svg>
-);
-
-/* ------------------------------------------------------------------ */
-/* Champ reutilisable                                                  */
-/* ------------------------------------------------------------------ */
-
-type FieldProps = {
-  id: string;
-  label: string;
-  type?: string;
-  name: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  autoComplete?: string;
-  icon: ReactNode;
-  trailing?: ReactNode;
-};
-
-function Field({
-  id,
-  label,
-  type = "text",
-  name,
-  value,
-  onChange,
-  placeholder,
-  autoComplete,
-  icon,
-  trailing,
-}: FieldProps) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="mb-1.5 block text-[13px] font-medium text-brown-sec"
-      >
-        {label}
-      </label>
-      <div className="group flex h-[50px] items-center gap-2.5 rounded-field border-[1.5px] border-border bg-cream px-3.5 transition-all duration-150 focus-within:border-gold focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(186,117,23,0.14)]">
-        <span className="shrink-0 text-placeholder transition-colors group-focus-within:text-gold">
-          {icon}
-        </span>
-        <input
-          id={id}
-          name={name}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          className="w-full bg-transparent text-[15px] text-brown outline-none placeholder:text-placeholder"
-        />
-        {trailing}
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
+import { useState } from "react";
+import { Field } from "./field";
+import {
+  MailIcon,
+  PhoneIcon,
+  LockIcon,
+  UserIcon,
+  EyeIcon,
+  EyeOffIcon,
+  CheckIcon,
+  ArrowLeftIcon,
+} from "./icons";
+import { GoogleIcon } from "@/app/_components/icons";
 
 type Mode = "login" | "signup" | "forgot";
 type Method = "email" | "phone";
@@ -220,7 +78,7 @@ export default function LoginPage() {
       </header>
 
       {/* Carte */}
-      <div className="relative z-10 w-full max-w-[416px] rounded-card border border-border bg-white p-[30px] shadow-[0_24px_60px_rgba(65,36,2,0.10)]">
+      <div className="relative z-10 w-full max-w-[416px] rounded-card border border-border bg-white p-[30px] shadow-card">
         {/* Bascule mode (ou retour en mode forgot) */}
         {mode === "forgot" ? (
           <button
@@ -341,11 +199,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={
-                    showPassword
-                      ? "Masquer le mot de passe"
-                      : "Afficher le mot de passe"
-                  }
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   className="shrink-0 text-placeholder transition-colors hover:text-gold"
                 >
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -387,7 +241,7 @@ export default function LoginPage() {
           {/* CTA */}
           <button
             type="submit"
-            className="h-[52px] rounded-[14px] bg-gold font-bold text-white shadow-[0_8px_20px_rgba(186,117,23,0.32)] transition-all hover:brightness-105 active:scale-[0.98]"
+            className="h-[52px] rounded-[14px] bg-gold font-bold text-white shadow-gold transition-all hover:brightness-105 active:scale-[0.98]"
           >
             {copy.cta}
           </button>
