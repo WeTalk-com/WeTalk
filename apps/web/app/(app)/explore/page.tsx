@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TopBar } from "@/app/_components/app/top-bar";
+import { TopBar } from "@/app/_components/layout/top-bar";
 import { ExploreFilters } from "@/app/_components/explore/explore-filters";
 import { ExploreTile } from "@/app/_components/explore/explore-tile";
 import { exploreTiles } from "@/lib/mock-data";

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { TopBar } from "@/app/_components/app/top-bar";
+import { TopBar } from "@/app/_components/layout/top-bar";
 import { RightRail } from "@/app/_components/home/right-rail";
 import { PillTabs } from "@/app/_components/ui/pill-tabs";
 import { Composer } from "@/app/_components/home/composer";
-import { PostCard } from "@/app/_components/post-card";
+import { PostCard } from "@/app/_components/post/post-card";
 import { posts } from "@/lib/mock-data";
 
 export const metadata: Metadata = {

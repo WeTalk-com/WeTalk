@@ -5,7 +5,7 @@ import {
   AtSign,
   type LucideIcon,
 } from "lucide-react";
-import { Avatar } from "../avatar";
+import { Avatar } from "../ui/avatar";
 import type { Notification, NotificationType } from "@/lib/mock-data";
 
 const TYPE: Record<NotificationType, { Icon: LucideIcon; badge: string }> = {

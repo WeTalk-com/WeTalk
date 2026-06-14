@@ -1,6 +1,6 @@
 import { MoreHorizontal, ImageIcon } from "lucide-react";
-import { Card } from "./ui/card";
-import { UserChip } from "./user-chip";
+import { Card } from "../ui/card";
+import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
 import type { Post } from "@/lib/mock-data";
 

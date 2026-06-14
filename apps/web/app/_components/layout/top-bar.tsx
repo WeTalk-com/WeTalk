@@ -1,6 +1,6 @@
 import { Search, Sparkles } from "lucide-react";
 import { IconButton } from "../ui/icon-button";
-import { ThemeToggle } from "../ui/theme-toggle";
+import { ThemeToggle } from "../theme/theme-toggle";
 
 /** Barre superieure de l'app : recherche + actions (sticky). */
 export function TopBar({

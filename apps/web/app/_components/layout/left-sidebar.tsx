@@ -10,7 +10,7 @@ import {
   MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
-import { UserChip } from "../user-chip";
+import { UserChip } from "../ui/user-chip";
 import { CreateButton } from "../create/create-button";
 import { currentUser } from "@/lib/mock-data";
 

@@ -1,6 +1,6 @@
 import { CreateModalProvider } from "@/app/_components/create/create-modal-provider";
-import { LeftSidebar } from "@/app/_components/app/left-sidebar";
-import { MobileNav } from "@/app/_components/app/mobile-nav";
+import { LeftSidebar } from "@/app/_components/layout/left-sidebar";
+import { MobileNav } from "@/app/_components/layout/mobile-nav";
 
 /** Shell de l'app connectee : sidebar + zone centrale + nav mobile + modale Create. */
 export default function AppLayout({ children }: { children: React.ReactNode }) {

@@ -1,4 +1,4 @@
-import { ErrorScreen } from "./_components/ui/error-screen";
+import { ErrorScreen } from "./_components/error-screen/error-screen";
 import { Button } from "./_components/ui/button";
 
 export default function NotFound() {

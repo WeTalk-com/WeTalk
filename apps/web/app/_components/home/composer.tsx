@@ -1,5 +1,5 @@
 import { ImageIcon } from "lucide-react";
-import { Avatar } from "../avatar";
+import { Avatar } from "../ui/avatar";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { IconButton } from "../ui/icon-button";

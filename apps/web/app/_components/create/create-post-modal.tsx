@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, ImageIcon, Smile, MapPin, Sparkles } from "lucide-react";
-import { Avatar } from "../avatar";
+import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { IconButton } from "../ui/icon-button";
 import { currentUser } from "@/lib/mock-data";

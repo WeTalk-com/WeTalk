@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { MapPin, CalendarDays } from "lucide-react";
-import { TopBar } from "@/app/_components/app/top-bar";
-import { Avatar } from "@/app/_components/avatar";
+import { TopBar } from "@/app/_components/layout/top-bar";
+import { Avatar } from "@/app/_components/ui/avatar";
 import { Button } from "@/app/_components/ui/button";
 import { PillTabs } from "@/app/_components/ui/pill-tabs";
-import { VerifiedBadge } from "@/app/_components/icons";
-import { PostCard } from "@/app/_components/post-card";
+import { VerifiedBadge } from "@/app/_components/ui/icons";
+import { PostCard } from "@/app/_components/post/post-card";
 import { currentUserProfile, myPosts } from "@/lib/mock-data";
 
 export const metadata: Metadata = {

@@ -13,7 +13,7 @@ import {
   Sparkle,
   X,
 } from "./icons";
-import { VerifiedBadge } from "../icons";
+import { VerifiedBadge } from "../ui/icons";
 import { useReducedMotion } from "./hooks";
 
 const SCENES = ["Home feed", "Explore", "Create"] as const;

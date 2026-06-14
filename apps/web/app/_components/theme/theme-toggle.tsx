@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { Palette, Check } from "lucide-react";
-import { IconButton } from "./icon-button";
-import { THEMES } from "../themes";
+import { IconButton } from "../ui/icon-button";
+import { THEMES } from "./themes";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();

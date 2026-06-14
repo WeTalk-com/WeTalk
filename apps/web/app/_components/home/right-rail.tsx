@@ -1,6 +1,6 @@
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
-import { UserChip } from "../user-chip";
+import { UserChip } from "../ui/user-chip";
 import { whoToFollow, trending } from "@/lib/mock-data";
 
 function Section({

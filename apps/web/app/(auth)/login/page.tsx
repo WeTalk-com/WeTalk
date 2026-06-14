@@ -12,7 +12,7 @@ import {
   CheckIcon,
   ArrowLeftIcon,
 } from "./icons";
-import { GoogleIcon } from "@/app/_components/icons";
+import { GoogleIcon } from "@/app/_components/ui/icons";
 
 type Mode = "login" | "signup" | "forgot";
 type Method = "email" | "phone";
