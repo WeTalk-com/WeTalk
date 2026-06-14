@@ -13,7 +13,7 @@ const BASE =
 
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-gold text-white shadow-gold hover:brightness-105",
-  outline: "border border-border bg-white text-brown hover:bg-cream",
+  outline: "border border-border bg-card text-brown hover:bg-cream",
 };
 
 const SIZES: Record<Size, string> = {

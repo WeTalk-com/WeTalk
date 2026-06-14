@@ -26,7 +26,7 @@ export function Features() {
         {FEATURES.map(({ Icon, title, text }) => (
           <article
             key={title}
-            className="rounded-[18px] border border-border bg-white p-6 transition-transform duration-200 hover:-translate-y-1"
+            className="rounded-[18px] border border-border bg-card p-6 transition-transform duration-200 hover:-translate-y-1"
           >
             <span className="grid size-12 place-items-center rounded-xl bg-gold/10 text-gold">
               <Icon className="size-6" />

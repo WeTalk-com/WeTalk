@@ -22,7 +22,7 @@ export function Hero() {
         {/* GAUCHE */}
         <div>
           {/* Badge */}
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-medium text-brown-sec">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-brown-sec">
             <span className="animate-pulse-dot size-2 rounded-full bg-live" />
             Now live · invite-only beta
           </span>

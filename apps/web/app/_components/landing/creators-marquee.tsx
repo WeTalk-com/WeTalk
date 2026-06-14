@@ -28,7 +28,7 @@ export function CreatorsMarquee() {
           {[...CREATORS, ...CREATORS].map((name, i) => (
             <span
               key={i}
-              className="flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-brown"
+              className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-brown"
             >
               <span className="grid size-7 place-items-center rounded-full bg-gold/20 text-xs font-semibold text-gold">
                 {name[0]}

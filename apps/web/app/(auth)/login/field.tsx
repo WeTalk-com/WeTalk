@@ -34,7 +34,7 @@ export function Field({
       >
         {label}
       </label>
-      <div className="group flex h-[50px] items-center gap-2.5 rounded-field border-[1.5px] border-border bg-cream px-3.5 transition-all duration-150 focus-within:border-gold focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(186,117,23,0.14)]">
+      <div className="group flex h-[50px] items-center gap-2.5 rounded-field border-[1.5px] border-border bg-cream px-3.5 transition-all duration-150 focus-within:border-gold focus-within:bg-card focus-within:shadow-[0_0_0_3px_rgba(186,117,23,0.14)]">
         <span className="shrink-0 text-placeholder transition-colors group-focus-within:text-gold">
           {icon}
         </span>

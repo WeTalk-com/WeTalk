@@ -78,7 +78,7 @@ export default function LoginPage() {
       </header>
 
       {/* Carte */}
-      <div className="relative z-10 w-full max-w-[416px] rounded-card border border-border bg-white p-[30px] shadow-card">
+      <div className="relative z-10 w-full max-w-[416px] rounded-card border border-border bg-card p-[30px] shadow-card">
         {/* Bascule mode (ou retour en mode forgot) */}
         {mode === "forgot" ? (
           <button
@@ -98,7 +98,7 @@ export default function LoginPage() {
                 onClick={() => setMode(m)}
                 className={`flex-1 rounded-[10px] py-2.5 text-sm font-semibold transition-all ${
                   mode === m
-                    ? "bg-white text-brown shadow-[0_2px_6px_rgba(65,36,2,0.08)]"
+                    ? "bg-card text-brown shadow-[0_2px_6px_rgba(65,36,2,0.08)]"
                     : "text-brown-sec"
                 }`}
               >
@@ -125,7 +125,7 @@ export default function LoginPage() {
                   onClick={() => setMethod(mt)}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-[10px] py-2 text-sm font-medium transition-all ${
                     method === mt
-                      ? "bg-white text-gold shadow-[0_2px_6px_rgba(65,36,2,0.08)]"
+                      ? "bg-card text-gold shadow-[0_2px_6px_rgba(65,36,2,0.08)]"
                       : "text-brown-sec"
                   }`}
                 >
@@ -221,7 +221,7 @@ export default function LoginPage() {
                   className={`grid size-[18px] place-items-center rounded-[5px] border-[1.5px] transition-colors ${
                     remember
                       ? "border-gold bg-gold text-white"
-                      : "border-border bg-white"
+                      : "border-border bg-card"
                   }`}
                 >
                   {remember && <CheckIcon className="size-3" />}
@@ -258,7 +258,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                className="flex h-[50px] items-center justify-center gap-2 rounded-field border border-border bg-white font-medium text-brown transition-colors hover:bg-cream"
+                className="flex h-[50px] items-center justify-center gap-2 rounded-field border border-border bg-card font-medium text-brown transition-colors hover:bg-cream"
               >
                 <GoogleIcon />
                 Google
@@ -266,7 +266,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setMethod("phone")}
-                className="flex h-[50px] items-center justify-center gap-2 rounded-field border border-border bg-white font-medium text-brown transition-colors hover:bg-cream"
+                className="flex h-[50px] items-center justify-center gap-2 rounded-field border border-border bg-card font-medium text-brown transition-colors hover:bg-cream"
               >
                 <PhoneIcon />
                 Phone

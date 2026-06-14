@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Search, Sparkles, Sun } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { IconButton } from "../_components/ui/icon-button";
+import { ThemeToggle } from "../_components/ui/theme-toggle";
 import { LeftSidebar } from "../_components/home/left-sidebar";
 import { RightRail } from "../_components/home/right-rail";
 import { MobileNav } from "../_components/home/mobile-nav";
@@ -35,9 +36,7 @@ export default function HomePage() {
             <IconButton label="AI suggestions">
               <Sparkles className="size-5" />
             </IconButton>
-            <IconButton label="Toggle theme">
-              <Sun className="size-5" />
-            </IconButton>
+            <ThemeToggle />
           </div>
 
           {/* En-tete : titre + onglets */}
