@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 
-const TABS = ["For you", "Following"] as const;
-
-export function HomeTabs() {
-  const [active, setActive] = useState<(typeof TABS)[number]>("For you");
+/** Onglets en pilule (etat local). Generique : passe la liste d'onglets. */
+export function PillTabs({ tabs }: { tabs: readonly string[] }) {
+  const [active, setActive] = useState<string>(tabs[0] ?? "");
 
   return (
     <div className="flex items-center gap-1">
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const isActive = tab === active;
         return (
           <button
