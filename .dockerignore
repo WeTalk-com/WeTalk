@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+**/.git
+
+# Node
+**/node_modules
+**/.npm
+.npmrc
+
+# Build artifacts
+**/dist
+**/.next
+**/build
+**/.turbo
+
+# Logs
+**/logs
+**/*.log
+npm-debug.log*
+
+# Tests
+**/__tests__
+**/*.test.ts
+**/*.spec.ts
+**/coverage
+
+# Env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+**/*.suo
+**/*.user
+
+# Docker
+**/Dockerfile*
+docker-compose*.yml
+
+# Certificats
+certs/ca
+certs/csr
