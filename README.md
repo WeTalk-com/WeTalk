@@ -21,8 +21,8 @@ Description de l'image :
 2. La couche Serveur (Back-end) : Les requêtes du Front passent d'abord par une API Gateway, qui sert de point d'entrée unique et redirige le trafic vers 4 microservices indépendants :
 - User Service (Gestion des utilisateurs)
 - Post Service (Gestion des publications)
-- Profil Service (Gestion des profils)
 - Auth Service (Gestion de l'authentification)
+- Notifications Service (Gestion et envoies des notifications)
 
 3. La couche Données (Database) : Chaque microservice possède sa propre base de données dédiée pour garantir l'indépendance du système :
 - PostgreSQL pour User Service et Auth Service.
