@@ -66,3 +66,9 @@ package-lock.json
 /lib/
 .turbo
 .env
+# PKI — clés privées et CA 
+certs/ca/ca.key
+certs/**/*.key
+certs/**/*.csr
+certs/**/*.srl
+certs/ca/ca.crt
