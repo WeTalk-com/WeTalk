@@ -3,6 +3,7 @@ import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
+import { postRouter } from "./routes/post.routes.js";
 
 export function createApp() {
   const app = express();
@@ -44,7 +45,7 @@ export function createApp() {
     res.json({ status: "ok", service: "post-service" });
   });
 
-  // Les routes des posts seront ajoutées ici.
+  app.use("/posts", postRouter);
 
   // Répond aux routes inconnues.
   app.use((_req: Request, res: Response) => {
