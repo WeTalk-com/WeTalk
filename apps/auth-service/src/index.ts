@@ -3,6 +3,10 @@ import { connectDb, sequelize } from "./config/db.js";
 import { connectRedis, redis } from "./config/redis.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
+import fs from "fs";
+import https from "https";
+import express from "express";
+
 
 async function main(): Promise<void> {
   await connectDb();
@@ -32,5 +36,5 @@ main().catch((err) => {
   logger.error("failed to start auth-service", {
     error: err instanceof Error ? err.message : String(err),
   });
-  process.exit(1);
+  process.exit(1);  
 });
