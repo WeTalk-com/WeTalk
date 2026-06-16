@@ -2,13 +2,14 @@ import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
 import {
-  register,
-  adminCreateUser,
-  login,
-  refresh,
-  logout,
-  me,
-  verify,
+    register,
+    adminCreateUser,
+    login,
+    refresh,
+    logout,
+    me,
+	getUsers,
+	getUser,
 } from "../controllers/user.controller.js";
 
 export const userRouter = Router();

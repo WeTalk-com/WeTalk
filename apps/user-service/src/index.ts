@@ -6,10 +6,10 @@ import { logger } from "./utils/logger.js";
 
 async function main(): Promise<void> {
 	// TODO: Dé-commenter
-	// await connectDb();
+	await connectDb();
 	logger.info("connected to PostgreSQL");
 	// TODO: Dé-commenter
-	// await connectRedis();
+	await connectRedis();
 	logger.info("connected to Redis");
 
 	const app = createApp();
