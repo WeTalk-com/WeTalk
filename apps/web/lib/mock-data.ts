@@ -1,38 +1,16 @@
 /**
  * Donnees factices pour la v1 design-only.
- * Les types sont volontairement proches d'une future reponse d'API
- * pour faciliter le branchement back-end plus tard.
+ * Les types de domaine vivent dans ./types (reutilisables apres branchement API).
  */
 
-export type User = {
-  id: string;
-  name: string;
-  handle: string;
-  /** Initiale affichee dans l'avatar (placeholder design) */
-  initial: string;
-  verified?: boolean;
-};
-
-export type Post = {
-  id: string;
-  author: User;
-  /** "5h", "2j"... (relatif, pre-formate cote mock) */
-  timeAgo: string;
-  text: string;
-  /** tags affiches en couleur or dans le texte */
-  tags: string[];
-  hasImage?: boolean;
-  imageRatio?: string; // ex. "1600x1000"
-  likes: number;
-  comments: number;
-  shares: number;
-};
-
-export type TrendingTopic = {
-  category: string;
-  tag: string;
-  posts: string; // "48.2K posts"
-};
+import type {
+  User,
+  Post,
+  TrendingTopic,
+  Profile,
+  ExploreTile,
+  Notification,
+} from "./types";
 
 export const currentUser: User = {
   id: "me",
@@ -53,7 +31,7 @@ export const posts: Post[] = [
     },
     timeAgo: "2h",
     text: "Chasing the golden hour across the dunes — slow mornings really do hit different.",
-    tags: ["#weetalk", "#goldenhour"],
+    tags: ["#wetalk", "#goldenhour"],
     hasImage: true,
     imageRatio: "1600x1000",
     likes: 1245,
@@ -71,7 +49,7 @@ export const posts: Post[] = [
     },
     timeAgo: "5h",
     text: "Studio light tests for the new series. Warm tones only, always.",
-    tags: ["#weetalk", "#process"],
+    tags: ["#wetalk", "#process"],
     hasImage: true,
     imageRatio: "1600x1000",
     likes: 842,
@@ -98,19 +76,12 @@ export const whoToFollow: User[] = [
 
 export const trending: TrendingTopic[] = [
   { category: "Photography", tag: "#goldenhour", posts: "48.2K posts" },
-  { category: "Trending", tag: "#weetalk", posts: "31.9K posts" },
+  { category: "Trending", tag: "#wetalk", posts: "31.9K posts" },
   { category: "Design", tag: "#warmtones", posts: "12.4K posts" },
   { category: "Travel", tag: "#slowmornings", posts: "9.1K posts" },
 ];
 
 /* ----------------------------- Profil ----------------------------- */
-
-export type Profile = User & {
-  bio: string;
-  location: string;
-  joined: string;
-  stats: { posts: number; followers: string; following: number };
-};
 
 export const currentUserProfile: Profile = {
   ...currentUser,
@@ -128,7 +99,7 @@ export const myPosts: Post[] = [
     author: currentUser,
     timeAgo: "1d",
     text: "Reorganised my desk for the third time this week. Productivity is a myth, vibes are real.",
-    tags: ["#slowmornings", "#weetalk"],
+    tags: ["#slowmornings", "#wetalk"],
     hasImage: true,
     imageRatio: "1600x1000",
     likes: 421,
@@ -149,23 +120,6 @@ export const myPosts: Post[] = [
 
 /* ----------------------------- Explore ----------------------------- */
 
-export const exploreCategories = [
-  "All",
-  "Photo",
-  "Travel",
-  "Design",
-  "Film",
-  "Food",
-] as const;
-
-export type ExploreTile = {
-  id: string;
-  tag: string;
-  /** hauteur du placeholder (effet masonry) */
-  height: number;
-  likes: string;
-};
-
 export const exploreTiles: ExploreTile[] = [
   { id: "e1", tag: "#goldenhour", height: 280, likes: "12.4K" },
   { id: "e2", tag: "#warmtones", height: 200, likes: "3.1K" },
@@ -174,25 +128,11 @@ export const exploreTiles: ExploreTile[] = [
   { id: "e5", tag: "#desksetup", height: 200, likes: "1.9K" },
   { id: "e6", tag: "#travel", height: 300, likes: "9.6K" },
   { id: "e7", tag: "#coffee", height: 220, likes: "6.0K" },
-  { id: "e8", tag: "#weetalk", height: 260, likes: "31.9K" },
+  { id: "e8", tag: "#wetalk", height: 260, likes: "31.9K" },
   { id: "e9", tag: "#cozy", height: 200, likes: "2.4K" },
 ];
 
 /* -------------------------- Notifications -------------------------- */
-
-export type NotificationType = "like" | "comment" | "follow" | "mention";
-
-export type Notification = {
-  id: string;
-  type: NotificationType;
-  actor: User;
-  /** action ("liked your post", "started following you"...) */
-  text: string;
-  /** extrait optionnel (contenu du commentaire / mention / post) */
-  preview?: string;
-  timeAgo: string;
-  read?: boolean;
-};
 
 const u = (
   id: string,
@@ -208,7 +148,7 @@ export const notifications: Notification[] = [
     type: "like",
     actor: u("u1", "Maya Rivera", "mayarivera", "M", true),
     text: "liked your post",
-    preview: "Golden hour never misses ☀️ #weetalk",
+    preview: "Golden hour never misses ☀️ #wetalk",
     timeAgo: "12m",
   },
   {

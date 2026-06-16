@@ -1,0 +1,199 @@
+{
+  "metadata": {
+    "rootTitle": "WeTalk",
+    "rootDescription": "Le réseau social léger et chaleureux.",
+    "landingTitle": "WeTalk — Le côté chaleureux du social",
+    "landingDescription": "Partagez vos golden hours, suivez les gens que vous aimez vraiment, et parlez plus lentement. WeTalk, c'est le fil où il fait bon revenir.",
+    "landingOgDescription": "Un réseau photo plus calme et chaleureux. Suivez moins, parlez plus.",
+    "home": "Accueil · WeTalk",
+    "explore": "Explorer · WeTalk",
+    "notifications": "Notifications · WeTalk",
+    "profile": "Profil · WeTalk",
+    "settings": "Paramètres · WeTalk",
+    "login": "Connexion · WeTalk",
+    "loginDescription": "Connectez-vous ou créez votre compte WeTalk."
+  },
+  "nav": {
+    "home": "Accueil",
+    "explore": "Explorer",
+    "notifications": "Notifications",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "create": "Créer",
+    "accountMenu": "Menu du compte",
+    "brandHome": "Accueil WeTalk",
+    "primary": "Navigation principale"
+  },
+  "landing": {
+    "hero": {
+      "badge": "En ligne · bêta sur invitation",
+      "title": "Le côté chaleureux du social.",
+      "highlightWord": "chaleureux",
+      "paragraph": "Partagez vos golden hours, suivez les gens que vous aimez vraiment, et parlez plus lentement. WeTalk, c'est le fil où il fait bon revenir.",
+      "ctaCreate": "Créer votre compte →"
+    },
+    "stats": {
+      "creators": "créateurs",
+      "goldenHours": "golden hours",
+      "comeBackDaily": "reviennent chaque jour"
+    },
+    "marquee": {
+      "heading": "Adoré par les amoureux de la lumière chaude, partout"
+    },
+    "features": {
+      "visualTitle": "Pensé pour les histoires visuelles",
+      "visualText": "Des posts photo plein cadre avec des presets aux tons chauds intégrés.",
+      "discoveryTitle": "Une découverte plus calme",
+      "discoveryText": "Pas de scroll infini. Une curation humaine, triée par chaleur.",
+      "connectionTitle": "De vraies connexions",
+      "connectionText": "Suivez moins, parlez plus. Des commentaires qui ont le goût d'un café.",
+      "ctaHeading": "Venez pour la lumière. Restez pour les gens.",
+      "getStarted": "Commencer"
+    },
+    "phone": {
+      "sceneHome": "Fil d'accueil",
+      "sceneExplore": "Explorer",
+      "sceneCreate": "Créer",
+      "rec": "Rec",
+      "likes": "j'aime",
+      "newPost": "Nouveau post",
+      "chipAll": "Tous",
+      "chipPhoto": "Photo",
+      "chipTravel": "Voyage",
+      "caption": "La golden hour ne déçoit jamais ☀️ #wetalk",
+      "post": "Publier"
+    }
+  },
+  "auth": {
+    "subtitle": "Parlez plus chaleureux · Partagez plus lentement",
+    "backToLogin": "Retour à la connexion",
+    "toggleLogin": "Se connecter",
+    "toggleSignup": "S'inscrire",
+    "methodEmail": "E-mail",
+    "methodPhone": "Téléphone",
+    "loginTitle": "Bon retour",
+    "loginSubtitle": "Connectez-vous pour reprendre là où vous en étiez.",
+    "loginCta": "Se connecter",
+    "signupTitle": "Créez votre compte",
+    "signupSubtitle": "Rejoignez le côté chaleureux d'internet.",
+    "signupCta": "Créer le compte",
+    "forgotTitle": "Réinitialiser le mot de passe",
+    "forgotSubtitle": "Entrez votre e-mail et nous vous enverrons un lien pour vous reconnecter.",
+    "forgotCta": "Envoyer le lien",
+    "nameLabel": "Nom complet",
+    "namePlaceholder": "Jean Dupont",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "vous@exemple.com",
+    "phoneLabel": "Téléphone",
+    "phonePlaceholder": "+33 6 12 34 56 78",
+    "passwordLabel": "Mot de passe",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oublié ?",
+    "footerLoginPrompt": "Nouveau sur WeTalk ?",
+    "footerCreateAccount": "Créer un compte",
+    "footerSignupPrompt": "Vous avez déjà un compte ?",
+    "footerLoginLink": "Se connecter",
+    "footerForgotPrompt": "Ça vous revient ?",
+    "footerBackLink": "Retour à la connexion",
+    "legal": "En continuant, vous acceptez nos <terms>Conditions</terms> et notre <privacy>Politique de confidentialité</privacy>."
+  },
+  "app": {
+    "topBar": {
+      "searchPlaceholder": "Rechercher sur WeTalk",
+      "aiSuggestions": "Suggestions IA"
+    },
+    "home": {
+      "title": "Accueil",
+      "tabForYou": "Pour vous",
+      "tabFollowing": "Abonnements"
+    },
+    "composer": {
+      "placeholder": "Partage quelque chose de chaleureux, {name}…",
+      "ariaCreate": "Créer un post",
+      "addImage": "Ajouter une image",
+      "post": "Publier"
+    },
+    "explore": {
+      "title": "Explorer",
+      "searchPlaceholder": "Rechercher golden hours, personnes, tags…",
+      "catAll": "Tous",
+      "catPhoto": "Photo",
+      "catTravel": "Voyage",
+      "catDesign": "Design",
+      "catFilm": "Film",
+      "catFood": "Cuisine"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "tabAll": "Toutes",
+      "tabMentions": "Mentions",
+      "actionLike": "a aimé votre post",
+      "actionComment": "a commenté votre post",
+      "actionFollow": "a commencé à vous suivre",
+      "actionMention": "vous a mentionné dans un post"
+    },
+    "profile": {
+      "editProfile": "Modifier le profil",
+      "statPosts": "Posts",
+      "statFollowers": "Abonnés",
+      "statFollowing": "Abonnements",
+      "tabPosts": "Posts",
+      "tabMedia": "Médias",
+      "tabLikes": "J'aime"
+    },
+    "rightRail": {
+      "whoToFollow": "À suivre",
+      "trending": "Tendances",
+      "follow": "Suivre",
+      "linkAbout": "À propos",
+      "linkHelp": "Aide",
+      "linkTerms": "Conditions",
+      "linkPrivacy": "Confidentialité",
+      "copyright": "© 2026 WeTalk"
+    },
+    "post": {
+      "image": "image du post · {ratio}",
+      "more": "Plus d'options",
+      "like": "J'aime",
+      "comment": "Commenter",
+      "share": "Partager",
+      "save": "Enregistrer"
+    },
+    "create": {
+      "title": "Nouveau post",
+      "placeholder": "Partage quelque chose de chaleureux…",
+      "addPhoto": "Ajouter une photo",
+      "addImage": "Ajouter une image",
+      "addEmoji": "Ajouter un emoji",
+      "addLocation": "Ajouter un lieu",
+      "enhance": "Améliorer",
+      "post": "Publier",
+      "close": "Fermer"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "languageLabel": "Langue",
+    "languageDescription": "Choisissez la langue de l'interface.",
+    "languageFr": "Français",
+    "languageEn": "English",
+    "themeLabel": "Thème",
+    "themeDescription": "Personnalisez l'apparence de WeTalk."
+  },
+  "theme": {
+    "changeTheme": "Changer de thème",
+    "amber": "Ambre",
+    "rose": "Rose",
+    "dark": "Sombre"
+  },
+  "errors": {
+    "notFoundLabel": "INTROUVABLE",
+    "notFoundMessage": "Le coin chaleureux que vous cherchez n'existe pas (encore).",
+    "notFoundCta": "Retour à l'accueil",
+    "serverErrorLabel": "ERREUR",
+    "serverErrorMessage": "Une erreur inattendue s'est produite. Réessayez dans un instant.",
+    "serverErrorCta": "Réessayer"
+  }
+}

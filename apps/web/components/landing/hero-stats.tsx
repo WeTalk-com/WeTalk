@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCountUp, useReducedMotion } from "./hooks";
 
 function Stat({
@@ -27,12 +28,23 @@ function Stat({
 
 export function HeroStats() {
   const reduced = useReducedMotion();
+  const t = useTranslations("landing.stats");
 
   return (
     <div className="mt-10 grid max-w-md grid-cols-3 gap-6">
-      <Stat target={120} suffix="k+" label="creators" enabled={!reduced} />
-      <Stat target={4} suffix="M" label="golden hours" enabled={!reduced} />
-      <Stat target={98} suffix="%" label="come back daily" enabled={!reduced} />
+      <Stat target={120} suffix="k+" label={t("creators")} enabled={!reduced} />
+      <Stat
+        target={4}
+        suffix="M"
+        label={t("goldenHours")}
+        enabled={!reduced}
+      />
+      <Stat
+        target={98}
+        suffix="%"
+        label={t("comeBackDaily")}
+        enabled={!reduced}
+      />
     </div>
   );
 }

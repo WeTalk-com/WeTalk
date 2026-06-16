@@ -1,16 +1,27 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/routing";
+import { getProfile, getMyPosts } from "@/lib/api";
 import { MapPin, CalendarDays } from "lucide-react";
-import { TopBar } from "@/app/_components/layout/top-bar";
-import { Avatar } from "@/app/_components/ui/avatar";
-import { Button } from "@/app/_components/ui/button";
-import { PillTabs } from "@/app/_components/ui/pill-tabs";
-import { VerifiedBadge } from "@/app/_components/ui/icons";
-import { PostCard } from "@/app/_components/post/post-card";
-import { currentUserProfile, myPosts } from "@/lib/mock-data";
+import { TopBar } from "@/components/layout/top-bar";
+import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { PillTabs } from "@/components/ui/pill-tabs";
+import { VerifiedBadge } from "@/components/icons/brand";
+import { PostCard } from "@/components/post/post-card";
 
-export const metadata: Metadata = {
-  title: "Profile · WeTalk",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({
+    locale: locale as Locale,
+    namespace: "metadata",
+  });
+  return { title: t("profile") };
+}
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -20,8 +31,9 @@ function Stat({ value, label }: { value: string | number; label: string }) {
   );
 }
 
-export default function ProfilePage() {
-  const p = currentUserProfile;
+export default async function ProfilePage() {
+  const t = await getTranslations("app.profile");
+  const [p, myPosts] = await Promise.all([getProfile(), getMyPosts()]);
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
@@ -36,7 +48,7 @@ export default function ProfilePage() {
             <Avatar initial={p.initial} solid size={96} />
           </span>
           <Button variant="outline" size="sm" className="mb-1">
-            Edit profile
+            {t("editProfile")}
           </Button>
         </div>
 
@@ -62,13 +74,13 @@ export default function ProfilePage() {
         </div>
 
         <div className="mt-3 flex gap-5">
-          <Stat value={p.stats.posts} label="Posts" />
-          <Stat value={p.stats.followers} label="Followers" />
-          <Stat value={p.stats.following} label="Following" />
+          <Stat value={p.stats.posts} label={t("statPosts")} />
+          <Stat value={p.stats.followers} label={t("statFollowers")} />
+          <Stat value={p.stats.following} label={t("statFollowing")} />
         </div>
 
         <div className="mt-5 border-b border-border pb-2">
-          <PillTabs tabs={["Posts", "Media", "Likes"]} />
+          <PillTabs tabs={[t("tabPosts"), t("tabMedia"), t("tabLikes")]} />
         </div>
       </div>
 

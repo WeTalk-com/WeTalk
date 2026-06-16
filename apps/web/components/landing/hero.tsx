@@ -1,11 +1,14 @@
+import { Fragment } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "../ui/button";
-import { PlayCircle } from "./icons";
 import { PhoneDemo } from "./phone-demo";
 import { HeroStats } from "./hero-stats";
 
-const TITLE_WORDS = ["The", "warm", "side", "of", "social."];
-
 export function Hero() {
+  const t = useTranslations("landing.hero");
+  const titleWords = t("title").split(" ");
+  const highlight = t("highlightWord");
+
   return (
     <section className="relative overflow-hidden">
       {/* Halos ambiants qui derivent */}
@@ -24,42 +27,34 @@ export function Hero() {
           {/* Badge */}
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-brown-sec">
             <span className="animate-pulse-dot size-2 rounded-full bg-live" />
-            Now live · invite-only beta
+            {t("badge")}
           </span>
 
           {/* Titre */}
           <h1 className="mt-5 font-head text-[44px] font-extrabold leading-[1.02] tracking-tight text-brown sm:text-[62px]">
-            {TITLE_WORDS.map((word, i) => (
-              <span
-                key={i}
-                className="word-in"
-                style={{ animationDelay: `${i * 90}ms` }}
-              >
-                {word === "warm" ? (
-                  <em className="shimmer-text italic">warm</em>
-                ) : (
-                  word
-                )}{" "}
-              </span>
+            {titleWords.map((word, i) => (
+              <Fragment key={i}>
+                <span
+                  className="word-in"
+                  style={{ animationDelay: `${i * 90}ms` }}
+                >
+                  {word === highlight ? (
+                    <em className="shimmer-text italic">{word}</em>
+                  ) : (
+                    word
+                  )}
+                </span>{" "}
+              </Fragment>
             ))}
           </h1>
 
           {/* Paragraphe */}
-          <p className="mt-5 max-w-xl text-lg text-brown-sec">
-            Share your golden hours, follow people you actually like, and talk
-            slower. WeeTalk is the feed that feels good to come back to.
-          </p>
+          <p className="mt-5 max-w-xl text-lg text-brown-sec">{t("paragraph")}</p>
 
           {/* CTA */}
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Button href="/login" size="lg">
-              Create your account →
-            </Button>
-            <Button variant="outline" size="lg">
-              <span className="grid size-8 place-items-center rounded-full bg-gold/15 text-gold">
-                <PlayCircle className="size-5" />
-              </span>
-              Watch the film
+              {t("ctaCreate")}
             </Button>
           </div>
 

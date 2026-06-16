@@ -1,35 +1,52 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
-import { ThemeProvider } from "./_components/theme/theme-provider";
-import "./globals.css";
+import { notFound } from "next/navigation";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { routing, type Locale } from "@/i18n/routing";
+import { fontVariables } from "@/lib/fonts";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import "../globals.css";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  style: ["normal", "italic"],
-  weight: ["400", "600", "700", "800"],
-});
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dmsans",
-  weight: ["400", "500", "600", "700"],
-});
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({
+    locale: locale as Locale,
+    namespace: "metadata",
+  });
+  return {
+    title: t("rootTitle"),
+    description: t("rootDescription"),
+  };
+}
 
-export const metadata: Metadata = {
-  title: "WeTalk",
-  description: "Le reseau social leger et reactif.",
-};
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+  // Active le rendu statique pour cette locale.
+  setRequestLocale(locale);
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${playfair.variable} ${dmSans.variable}`}>
-        <ThemeProvider>{children}</ThemeProvider>
+    <html lang={locale} suppressHydrationWarning>
+      <body className={fontVariables}>
+        <NextIntlClientProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

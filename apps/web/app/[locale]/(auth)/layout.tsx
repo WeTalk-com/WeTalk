@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/routing";
 
-export const metadata: Metadata = {
-  title: "Log in · WeTalk",
-  description: "Log in or create your WeTalk account.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({
+    locale: locale as Locale,
+    namespace: "metadata",
+  });
+  return {
+    title: t("login"),
+    description: t("loginDescription"),
+  };
+}
 
 export default function AuthLayout({
   children,

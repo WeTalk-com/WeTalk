@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { Palette, Check } from "lucide-react";
 import { IconButton } from "../ui/icon-button";
@@ -8,6 +9,7 @@ import { THEMES } from "./themes";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const tr = useTranslations("theme");
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -30,7 +32,7 @@ export function ThemeToggle() {
   return (
     <div ref={ref} className="relative">
       <IconButton
-        label="Change theme"
+        label={tr("changeTheme")}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -43,25 +45,25 @@ export function ThemeToggle() {
           role="menu"
           className="absolute right-0 z-50 mt-2 w-44 rounded-2xl border border-border bg-card p-1.5 shadow-card"
         >
-          {THEMES.map((t) => {
-            const active = mounted && theme === t.id;
+          {THEMES.map((option) => {
+            const active = mounted && theme === option.id;
             return (
               <button
-                key={t.id}
+                key={option.id}
                 type="button"
                 role="menuitemradio"
                 aria-checked={active}
                 onClick={() => {
-                  setTheme(t.id);
+                  setTheme(option.id);
                   setOpen(false);
                 }}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-brown transition-colors hover:bg-cream"
               >
                 <span
                   className="size-4 shrink-0 rounded-full border border-border"
-                  style={{ backgroundColor: t.swatch }}
+                  style={{ backgroundColor: option.swatch }}
                 />
-                {t.label}
+                {tr(option.id)}
                 {active && <Check className="ml-auto size-4 text-gold" />}
               </button>
             );

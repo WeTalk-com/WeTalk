@@ -1,8 +1,9 @@
+import { useTranslations } from "next-intl";
 import { MoreHorizontal, ImageIcon } from "lucide-react";
 import { Card } from "../ui/card";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
-import type { Post } from "@/lib/mock-data";
+import type { Post } from "@/lib/types";
 
 /** Affiche le texte du post avec les hashtags colores en or */
 function PostText({ text, tags }: { text: string; tags: string[] }) {
@@ -20,6 +21,7 @@ function PostText({ text, tags }: { text: string; tags: string[] }) {
 
 export function PostCard({ post }: { post: Post }) {
   const { author } = post;
+  const t = useTranslations("app.post");
 
   return (
     <Card as="article" className="p-4">
@@ -32,7 +34,7 @@ export function PostCard({ post }: { post: Post }) {
         />
         <button
           type="button"
-          aria-label="More options"
+          aria-label={t("more")}
           className="grid size-9 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-line/60"
         >
           <MoreHorizontal className="size-5" />
@@ -49,7 +51,7 @@ export function PostCard({ post }: { post: Post }) {
         <div className="mt-3 rounded-xl border border-line bg-gold/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(194,136,43,0.08)_12px,rgba(194,136,43,0.08)_24px)] aspect-16/10 grid place-items-center">
           <span className="flex flex-col items-center gap-1 text-ink-soft text-sm">
             <ImageIcon className="size-6" />
-            post image · {post.imageRatio}
+            {t("image", { ratio: post.imageRatio ?? "" })}
           </span>
         </div>
       )}

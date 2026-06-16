@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { User } from "@/lib/types";
 import { CreatePostModal } from "./create-post-modal";
 
 type CreateModalCtx = { isOpen: boolean; open: () => void; close: () => void };
@@ -21,7 +22,13 @@ export function useCreateModal() {
   return ctx;
 }
 
-export function CreateModalProvider({ children }: { children: ReactNode }) {
+export function CreateModalProvider({
+  user,
+  children,
+}: {
+  user: User;
+  children: ReactNode;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
@@ -29,7 +36,7 @@ export function CreateModalProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{ isOpen, open, close }}>
       {children}
-      {isOpen && <CreatePostModal onClose={close} />}
+      {isOpen && <CreatePostModal user={user} onClose={close} />}
     </Ctx.Provider>
   );
 }

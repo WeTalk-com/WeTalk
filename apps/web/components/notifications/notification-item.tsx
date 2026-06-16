@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import {
   Heart,
   MessageCircle,
@@ -6,13 +7,22 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Avatar } from "../ui/avatar";
-import type { Notification, NotificationType } from "@/lib/mock-data";
+import type { Notification, NotificationType } from "@/lib/types";
 
-const TYPE: Record<NotificationType, { Icon: LucideIcon; badge: string }> = {
-  like: { Icon: Heart, badge: "bg-live" },
-  comment: { Icon: MessageCircle, badge: "bg-blue" },
-  follow: { Icon: UserPlus, badge: "bg-gold" },
-  mention: { Icon: AtSign, badge: "bg-gold-dark" },
+type ActionKey =
+  | "actionLike"
+  | "actionComment"
+  | "actionFollow"
+  | "actionMention";
+
+const TYPE: Record<
+  NotificationType,
+  { Icon: LucideIcon; badge: string; action: ActionKey }
+> = {
+  like: { Icon: Heart, badge: "bg-live", action: "actionLike" },
+  comment: { Icon: MessageCircle, badge: "bg-blue", action: "actionComment" },
+  follow: { Icon: UserPlus, badge: "bg-gold", action: "actionFollow" },
+  mention: { Icon: AtSign, badge: "bg-gold-dark", action: "actionMention" },
 };
 
 export function NotificationItem({
@@ -20,8 +30,9 @@ export function NotificationItem({
 }: {
   notification: Notification;
 }) {
-  const { actor, type, text, preview, timeAgo, read } = notification;
-  const { Icon, badge } = TYPE[type];
+  const { actor, type, preview, timeAgo, read } = notification;
+  const { Icon, badge, action } = TYPE[type];
+  const t = useTranslations("app.notifications");
 
   return (
     <li
@@ -40,7 +51,7 @@ export function NotificationItem({
 
       <div className="min-w-0 flex-1">
         <p className="text-brown">
-          <span className="font-semibold">{actor.name}</span> {text}
+          <span className="font-semibold">{actor.name}</span> {t(action)}
         </p>
         {preview && (
           <p className="mt-1 truncate text-sm text-brown-sec">{preview}</p>

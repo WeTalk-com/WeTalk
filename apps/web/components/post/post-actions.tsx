@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Heart, MessageCircle, Send, Bookmark } from "lucide-react";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 export function PostActions({ likes, comments, shares }: Props) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const t = useTranslations("app.post");
 
   return (
     <div className="flex items-center gap-6 text-ink-soft text-sm">
@@ -19,6 +21,7 @@ export function PostActions({ likes, comments, shares }: Props) {
         type="button"
         onClick={() => setLiked((v) => !v)}
         aria-pressed={liked}
+        aria-label={t("like")}
         className="flex items-center gap-2 hover:text-live transition-colors"
       >
         <Heart
@@ -29,6 +32,7 @@ export function PostActions({ likes, comments, shares }: Props) {
 
       <button
         type="button"
+        aria-label={t("comment")}
         className="flex items-center gap-2 hover:text-ink transition-colors"
       >
         <MessageCircle className="size-5" />
@@ -37,6 +41,7 @@ export function PostActions({ likes, comments, shares }: Props) {
 
       <button
         type="button"
+        aria-label={t("share")}
         className="flex items-center gap-2 hover:text-ink transition-colors"
       >
         <Send className="size-5" />
@@ -47,7 +52,7 @@ export function PostActions({ likes, comments, shares }: Props) {
         type="button"
         onClick={() => setSaved((v) => !v)}
         aria-pressed={saved}
-        aria-label="Save"
+        aria-label={t("save")}
         className="ml-auto hover:text-gold transition-colors"
       >
         <Bookmark className={`size-5 ${saved ? "fill-gold text-gold" : ""}`} />

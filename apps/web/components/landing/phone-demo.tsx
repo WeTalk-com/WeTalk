@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Bell,
   Heart,
@@ -12,17 +13,18 @@ import {
   MapPin,
   Sparkle,
   X,
-} from "./icons";
-import { VerifiedBadge } from "../ui/icons";
+} from "../icons/demo";
+import { VerifiedBadge } from "../icons/brand";
 import { useReducedMotion } from "./hooks";
 
-const SCENES = ["Home feed", "Explore", "Create"] as const;
+const SCENE_COUNT = 3;
 const SCENE_MS = 3600;
 
 /* ---------------- Scene 1 : Home feed (auto-like) ---------------- */
 
 function HomeScene({ active }: { active: boolean }) {
   const [liked, setLiked] = useState(false);
+  const t = useTranslations("landing.phone");
 
   useEffect(() => {
     if (!active) {
@@ -38,7 +40,7 @@ function HomeScene({ active }: { active: boolean }) {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <span className="font-head text-lg font-extrabold italic text-brown">
-          WeeTalk
+          WeTalk
         </span>
         <Bell className="size-4 text-brown-sec" />
       </div>
@@ -95,7 +97,7 @@ function HomeScene({ active }: { active: boolean }) {
           <Comment className="size-5" />
           <Send className="size-5" />
           <span className="ml-auto text-xs font-medium text-brown">
-            {(liked ? 1246 : 1245).toLocaleString("en-US")} likes
+            {(liked ? 1246 : 1245).toLocaleString("en-US")} {t("likes")}
           </span>
         </div>
       </div>
@@ -107,11 +109,12 @@ function HomeScene({ active }: { active: boolean }) {
 
 function ExploreScene({ active }: { active: boolean }) {
   const [cycle, setCycle] = useState(0);
+  const t = useTranslations("landing.phone");
   useEffect(() => {
     if (active) setCycle((c) => c + 1);
   }, [active]);
 
-  const chips = ["All", "Photo", "Travel"];
+  const chips = [t("chipAll"), t("chipPhoto"), t("chipTravel")];
 
   return (
     <div className="flex h-full flex-col px-4 py-3">
@@ -153,8 +156,6 @@ function ExploreScene({ active }: { active: boolean }) {
 
 /* ---------------- Scene 3 : Create (machine a ecrire) ---------------- */
 
-const CAPTION = "Golden hour never misses ☀️ #weetalk";
-
 function CreateScene({
   active,
   reduced,
@@ -162,15 +163,17 @@ function CreateScene({
   active: boolean;
   reduced: boolean;
 }) {
-  const [n, setN] = useState(reduced ? CAPTION.length : 0);
+  const t = useTranslations("landing.phone");
+  const caption = t("caption");
+  const [n, setN] = useState(reduced ? caption.length : 0);
 
   useEffect(() => {
     if (!active) {
-      setN(reduced ? CAPTION.length : 0);
+      setN(reduced ? caption.length : 0);
       return;
     }
     if (reduced) {
-      setN(CAPTION.length);
+      setN(caption.length);
       return;
     }
     setN(0);
@@ -178,24 +181,24 @@ function CreateScene({
     const id = setInterval(() => {
       i += 1;
       setN(i);
-      if (i >= CAPTION.length) clearInterval(id);
+      if (i >= caption.length) clearInterval(id);
     }, 55);
     return () => clearInterval(id);
-  }, [active, reduced]);
+  }, [active, reduced, caption]);
 
   return (
     <div className="flex h-full flex-col px-4 py-3">
       {/* Header modale */}
       <div className="flex items-center justify-between">
         <span className="font-head text-base font-extrabold text-brown">
-          New post
+          {t("newPost")}
         </span>
         <X className="size-4 text-brown-sec" />
       </div>
 
       {/* Caption */}
       <div className="mt-3 min-h-12 rounded-xl bg-cream px-3 py-2 text-sm text-brown">
-        {CAPTION.slice(0, n)}
+        {caption.slice(0, n)}
         <span className="caret ml-0.5 inline-block h-4 w-px translate-y-0.5 bg-gold" />
       </div>
 
@@ -209,7 +212,7 @@ function CreateScene({
         <MapPin className="size-5" />
         <Sparkle className="size-5" />
         <span className="ml-auto rounded-full bg-gold px-4 py-1.5 text-xs font-semibold text-white">
-          Post
+          {t("post")}
         </span>
       </div>
     </div>
@@ -221,6 +224,8 @@ function CreateScene({
 export function PhoneDemo() {
   const reduced = useReducedMotion();
   const [scene, setScene] = useState(0);
+  const t = useTranslations("landing.phone");
+  const sceneLabels = [t("sceneHome"), t("sceneExplore"), t("sceneCreate")];
 
   useEffect(() => {
     if (reduced) {
@@ -228,7 +233,7 @@ export function PhoneDemo() {
       return;
     }
     const id = setInterval(
-      () => setScene((s) => (s + 1) % SCENES.length),
+      () => setScene((s) => (s + 1) % SCENE_COUNT),
       SCENE_MS,
     );
     return () => clearInterval(id);
@@ -270,9 +275,9 @@ export function PhoneDemo() {
           <span className="text-xs font-semibold uppercase tracking-wide">
             Rec
           </span>
-          <span className="text-xs text-white/70">{SCENES[scene]}</span>
+          <span className="text-xs text-white/70">{sceneLabels[scene]}</span>
           <span className="ml-1 flex items-center gap-1">
-            {SCENES.map((_, i) => (
+            {sceneLabels.map((_, i) => (
               <span
                 key={i}
                 className={`h-1 rounded-full transition-all duration-500 ${

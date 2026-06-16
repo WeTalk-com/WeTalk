@@ -1,14 +1,21 @@
-import { CreateModalProvider } from "@/app/_components/create/create-modal-provider";
-import { LeftSidebar } from "@/app/_components/layout/left-sidebar";
-import { MobileNav } from "@/app/_components/layout/mobile-nav";
+import { getCurrentUser } from "@/lib/api";
+import { CreateModalProvider } from "@/components/create/create-modal-provider";
+import { LeftSidebar } from "@/components/layout/left-sidebar";
+import { MobileNav } from "@/components/layout/mobile-nav";
 
 /** Shell de l'app connectee : sidebar + zone centrale + nav mobile + modale Create. */
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const user = await getCurrentUser();
+
   return (
-    <CreateModalProvider>
+    <CreateModalProvider user={user}>
       <div className="min-h-dvh bg-canvas">
         <div className="mx-auto flex w-full max-w-[1240px]">
-          <LeftSidebar />
+          <LeftSidebar user={user} />
           {children}
         </div>
         <MobileNav />

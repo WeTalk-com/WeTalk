@@ -1,0 +1,199 @@
+{
+  "metadata": {
+    "rootTitle": "WeTalk",
+    "rootDescription": "The light, warm social network.",
+    "landingTitle": "WeTalk — The warm side of social",
+    "landingDescription": "Share your golden hours, follow people you actually like, and talk slower. WeTalk is the feed that feels good to come back to.",
+    "landingOgDescription": "A calmer, warmer photo network. Follow fewer, talk more.",
+    "home": "Home · WeTalk",
+    "explore": "Explore · WeTalk",
+    "notifications": "Notifications · WeTalk",
+    "profile": "Profile · WeTalk",
+    "settings": "Settings · WeTalk",
+    "login": "Log in · WeTalk",
+    "loginDescription": "Log in or create your WeTalk account."
+  },
+  "nav": {
+    "home": "Home",
+    "explore": "Explore",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "create": "Create",
+    "accountMenu": "Account menu",
+    "brandHome": "WeTalk home",
+    "primary": "Primary navigation"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Now live · invite-only beta",
+      "title": "The warm side of social.",
+      "highlightWord": "warm",
+      "paragraph": "Share your golden hours, follow people you actually like, and talk slower. WeTalk is the feed that feels good to come back to.",
+      "ctaCreate": "Create your account →"
+    },
+    "stats": {
+      "creators": "creators",
+      "goldenHours": "golden hours",
+      "comeBackDaily": "come back daily"
+    },
+    "marquee": {
+      "heading": "Loved by warm-light people everywhere"
+    },
+    "features": {
+      "visualTitle": "Made for visual stories",
+      "visualText": "Full-bleed photo posts with warm-tone presets built in.",
+      "discoveryTitle": "A calmer discovery",
+      "discoveryText": "No doomscroll. Curated by people, sorted by warmth.",
+      "connectionTitle": "Real connection",
+      "connectionText": "Follow fewer, talk more. Comments that feel like a coffee.",
+      "ctaHeading": "Come for the light. Stay for the people.",
+      "getStarted": "Get started"
+    },
+    "phone": {
+      "sceneHome": "Home feed",
+      "sceneExplore": "Explore",
+      "sceneCreate": "Create",
+      "rec": "Rec",
+      "likes": "likes",
+      "newPost": "New post",
+      "chipAll": "All",
+      "chipPhoto": "Photo",
+      "chipTravel": "Travel",
+      "caption": "Golden hour never misses ☀️ #wetalk",
+      "post": "Post"
+    }
+  },
+  "auth": {
+    "subtitle": "Talk warmer · Share slower",
+    "backToLogin": "Back to log in",
+    "toggleLogin": "Log in",
+    "toggleSignup": "Sign up",
+    "methodEmail": "Email",
+    "methodPhone": "Phone",
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Log in to pick up where you left off.",
+    "loginCta": "Log in",
+    "signupTitle": "Create your account",
+    "signupSubtitle": "Join the warm side of the internet.",
+    "signupCta": "Create account",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter your email and we'll send you a link to get back in.",
+    "forgotCta": "Send reset link",
+    "nameLabel": "Full name",
+    "namePlaceholder": "Jane Doe",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "+33 6 12 34 56 78",
+    "passwordLabel": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "footerLoginPrompt": "New to WeTalk?",
+    "footerCreateAccount": "Create an account",
+    "footerSignupPrompt": "Already have an account?",
+    "footerLoginLink": "Log in",
+    "footerForgotPrompt": "Remembered it?",
+    "footerBackLink": "Back to log in",
+    "legal": "By continuing you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
+  },
+  "app": {
+    "topBar": {
+      "searchPlaceholder": "Search WeTalk",
+      "aiSuggestions": "AI suggestions"
+    },
+    "home": {
+      "title": "Home",
+      "tabForYou": "For you",
+      "tabFollowing": "Following"
+    },
+    "composer": {
+      "placeholder": "Share something warm, {name}…",
+      "ariaCreate": "Create a post",
+      "addImage": "Add an image",
+      "post": "Post"
+    },
+    "explore": {
+      "title": "Explore",
+      "searchPlaceholder": "Search golden hours, people, tags…",
+      "catAll": "All",
+      "catPhoto": "Photo",
+      "catTravel": "Travel",
+      "catDesign": "Design",
+      "catFilm": "Film",
+      "catFood": "Food"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "tabAll": "All",
+      "tabMentions": "Mentions",
+      "actionLike": "liked your post",
+      "actionComment": "commented on your post",
+      "actionFollow": "started following you",
+      "actionMention": "mentioned you in a post"
+    },
+    "profile": {
+      "editProfile": "Edit profile",
+      "statPosts": "Posts",
+      "statFollowers": "Followers",
+      "statFollowing": "Following",
+      "tabPosts": "Posts",
+      "tabMedia": "Media",
+      "tabLikes": "Likes"
+    },
+    "rightRail": {
+      "whoToFollow": "Who to follow",
+      "trending": "Trending",
+      "follow": "Follow",
+      "linkAbout": "About",
+      "linkHelp": "Help",
+      "linkTerms": "Terms",
+      "linkPrivacy": "Privacy",
+      "copyright": "© 2026 WeTalk"
+    },
+    "post": {
+      "image": "post image · {ratio}",
+      "more": "More options",
+      "like": "Like",
+      "comment": "Comment",
+      "share": "Share",
+      "save": "Save"
+    },
+    "create": {
+      "title": "New post",
+      "placeholder": "Share something warm…",
+      "addPhoto": "Add a photo",
+      "addImage": "Add image",
+      "addEmoji": "Add emoji",
+      "addLocation": "Add location",
+      "enhance": "Enhance",
+      "post": "Post",
+      "close": "Close"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "languageLabel": "Language",
+    "languageDescription": "Choose the interface language.",
+    "languageFr": "Français",
+    "languageEn": "English",
+    "themeLabel": "Theme",
+    "themeDescription": "Customize how WeTalk looks."
+  },
+  "theme": {
+    "changeTheme": "Change theme",
+    "amber": "Amber",
+    "rose": "Rose",
+    "dark": "Dark"
+  },
+  "errors": {
+    "notFoundLabel": "NOT FOUND",
+    "notFoundMessage": "The warm corner you're looking for doesn't exist (yet).",
+    "notFoundCta": "Back home",
+    "serverErrorLabel": "ERROR",
+    "serverErrorMessage": "An unexpected error occurred. Try again in a moment.",
+    "serverErrorCta": "Try again"
+  }
+}

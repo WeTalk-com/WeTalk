@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 const CREATORS = [
   "Maya",
   "Theo",
@@ -15,10 +17,12 @@ const FADE_MASK =
   "linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)";
 
 export function CreatorsMarquee() {
+  const t = useTranslations("landing.marquee");
+
   return (
     <section className="border-y border-border bg-cream py-12">
       <p className="text-center text-xs font-semibold uppercase tracking-[2px] text-brown-sec">
-        Loved by warm-light people everywhere
+        {t("heading")}
       </p>
       <div
         className="mt-6 overflow-hidden"

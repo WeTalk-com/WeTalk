@@ -1,5 +1,5 @@
 import { Heart } from "lucide-react";
-import type { ExploreTile as Tile } from "@/lib/mock-data";
+import type { ExploreTile as Tile } from "@/lib/types";
 
 /** Tuile de la grille Explore (placeholder raye + overlay tag/likes). */
 export function ExploreTile({ tile }: { tile: Tile }) {

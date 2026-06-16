@@ -38,21 +38,30 @@ npm run dev -w web     # http://localhost:3000
 ## Structure
 
 ```
-app/
-├─ globals.css            # design tokens (couleurs, ombres, fonts, animations)
-├─ layout.tsx             # polices + metadata racine
-├─ page.tsx               # / (landing, shell serveur + metadata)
-├─ home/page.tsx          # /home
-├─ (auth)/login/page.tsx  # /login
-├─ error.tsx · not-found.tsx
-└─ _components/
-   ├─ ui/button.tsx       # bouton de marque reutilisable
-   ├─ home/               # sidebar, rail, composer, tabs, mobile-nav
-   ├─ landing/            # landing, phone-demo, hooks, icons
-   ├─ avatar · post-card · post-actions
-lib/mock-data.ts          # donnees factices (design-only)
+app/                          # routing uniquement (App Router)
+├─ globals.css                # design tokens (couleurs, ombres, fonts, animations)
+├─ not-found.tsx              # 404 racine (hors locale, filet de securite)
+└─ [locale]/                  # segment de langue (fr | en)
+   ├─ layout.tsx              # provider i18n + polices + metadata
+   ├─ page.tsx                # / → redirige vers /welcome
+   ├─ welcome/page.tsx        # /welcome (landing publique)
+   ├─ (auth)/login/page.tsx   # /login
+   ├─ (app)/                  # shell connecte (sidebar + nav mobile)
+   │  ├─ layout.tsx
+   │  └─ home · explore · notifications · profile · settings
+   ├─ [...rest]/page.tsx      # catch-all → 404 localise
+   └─ error.tsx · not-found.tsx
+components/                   # composants UI, groupes par domaine
+├─ ui/                        # primitives (button, card, avatar, pill-tabs…)
+├─ icons/                     # brand · demo · form
+├─ layout/ home/ post/ explore/ notifications/
+├─ create/ settings/ theme/ auth/ landing/
+i18n/                         # routing · navigation · request (next-intl)
+messages/                     # fr.json · en.json (textes de l'interface)
+lib/                          # types.ts · fonts.ts · mock-data.ts
+proxy.ts                      # middleware i18n (prefixe les URLs par locale)
 ```
 
-> Données encore mockées (`lib/mock-data.ts`) — le branchement API arrivera avec le back-end.
+> Données encore mockées (`lib/mock-data.ts`, types dans `lib/types.ts`) — le branchement API arrivera avec le back-end.
 
-Import alias : `@/*` → racine de `apps/web` (ex. `@/lib/mock-data`).
+Import alias : `@/*` → racine de `apps/web` (ex. `@/components/ui/button`, `@/lib/types`).

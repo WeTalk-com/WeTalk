@@ -1,14 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { exploreCategories } from "@/lib/mock-data";
+import { useTranslations } from "next-intl";
+
+const CATEGORIES = [
+  "catAll",
+  "catPhoto",
+  "catTravel",
+  "catDesign",
+  "catFilm",
+  "catFood",
+] as const;
 
 export function ExploreFilters() {
-  const [active, setActive] = useState<string>(exploreCategories[0]);
+  const t = useTranslations("app.explore");
+  const [active, setActive] = useState<(typeof CATEGORIES)[number]>("catAll");
 
   return (
     <div className="mt-4 flex flex-wrap gap-2">
-      {exploreCategories.map((c) => {
+      {CATEGORIES.map((c) => {
         const isActive = c === active;
         return (
           <button
@@ -22,7 +32,7 @@ export function ExploreFilters() {
                 : "bg-cream text-brown-sec hover:text-brown"
             }`}
           >
-            {c}
+            {t(c)}
           </button>
         );
       })}

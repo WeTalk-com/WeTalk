@@ -1,5 +1,5 @@
 import { Avatar } from "./avatar";
-import { VerifiedBadge } from "./icons";
+import { VerifiedBadge } from "../icons/brand";
 
 type ChipUser = {
   name: string;

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Field } from "./field";
+import { useTranslations } from "next-intl";
+import { Field } from "@/components/auth/field";
 import {
   MailIcon,
   PhoneIcon,
@@ -11,31 +12,13 @@ import {
   EyeOffIcon,
   CheckIcon,
   ArrowLeftIcon,
-} from "./icons";
-import { GoogleIcon } from "@/app/_components/ui/icons";
+} from "@/components/icons/form";
 
 type Mode = "login" | "signup" | "forgot";
 type Method = "email" | "phone";
 
-const COPY: Record<Mode, { title: string; subtitle: string; cta: string }> = {
-  login: {
-    title: "Welcome back",
-    subtitle: "Log in to pick up where you left off.",
-    cta: "Log in",
-  },
-  signup: {
-    title: "Create your account",
-    subtitle: "Join the warm side of the internet.",
-    cta: "Create account",
-  },
-  forgot: {
-    title: "Reset your password",
-    subtitle: "Enter your email and we'll send you a link to get back in.",
-    cta: "Send reset link",
-  },
-};
-
 export default function LoginPage() {
+  const t = useTranslations("auth");
   const [mode, setMode] = useState<Mode>("login");
   const [method, setMethod] = useState<Method>("email");
   const [showPassword, setShowPassword] = useState(false);
@@ -50,8 +33,23 @@ export default function LoginPage() {
   const setField = (key: keyof typeof form) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
 
-  const copy = COPY[mode];
-  const showSocials = mode !== "forgot";
+  const copy = {
+    login: {
+      title: t("loginTitle"),
+      subtitle: t("loginSubtitle"),
+      cta: t("loginCta"),
+    },
+    signup: {
+      title: t("signupTitle"),
+      subtitle: t("signupSubtitle"),
+      cta: t("signupCta"),
+    },
+    forgot: {
+      title: t("forgotTitle"),
+      subtitle: t("forgotSubtitle"),
+      cta: t("forgotCta"),
+    },
+  }[mode];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,10 +68,10 @@ export default function LoginPage() {
       {/* En-tete */}
       <header className="relative z-10 mb-6 text-center">
         <h1 className="font-head text-[40px] font-extrabold italic leading-none text-brown">
-          WeeTalk
+          WeTalk
         </h1>
         <p className="mt-2 text-xs uppercase tracking-[1.6px] text-brown-sec">
-          Talk warmer · Share slower
+          {t("subtitle")}
         </p>
       </header>
 
@@ -87,7 +85,7 @@ export default function LoginPage() {
             className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-brown-sec transition-colors hover:text-brown"
           >
             <ArrowLeftIcon className="size-4" />
-            Back to log in
+            {t("backToLogin")}
           </button>
         ) : (
           <div className="mb-6 flex rounded-[13px] bg-cream p-1">
@@ -102,7 +100,7 @@ export default function LoginPage() {
                     : "text-brown-sec"
                 }`}
               >
-                {m === "login" ? "Log in" : "Sign up"}
+                {m === "login" ? t("toggleLogin") : t("toggleSignup")}
               </button>
             ))}
           </div>
@@ -134,7 +132,7 @@ export default function LoginPage() {
                   ) : (
                     <PhoneIcon className="size-4" />
                   )}
-                  {mt === "email" ? "Email" : "Phone"}
+                  {mt === "email" ? t("methodEmail") : t("methodPhone")}
                 </button>
               ))}
             </div>
@@ -145,10 +143,10 @@ export default function LoginPage() {
             <Field
               id="name"
               name="name"
-              label="Full name"
+              label={t("nameLabel")}
               value={form.name}
               onChange={setField("name")}
-              placeholder="Jane Doe"
+              placeholder={t("namePlaceholder")}
               autoComplete="name"
               icon={<UserIcon />}
             />
@@ -160,10 +158,10 @@ export default function LoginPage() {
               id="email"
               name="email"
               type="email"
-              label="Email"
+              label={t("emailLabel")}
               value={form.email}
               onChange={setField("email")}
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               autoComplete="email"
               icon={<MailIcon />}
             />
@@ -172,10 +170,10 @@ export default function LoginPage() {
               id="phone"
               name="phone"
               type="tel"
-              label="Phone"
+              label={t("phoneLabel")}
               value={form.phone}
               onChange={setField("phone")}
-              placeholder="+33 6 12 34 56 78"
+              placeholder={t("phonePlaceholder")}
               autoComplete="tel"
               icon={<PhoneIcon />}
             />
@@ -187,7 +185,7 @@ export default function LoginPage() {
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
-              label="Password"
+              label={t("passwordLabel")}
               value={form.password}
               onChange={setField("password")}
               placeholder="••••••••"
@@ -199,7 +197,9 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={
+                    showPassword ? t("hidePassword") : t("showPassword")
+                  }
                   className="shrink-0 text-placeholder transition-colors hover:text-gold"
                 >
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -226,14 +226,14 @@ export default function LoginPage() {
                 >
                   {remember && <CheckIcon className="size-3" />}
                 </span>
-                Remember me
+                {t("rememberMe")}
               </button>
               <button
                 type="button"
                 onClick={() => setMode("forgot")}
                 className="text-sm font-medium text-gold hover:underline"
               >
-                Forgot password?
+                {t("forgotPassword")}
               </button>
             </div>
           )}
@@ -247,69 +247,41 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Separateur + socials */}
-        {showSocials && (
-          <>
-            <div className="my-5 flex items-center gap-3 text-xs text-brown-sec">
-              <span className="h-px flex-1 bg-border" />
-              or continue with
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="flex h-[50px] items-center justify-center gap-2 rounded-field border border-border bg-card font-medium text-brown transition-colors hover:bg-cream"
-              >
-                <GoogleIcon />
-                Google
-              </button>
-              <button
-                type="button"
-                onClick={() => setMethod("phone")}
-                className="flex h-[50px] items-center justify-center gap-2 rounded-field border border-border bg-card font-medium text-brown transition-colors hover:bg-cream"
-              >
-                <PhoneIcon />
-                Phone
-              </button>
-            </div>
-          </>
-        )}
-
         {/* Footer bascule */}
         <p className="mt-6 text-center text-sm text-brown-sec">
           {mode === "login" && (
             <>
-              New to WeeTalk?{" "}
+              {t("footerLoginPrompt")}{" "}
               <button
                 type="button"
                 onClick={() => setMode("signup")}
                 className="font-semibold text-gold hover:underline"
               >
-                Create an account
+                {t("footerCreateAccount")}
               </button>
             </>
           )}
           {mode === "signup" && (
             <>
-              Already have an account?{" "}
+              {t("footerSignupPrompt")}{" "}
               <button
                 type="button"
                 onClick={() => setMode("login")}
                 className="font-semibold text-gold hover:underline"
               >
-                Log in
+                {t("footerLoginLink")}
               </button>
             </>
           )}
           {mode === "forgot" && (
             <>
-              Remembered it?{" "}
+              {t("footerForgotPrompt")}{" "}
               <button
                 type="button"
                 onClick={() => setMode("login")}
                 className="font-semibold text-gold hover:underline"
               >
-                Back to log in
+                {t("footerBackLink")}
               </button>
             </>
           )}
@@ -318,15 +290,18 @@ export default function LoginPage() {
 
       {/* Mention legale */}
       <p className="relative z-10 mt-6 max-w-[416px] text-center text-xs text-brown-sec">
-        By continuing you agree to our{" "}
-        <a href="#" className="underline hover:text-brown">
-          Terms
-        </a>{" "}
-        and{" "}
-        <a href="#" className="underline hover:text-brown">
-          Privacy Policy
-        </a>
-        .
+        {t.rich("legal", {
+          terms: (chunks) => (
+            <a href="#" className="underline hover:text-brown">
+              {chunks}
+            </a>
+          ),
+          privacy: (chunks) => (
+            <a href="#" className="underline hover:text-brown">
+              {chunks}
+            </a>
+          ),
+        })}
       </p>
     </main>
   );

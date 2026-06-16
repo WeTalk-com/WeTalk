@@ -1,20 +1,36 @@
 import type { Metadata } from "next";
-import { TopBar } from "@/app/_components/layout/top-bar";
-import { ExploreFilters } from "@/app/_components/explore/explore-filters";
-import { ExploreTile } from "@/app/_components/explore/explore-tile";
-import { exploreTiles } from "@/lib/mock-data";
+import { getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/routing";
+import { getExploreTiles } from "@/lib/api";
+import { TopBar } from "@/components/layout/top-bar";
+import { ExploreFilters } from "@/components/explore/explore-filters";
+import { ExploreTile } from "@/components/explore/explore-tile";
 
-export const metadata: Metadata = {
-  title: "Explore · WeTalk",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({
+    locale: locale as Locale,
+    namespace: "metadata",
+  });
+  return { title: t("explore") };
+}
 
-export default function ExplorePage() {
+export default async function ExplorePage() {
+  const t = await getTranslations("app.explore");
+  const exploreTiles = await getExploreTiles();
+
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-      <TopBar searchPlaceholder="Search golden hours, people, tags…" />
+      <TopBar searchPlaceholder={t("searchPlaceholder")} />
 
       <div className="px-5 pt-4">
-        <h1 className="font-display text-4xl font-bold text-brown">Explore</h1>
+        <h1 className="font-display text-4xl font-bold text-brown">
+          {t("title")}
+        </h1>
         <ExploreFilters />
       </div>
 
