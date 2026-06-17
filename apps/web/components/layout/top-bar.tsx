@@ -8,7 +8,7 @@ export function TopBar({ searchPlaceholder }: { searchPlaceholder?: string }) {
 
   return (
     <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-canvas/80 px-4 py-3 backdrop-blur">
-      <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-brown-sec">
+      <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-brown-sec focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
         <Search className="size-5 shrink-0" />
         <input
           type="search"
