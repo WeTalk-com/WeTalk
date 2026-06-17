@@ -154,7 +154,8 @@
       "statFollowing": "Following",
       "tabPosts": "Posts",
       "tabMedia": "Media",
-      "tabLikes": "Likes"
+      "tabLikes": "Likes",
+      "handleComingSoon": "Profile of @{handle} — coming soon"
     },
     "rightRail": {
       "whoToFollow": "Who to follow",

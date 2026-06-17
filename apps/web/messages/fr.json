@@ -154,7 +154,8 @@
       "statFollowing": "Abonnements",
       "tabPosts": "Posts",
       "tabMedia": "Médias",
-      "tabLikes": "J'aime"
+      "tabLikes": "J'aime",
+      "handleComingSoon": "Profil de @{handle} — bientôt disponible"
     },
     "rightRail": {
       "whoToFollow": "À suivre",
