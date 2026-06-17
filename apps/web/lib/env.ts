@@ -7,7 +7,8 @@ function parseApiUrl(raw: string | undefined): string {
   const trimmed = raw?.trim() ?? "";
   if (!trimmed) return "";
   try {
-    return new URL(trimmed).origin;
+    const url = new URL(trimmed);
+    return (url.origin + url.pathname).replace(/\/$/, "");
   } catch {
     console.warn(`NEXT_PUBLIC_API_URL "${trimmed}" is not a valid URL — falling back to mock mode`);
     return "";
