@@ -16,5 +16,7 @@ export async function getMyPosts(): Promise<Post[]> {
 /** Creation d'un post (maquette : pas de persistance). */
 export async function createPost(input: { text: string }): Promise<void> {
   // TODO(api): await apiFetch("/posts", { method: "POST", body: JSON.stringify(input) });
-  console.log("createPost (mock)", input);
+  if (process.env.NODE_ENV === "development") {
+    console.log("createPost (mock)", input);
+  }
 }
