@@ -4,13 +4,13 @@ import { posts, myPosts } from "@/lib/mock-data";
 /** Fil principal. */
 export async function getPosts(): Promise<Post[]> {
   // TODO(api): return apiFetch<Post[]>("/posts");
-  return posts;
+  return structuredClone(posts);
 }
 
 /** Publications de l'utilisateur courant (page profil). */
 export async function getMyPosts(): Promise<Post[]> {
   // TODO(api): return apiFetch<Post[]>("/me/posts");
-  return myPosts;
+  return structuredClone(myPosts);
 }
 
 /** Creation d'un post (maquette : pas de persistance). */
