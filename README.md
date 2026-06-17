@@ -21,12 +21,58 @@ Description de l'image :
 2. La couche Serveur (Back-end) : Les requêtes du Front passent d'abord par une API Gateway, qui sert de point d'entrée unique et redirige le trafic vers 4 microservices indépendants :
 - User Service (Gestion des utilisateurs)
 - Post Service (Gestion des publications)
-- Profil Service (Gestion des profils)
 - Auth Service (Gestion de l'authentification)
+- Notifications Service (Gestion et envoies des notifications)
 
 3. La couche Données (Database) : Chaque microservice possède sa propre base de données dédiée pour garantir l'indépendance du système :
 - PostgreSQL pour User Service et Auth Service.
-- MongoDB pour Post Service and Profil Service.
+- MongoDB pour Post Service.
+
+### Schéma d'architecture (Mermaid)
+
+```mermaid
+flowchart TB
+    subgraph Client["🖥️ Couche Client (Front-end)"]
+        direction LR
+        U["👤 User"]
+        M["🛡️ Moderator"]
+        A["⚙️ Administrator"]
+        FE["Next.js / React<br/>(Mobile-first, Responsive)"]
+        U --> FE
+        M --> FE
+        A --> FE
+    end
+
+    subgraph Server["⚙️ Couche Serveur (Back-end)"]
+        GW["API Gateway<br/>(Point d'entrée unique · JWT · CORS)"]
+
+        subgraph Services["Microservices (Node.js / Express)"]
+            direction LR
+            AUTH["Auth Service<br/>(Authentification JWT)"]
+            USER["User Service<br/>(Gestion utilisateurs)"]
+            POST["Post Service<br/>(Publications, likes, commentaires, tags)"]
+        end
+
+        GW --> AUTH
+        GW --> USER
+        GW --> POST
+    end
+
+    subgraph Data["🗄️ Couche Données (Database)"]
+        direction LR
+        PG_AUTH[("PostgreSQL<br/>Auth DB")]
+        PG_USER[("PostgreSQL<br/>User DB")]
+        MG_POST[("MongoDB<br/>Post DB")]
+    end
+
+    FE -->|HTTPS / REST · Axios| GW
+
+    AUTH -->|Sequelize| PG_AUTH
+    USER -->|Sequelize| PG_USER
+    POST -->|Mongoose| MG_POST
+```
+
+> Conteneurisation : chaque service (front, gateway, microservices, bases de données) tourne dans son propre conteneur **Docker**, orchestré via `docker-compose`.
 
 ## Technologies à utiliser
 
