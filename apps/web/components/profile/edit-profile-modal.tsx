@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Profile } from "@/lib/types";
@@ -67,7 +67,7 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
     return (v: string) => setForm((prev) => ({ ...prev, [key]: v }));
   }
 
-  function handleClose() {
+  const handleClose = useCallback(() => {
     setOpen(false);
     setForm({
       name: profile.name,
@@ -75,7 +75,7 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
       bio: profile.bio,
       location: profile.location,
     });
-  }
+  }, [profile]);
 
   useEffect(() => {
     if (!open) return;
@@ -84,7 +84,7 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, handleClose]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
