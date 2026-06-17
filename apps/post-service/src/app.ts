@@ -8,10 +8,8 @@ import { postRouter } from "./routes/post.routes.js";
 export function createApp() {
   const app = express();
 
-  // Le service tourne derrière la passerelle : on récupère la vraie IP du client.
   app.set("trust proxy", 1);
 
-  // Autorise les origines configurées, sinon bloque les appels externes en production.
   const corsOptions: CorsOptions = {
     origin:
       env.corsOrigins.length > 0
@@ -25,8 +23,6 @@ export function createApp() {
   app.use(helmet());
   app.use(cors(corsOptions));
   app.use(express.json());
-
-  // Journalise chaque requête une fois la réponse envoyée.
   app.use((req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     res.on("finish", () => {
@@ -47,12 +43,10 @@ export function createApp() {
 
   app.use("/posts", postRouter);
 
-  // Répond aux routes inconnues.
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: "Not found" });
   });
 
-  // Capture les erreurs non gérées.
   app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     logger.error("unhandled error", {
       method: req.method,

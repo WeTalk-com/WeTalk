@@ -3,9 +3,7 @@ import { Schema, model, type InferSchemaType } from "mongoose";
 // Forme d'un post en base.
 const postSchema = new Schema(
   {
-    // Identifiant de l'auteur, repris du token.
     authorId: { type: String, required: true, index: true },
-    // Contenu du message, limité à 280 caractères.
     content: { type: String, required: true, trim: true, maxlength: 280 },
   },
   { timestamps: true },

@@ -11,7 +11,6 @@ declare global {
   }
 }
 
-// Vérifie le token et attache l'utilisateur à la requête.
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {

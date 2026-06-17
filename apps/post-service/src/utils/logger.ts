@@ -5,7 +5,6 @@ const SERVICE = "post-service";
 
 function emit(level: "info" | "warn" | "error", msg: string, meta?: Meta): void {
   const line = JSON.stringify({
-    // meta en premier : les champs fixes ci-dessous ne peuvent pas être écrasés.
     ...meta,
     ts: new Date().toISOString(),
     level,

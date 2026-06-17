@@ -1,12 +1,13 @@
-# Le contexte de build est la racine du dépôt.
+# Build context
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# --- Dépendances et compilation ---
+# Dependencies + build
 FROM base AS builder
-# Copie d'abord les manifestes pour réutiliser le cache.
 COPY package.json package-lock.json ./
 COPY turbo.json ./
+COPY apps/auth-service/package.json ./apps/auth-service/package.json
+COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
@@ -15,7 +16,7 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/packag
 COPY packages/ui/package.json ./packages/ui/package.json
 RUN npm ci
 
-# Code source.
+# Sources
 COPY packages/typescript-config ./packages/typescript-config
 COPY apps/post-service ./apps/post-service
 RUN npm run build --workspace=post-service
@@ -37,6 +38,5 @@ COPY --from=builder /app/apps/post-service/dist ./apps/post-service/dist
 
 EXPOSE 4002
 WORKDIR /app/apps/post-service
-# Abandonne les privilèges root : exécute en utilisateur non-privilégié.
 USER node
 CMD ["node", "dist/index.js"]

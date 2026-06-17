@@ -1,7 +1,6 @@
 import "dotenv/config";
 
 function required(name: string, fallback?: string): string {
-  // Nettoie les espaces ; rejette aussi bien l'absence qu'une valeur vide.
   const value = (process.env[name] ?? fallback)?.trim();
   if (!value) {
     throw new Error(`Missing or empty required env var: ${name}`);
@@ -9,7 +8,7 @@ function required(name: string, fallback?: string): string {
   return value;
 }
 
-// Valide un port : entier dans 1..65535, sinon échec explicite au démarrage.
+// Port Invalidation between 1 and 65535
 function requiredPort(name: string, fallback: number): number {
   const raw = process.env[name];
   if (raw === undefined) return fallback;
@@ -23,21 +22,15 @@ function requiredPort(name: string, fallback: number): number {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: requiredPort("PORT", 4002),
-
-  // Adresse de la base de données des posts.
   mongoUri: required("MONGO_URI", "mongodb://localhost:27017/post_db"),
-
-  // Secret partagé pour vérifier les tokens émis par auth-service.
   jwtAccessSecret: required("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
-
-  // Origines autorisées à appeler le service.
   corsOrigins: (process.env.CORS_ORIGIN ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean),
 } as const;
 
-// Empêche le démarrage en production avec le secret par défaut.
+// Prevents starting in production with the default secret
 if (env.nodeEnv === "production" && env.jwtAccessSecret === "dev-access-secret-change-me") {
   throw new Error("Refusing to start in production with the default JWT secret.");
 }

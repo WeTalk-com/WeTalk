@@ -12,10 +12,8 @@ async function main(): Promise<void> {
     logger.info("post-service listening", { port: env.port, env: env.nodeEnv });
   });
 
-  // Arrête le serveur puis ferme la connexion à la base.
   async function shutdown(signal: string): Promise<void> {
     logger.info("shutting down", { signal });
-    // Attend la fin des requêtes en cours avant de fermer la base.
     await new Promise<void>((resolve, reject) => {
       server.close((err) => (err ? reject(err) : resolve()));
     });
