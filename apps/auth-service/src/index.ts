@@ -3,9 +3,6 @@ import { connectDb, sequelize } from "./config/db.js";
 import { connectRedis, redis } from "./config/redis.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
-import fs from "fs";
-import https from "https";
-import express from "express";
 
 
 async function main(): Promise<void> {

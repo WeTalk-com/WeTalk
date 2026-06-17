@@ -52,9 +52,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./certs/auth-service:/app/certs/auth-service:ro
-      - ./certs/ca:/app/certs/ca:ro
     networks:
       - wetalk-net
     expose:
@@ -79,9 +76,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./certs/user-service:/app/certs/user-service:ro
-      - ./certs/ca:/app/certs/ca:ro
     networks:
       - wetalk-net
     expose:
@@ -103,9 +97,6 @@ services:
       - .env
     environment:
       MONGO_URI: ${MONGO_URI_POST}
-    volumes:
-      - ./certs/post-service:/app/certs/post-service:ro
-      - ./certs/ca:/app/certs/ca:ro
     networks:
       - wetalk-net
     expose:
@@ -125,10 +116,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-      # Faut qu'on précise la DB juste ici quand on aura décidé si mongo ou postgre
-    volumes:
-      - ./certs/notification-service:/app/certs/notification-service:ro
-      - ./certs/ca:/app/certs/ca:ro
     networks:
       - wetalk-net
     expose:
@@ -165,11 +152,8 @@ services:
       dockerfile: apps/gateway/Dockerfile
     container_name: wetalk-gateway
     restart: unless-stopped
-    volumes:
-      - ./certs:/etc/nginx/certs:ro
     ports:
       - "80:80"
-      - "443:443"
     depends_on:
       auth-service:
         condition: service_healthy

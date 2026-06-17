@@ -1,30 +1,15 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
+import { openApiSpec } from "./config/openapi.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { logger } from "./utils/logger.js";
-import fs from "fs";
-import https from "https";
 
 
 export function createApp() {
   const app = express();
-
-  const SERVICE_NAME = "auth-service";
-  const PORT = 4000;     
-  
-  const httpsOptions = {
-    key:  fs.readFileSync(`/app/certs/${SERVICE_NAME}/${SERVICE_NAME}.key`),
-    cert: fs.readFileSync(`/app/certs/${SERVICE_NAME}/${SERVICE_NAME}.crt`),
-    ca:   fs.readFileSync("/app/certs/ca/ca.crt"),
-    requestCert: true,
-    rejectUnauthorized: true,
-  };
-  
-  https.createServer(httpsOptions, app).listen(PORT, () => {
-    console.log(`[${SERVICE_NAME}] HTTPS server running on port ${PORT}`);
-  });
 
   // Service derrière la gateway Nginx : fait confiance au 1er proxy pour que
   // req.ip = vraie IP client (X-Forwarded-For), nécessaire au rate-limiting.
@@ -70,6 +55,11 @@ export function createApp() {
   });
 
   app.use("/auth", authRouter);
+
+  // Swagger UI — accessible uniquement en développement
+  if (env.nodeEnv === "development") {
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+  }
 
   // 404
   app.use((_req: Request, res: Response) => {

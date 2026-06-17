@@ -2,8 +2,13 @@ import type { Request, Response } from "express";
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { Op, UniqueConstraintError } from "sequelize";
-import { z } from "zod";
 import { User, type UserRole } from "../models/user.js";
+import {
+  registerSchema,
+  adminCreateSchema,
+  loginSchema,
+  refreshSchema,
+} from "../schemas/auth.schemas.js";
 import {
   signAccessToken,
   signRefreshToken,
@@ -17,26 +22,6 @@ import {
 import { logger } from "../utils/logger.js";
 
 const SALT_ROUNDS = 12;
-
-const registerSchema = z.object({
-  username: z.string().min(3).max(50),
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
-});
-
-// Un admin peut imposer le rôle à la création (Fx1, cf. matrice de permissions).
-const adminCreateSchema = registerSchema.extend({
-  role: z.enum(["user", "moderator", "admin"]).optional(),
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
-
-const refreshSchema = z.object({
-  refreshToken: z.string().min(1),
-});
 
 function publicUser(user: User) {
   return {
