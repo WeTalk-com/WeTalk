@@ -17,10 +17,10 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({
-    locale: locale as Locale,
-    namespace: "metadata",
-  });
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+  const t = await getTranslations({ locale, namespace: "metadata" });
   return {
     title: t("rootTitle"),
     description: t("rootDescription"),
