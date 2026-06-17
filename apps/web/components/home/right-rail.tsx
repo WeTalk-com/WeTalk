@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { User, TrendingTopic } from "@/lib/types";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
@@ -41,7 +42,9 @@ export function RightRail({
         <ul className="flex flex-col gap-4">
           {users.map((u) => (
             <li key={u.id} className="flex items-center gap-3">
-              <UserChip user={u} className="min-w-0 flex-1" />
+              <Link href="/profile" className="min-w-0 flex-1">
+                <UserChip user={u} />
+              </Link>
               <Button size="sm">{t("follow")}</Button>
             </li>
           ))}

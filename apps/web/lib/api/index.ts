@@ -3,3 +3,4 @@ export * from "./posts";
 export * from "./users";
 export * from "./notifications";
 export * from "./explore";
+export * from "./messages";

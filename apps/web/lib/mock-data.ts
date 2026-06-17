@@ -10,6 +10,7 @@ import type {
   Profile,
   ExploreTile,
   Notification,
+  Conversation,
 } from "./types";
 
 export const currentUser: User = {
@@ -130,6 +131,54 @@ export const exploreTiles: ExploreTile[] = [
   { id: "e7", tag: "#coffee", height: 220, likes: "6.0K" },
   { id: "e8", tag: "#wetalk", height: 260, likes: "31.9K" },
   { id: "e9", tag: "#cozy", height: 200, likes: "2.4K" },
+];
+
+/* -------------------------- Notifications -------------------------- */
+
+/* ---------------------------- Messages ---------------------------- */
+
+export const conversations: Conversation[] = [
+  {
+    id: "c1",
+    user: { id: "u1", name: "Maya Rivera", handle: "mayarivera", initial: "M", verified: true },
+    lastMessage: "tes photos sont incroyables !",
+    timeAgo: "12m",
+    unread: 2,
+    messages: [
+      { id: "m1", text: "Hey ! J'ai vu ton dernier post, vraiment magnifique.", timeAgo: "1h", mine: false },
+      { id: "m2", text: "Merci beaucoup ! C'était un beau coucher de soleil.", timeAgo: "55m", mine: true },
+      { id: "m3", text: "tes photos sont incroyables !", timeAgo: "12m", mine: false },
+    ],
+  },
+  {
+    id: "c2",
+    user: { id: "u2", name: "Theo Lang", handle: "theolang", initial: "T", verified: true },
+    lastMessage: "Oui bien sûr, on se retrouve vendredi ?",
+    timeAgo: "2h",
+    messages: [
+      { id: "m4", text: "Salut ! Tu veux qu'on tourne quelque chose ensemble cette semaine ?", timeAgo: "3h", mine: false },
+      { id: "m5", text: "Oui bien sûr, on se retrouve vendredi ?", timeAgo: "2h", mine: true },
+    ],
+  },
+  {
+    id: "c3",
+    user: { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" },
+    lastMessage: "J'adore cette palette de couleurs 🎨",
+    timeAgo: "1d",
+    messages: [
+      { id: "m6", text: "J'adore cette palette de couleurs 🎨", timeAgo: "1d", mine: false },
+    ],
+  },
+  {
+    id: "c4",
+    user: { id: "w1", name: "Jonas Beck", handle: "jonasbeck", initial: "J" },
+    lastMessage: "Merci pour le follow !",
+    timeAgo: "2d",
+    messages: [
+      { id: "m7", text: "Merci pour le follow !", timeAgo: "2d", mine: false },
+      { id: "m8", text: "Avec plaisir, ton feed est superbe.", timeAgo: "2d", mine: true },
+    ],
+  },
 ];
 
 /* -------------------------- Notifications -------------------------- */

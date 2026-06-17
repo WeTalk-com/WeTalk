@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { getNotifications } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
-import { PillTabs } from "@/components/ui/pill-tabs";
 import { NotificationItem } from "@/components/notifications/notification-item";
 
 export async function generateMetadata({
@@ -27,11 +26,10 @@ export default async function NotificationsPage() {
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
       <TopBar />
 
-      <div className="flex items-center justify-between gap-4 px-5 pb-4 pt-4">
+      <div className="px-5 pb-4 pt-4">
         <h1 className="font-display text-4xl font-bold text-brown">
           {t("title")}
         </h1>
-        <PillTabs tabs={[t("tabAll"), t("tabMentions")]} />
       </div>
 
       <ul className="pb-24 lg:pb-10">

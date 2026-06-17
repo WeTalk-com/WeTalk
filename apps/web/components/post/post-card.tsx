@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { MoreHorizontal, ImageIcon } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Card } from "../ui/card";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
@@ -27,11 +28,12 @@ export function PostCard({ post }: { post: Post }) {
     <Card as="article" className="p-4">
       {/* En-tete */}
       <div className="flex items-center gap-3">
-        <UserChip
-          user={author}
-          subtitle={`@${author.handle} · ${post.timeAgo}`}
-          className="min-w-0 flex-1"
-        />
+        <Link href="/profile" className="min-w-0 flex-1">
+          <UserChip
+            user={author}
+            subtitle={`@${author.handle} · ${post.timeAgo}`}
+          />
+        </Link>
         <button
           type="button"
           aria-label={t("more")}

@@ -8,6 +8,7 @@ import {
   Bell,
   User,
   Settings,
+  MessageSquare,
   MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
@@ -15,7 +16,7 @@ import type { User as UserModel } from "@/lib/types";
 import { UserChip } from "../ui/user-chip";
 import { CreateButton } from "../create/create-button";
 
-type NavKey = "home" | "explore" | "notifications" | "profile" | "settings";
+type NavKey = "home" | "explore" | "notifications" | "messages" | "profile" | "settings";
 
 type NavItem = {
   key: NavKey;
@@ -28,6 +29,7 @@ const NAV: NavItem[] = [
   { key: "home", Icon: Home, href: "/home" },
   { key: "explore", Icon: Compass, href: "/explore" },
   { key: "notifications", Icon: Bell, href: "/notifications", badge: 3 },
+  { key: "messages", Icon: MessageSquare, href: "/messages" },
   { key: "profile", Icon: User, href: "/profile" },
   { key: "settings", Icon: Settings, href: "/settings" },
 ];

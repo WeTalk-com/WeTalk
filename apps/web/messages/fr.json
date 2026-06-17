@@ -10,6 +10,7 @@
     "notifications": "Notifications · WeTalk",
     "profile": "Profil · WeTalk",
     "settings": "Paramètres · WeTalk",
+    "messages": "Messages · WeTalk",
     "login": "Connexion · WeTalk",
     "loginDescription": "Connectez-vous ou créez votre compte WeTalk."
   },
@@ -22,7 +23,8 @@
     "create": "Créer",
     "accountMenu": "Menu du compte",
     "brandHome": "Accueil WeTalk",
-    "primary": "Navigation principale"
+    "primary": "Navigation principale",
+    "messages": "Messages"
   },
   "landing": {
     "hero": {
@@ -118,6 +120,10 @@
     "explore": {
       "title": "Explorer",
       "searchPlaceholder": "Rechercher golden hours, personnes, tags…",
+      "tabTrending": "Tendances",
+      "tabForYou": "Pour vous",
+      "tabPeople": "Personnes",
+      "trending": "Tendances",
       "catAll": "Tous",
       "catPhoto": "Photo",
       "catTravel": "Voyage",
@@ -136,6 +142,13 @@
     },
     "profile": {
       "editProfile": "Modifier le profil",
+      "editProfileTitle": "Modifier le profil",
+      "editName": "Nom",
+      "editHandle": "Identifiant",
+      "editBio": "Bio",
+      "editLocation": "Lieu",
+      "editSave": "Enregistrer",
+      "editCancel": "Annuler",
       "statPosts": "Posts",
       "statFollowers": "Abonnés",
       "statFollowing": "Abonnements",
@@ -160,6 +173,14 @@
       "comment": "Commenter",
       "share": "Partager",
       "save": "Enregistrer"
+    },
+    "messages": {
+      "title": "Messages",
+      "noConversationSelected": "Aucune conversation sélectionnée",
+      "selectConversation": "Choisissez une conversation pour commencer à discuter.",
+      "typeMessage": "Écrivez un message…",
+      "send": "Envoyer",
+      "back": "Retour"
     },
     "create": {
       "title": "Nouveau post",

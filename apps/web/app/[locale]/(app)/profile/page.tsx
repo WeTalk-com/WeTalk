@@ -5,10 +5,10 @@ import { getProfile, getMyPosts } from "@/lib/api";
 import { MapPin, CalendarDays } from "lucide-react";
 import { TopBar } from "@/components/layout/top-bar";
 import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { VerifiedBadge } from "@/components/icons/brand";
 import { PostCard } from "@/components/post/post-card";
+import { EditProfileButton } from "@/components/profile/edit-profile-modal";
 
 export async function generateMetadata({
   params,
@@ -47,9 +47,7 @@ export default async function ProfilePage() {
           <span className="inline-block rounded-full ring-4 ring-canvas">
             <Avatar initial={p.initial} solid size={96} />
           </span>
-          <Button variant="outline" size="sm" className="mb-1">
-            {t("editProfile")}
-          </Button>
+          <EditProfileButton profile={p} />
         </div>
 
         <div className="mt-3">

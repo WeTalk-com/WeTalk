@@ -62,3 +62,19 @@ export type Notification = {
   timeAgo: string;
   read?: boolean;
 };
+
+export type Message = {
+  id: string;
+  text: string;
+  timeAgo: string;
+  mine: boolean;
+};
+
+export type Conversation = {
+  id: string;
+  user: User;
+  lastMessage: string;
+  timeAgo: string;
+  unread?: number;
+  messages: Message[];
+};

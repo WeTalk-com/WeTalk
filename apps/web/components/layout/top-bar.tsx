@@ -1,9 +1,7 @@
 import { useTranslations } from "next-intl";
-import { Search, Sparkles } from "lucide-react";
-import { IconButton } from "../ui/icon-button";
-import { ThemeToggle } from "../theme/theme-toggle";
+import { Search } from "lucide-react";
 
-/** Barre superieure de l'app : recherche + actions (sticky). */
+/** Barre superieure de l'app : recherche (sticky). */
 export function TopBar({ searchPlaceholder }: { searchPlaceholder?: string }) {
   const t = useTranslations("app.topBar");
   const placeholder = searchPlaceholder ?? t("searchPlaceholder");
@@ -19,10 +17,6 @@ export function TopBar({ searchPlaceholder }: { searchPlaceholder?: string }) {
           className="min-w-0 flex-1 bg-transparent text-brown outline-none placeholder:text-placeholder"
         />
       </div>
-      <IconButton label={t("aiSuggestions")}>
-        <Sparkles className="size-5" />
-      </IconButton>
-      <ThemeToggle />
     </div>
   );
 }

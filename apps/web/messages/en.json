@@ -10,6 +10,7 @@
     "notifications": "Notifications · WeTalk",
     "profile": "Profile · WeTalk",
     "settings": "Settings · WeTalk",
+    "messages": "Messages · WeTalk",
     "login": "Log in · WeTalk",
     "loginDescription": "Log in or create your WeTalk account."
   },
@@ -22,7 +23,8 @@
     "create": "Create",
     "accountMenu": "Account menu",
     "brandHome": "WeTalk home",
-    "primary": "Primary navigation"
+    "primary": "Primary navigation",
+    "messages": "Messages"
   },
   "landing": {
     "hero": {
@@ -118,6 +120,10 @@
     "explore": {
       "title": "Explore",
       "searchPlaceholder": "Search golden hours, people, tags…",
+      "tabTrending": "Trending",
+      "tabForYou": "For you",
+      "tabPeople": "People",
+      "trending": "Trending",
       "catAll": "All",
       "catPhoto": "Photo",
       "catTravel": "Travel",
@@ -136,6 +142,13 @@
     },
     "profile": {
       "editProfile": "Edit profile",
+      "editProfileTitle": "Edit profile",
+      "editName": "Name",
+      "editHandle": "Username",
+      "editBio": "Bio",
+      "editLocation": "Location",
+      "editSave": "Save",
+      "editCancel": "Cancel",
       "statPosts": "Posts",
       "statFollowers": "Followers",
       "statFollowing": "Following",
@@ -160,6 +173,14 @@
       "comment": "Comment",
       "share": "Share",
       "save": "Save"
+    },
+    "messages": {
+      "title": "Messages",
+      "noConversationSelected": "No conversation selected",
+      "selectConversation": "Choose a conversation to start chatting.",
+      "typeMessage": "Write a message…",
+      "send": "Send",
+      "back": "Back"
     },
     "create": {
       "title": "New post",

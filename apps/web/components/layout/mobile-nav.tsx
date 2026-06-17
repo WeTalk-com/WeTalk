@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Home, Compass, Bell, User } from "lucide-react";
+import { Home, Compass, Bell, User, MessageSquare } from "lucide-react";
 import { CreateButton } from "../create/create-button";
 
 /** Barre de navigation basse, affichee uniquement sous le breakpoint lg. */
@@ -43,6 +43,14 @@ export function MobileNav() {
         className={cls("/notifications")}
       >
         <Bell className="size-6" />
+      </Link>
+      <Link
+        href="/messages"
+        aria-label={t("messages")}
+        aria-current={pathname === "/messages" ? "page" : undefined}
+        className={cls("/messages")}
+      >
+        <MessageSquare className="size-6" />
       </Link>
       <Link
         href="/profile"
