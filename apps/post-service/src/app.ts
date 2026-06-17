@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 import { postRouter } from "./routes/post.routes.js";
+import { commentRouter } from "./routes/comment.routes.js";
 
 export function createApp() {
   const app = express();
@@ -42,6 +43,7 @@ export function createApp() {
   });
 
   app.use("/posts", postRouter);
+  app.use("/comments", commentRouter);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: "Not found" });
