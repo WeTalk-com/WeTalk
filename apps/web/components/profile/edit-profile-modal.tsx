@@ -67,10 +67,20 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
     return (v: string) => setForm((prev) => ({ ...prev, [key]: v }));
   }
 
+  function handleClose() {
+    setOpen(false);
+    setForm({
+      name: profile.name,
+      handle: profile.handle,
+      bio: profile.bio,
+      location: profile.location,
+    });
+  }
+
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") handleClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -90,7 +100,7 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-dark/40 backdrop-blur-sm px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
           <div className="w-full max-w-md rounded-2xl bg-canvas shadow-card">
             {/* Header */}
@@ -101,7 +111,7 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
               <button
                 type="button"
                 aria-label={t("editCancel")}
-                onClick={() => setOpen(false)}
+                onClick={() => handleClose()}
                 className="grid size-8 place-items-center rounded-full text-brown-sec transition-colors hover:bg-gold/10 hover:text-gold"
               >
                 <X className="size-5" />
@@ -118,7 +128,7 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
 
             {/* Actions */}
             <div className="flex justify-end gap-3 border-t border-border px-5 py-4">
-              <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+              <Button variant="outline" size="sm" onClick={() => handleClose()}>
                 {t("editCancel")}
               </Button>
               <Button size="sm" onClick={() => setOpen(false)}>
