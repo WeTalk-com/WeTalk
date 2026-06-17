@@ -45,7 +45,7 @@ export function ExploreContent({
           >
             {label}
             {tab === key && (
-              <span className="absolute bottom-0 left-1/2 h-[3px] w-12 -translate-x-1/2 rounded-full bg-gold" />
+              <span className="absolute bottom-0 left-1/2 h-0.75 w-12 -translate-x-1/2 rounded-full bg-gold" />
             )}
           </button>
         ))}
@@ -101,7 +101,7 @@ export function ExploreContent({
               key={u.id}
               className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0"
             >
-              <Link href="/profile" className="min-w-0 flex-1">
+              <Link href={`/profile/${u.handle}`} className="min-w-0 flex-1">
                 <UserChip user={u} />
               </Link>
               <Button size="sm">{tRail("follow")}</Button>

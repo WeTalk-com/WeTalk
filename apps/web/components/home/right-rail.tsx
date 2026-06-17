@@ -1,9 +1,6 @@
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
-import type { User, TrendingTopic } from "@/lib/types";
+import type { TrendingTopic } from "@/lib/types";
 import { Card } from "../ui/card";
-import { Button } from "../ui/button";
-import { UserChip } from "../ui/user-chip";
 
 function Section({
   title,
@@ -20,13 +17,7 @@ function Section({
   );
 }
 
-export function RightRail({
-  users,
-  topics,
-}: {
-  users: User[];
-  topics: TrendingTopic[];
-}) {
+export function RightRail({ topics }: { topics: TrendingTopic[] }) {
   const t = useTranslations("app.rightRail");
   const footerLinks = [
     t("linkAbout"),
@@ -37,20 +28,6 @@ export function RightRail({
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-[340px] shrink-0 flex-col gap-5 px-4 py-6 lg:flex">
-      {/* Who to follow */}
-      <Section title={t("whoToFollow")}>
-        <ul className="flex flex-col gap-4">
-          {users.map((u) => (
-            <li key={u.id} className="flex items-center gap-3">
-              <Link href="/profile" className="min-w-0 flex-1">
-                <UserChip user={u} />
-              </Link>
-              <Button size="sm">{t("follow")}</Button>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
       {/* Trending */}
       <Section title={t("trending")}>
         <ul className="flex flex-col gap-4">
@@ -65,14 +42,14 @@ export function RightRail({
       </Section>
 
       {/* Footer */}
-      <footer className="px-2 text-sm text-brown-sec">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <footer className="mt-auto px-2 text-xs text-brown-sec">
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
           {footerLinks.map((l, i) => (
-            <span key={l} className="flex items-center gap-2">
+            <span key={l} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
               <a href="#" className="transition-colors hover:text-brown">
                 {l}
               </a>
-              {i < footerLinks.length - 1 && <span>·</span>}
+              {i < footerLinks.length - 1 && <span aria-hidden>·</span>}
             </span>
           ))}
         </p>

@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { Field } from "@/components/auth/field";
 import {
   MailIcon,
-  PhoneIcon,
   LockIcon,
   UserIcon,
   EyeIcon,
@@ -15,18 +14,15 @@ import {
 } from "@/components/icons/form";
 
 type Mode = "login" | "signup" | "forgot";
-type Method = "email" | "phone";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
   const [mode, setMode] = useState<Mode>("login");
-  const [method, setMethod] = useState<Method>("email");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phone: "",
     password: "",
   });
 
@@ -54,7 +50,7 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Maquette : pas de backend
-    console.log("submit", { mode, method, remember, ...form });
+    console.log("submit", { mode, remember, ...form });
   };
 
   return (
@@ -113,31 +109,6 @@ export default function LoginPage() {
         <p className="mt-1 text-brown-sec">{copy.subtitle}</p>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          {/* Sous-toggle Email | Phone (login / signup, methode email) */}
-          {mode !== "forgot" && (
-            <div className="flex rounded-[13px] bg-cream p-1">
-              {(["email", "phone"] as const).map((mt) => (
-                <button
-                  key={mt}
-                  type="button"
-                  onClick={() => setMethod(mt)}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-[10px] py-2 text-sm font-medium transition-all ${
-                    method === mt
-                      ? "bg-card text-gold shadow-[0_2px_6px_rgba(65,36,2,0.08)]"
-                      : "text-brown-sec"
-                  }`}
-                >
-                  {mt === "email" ? (
-                    <MailIcon className="size-4" />
-                  ) : (
-                    <PhoneIcon className="size-4" />
-                  )}
-                  {mt === "email" ? t("methodEmail") : t("methodPhone")}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* Full name (signup) */}
           {mode === "signup" && (
             <Field
@@ -152,32 +123,18 @@ export default function LoginPage() {
             />
           )}
 
-          {/* Email ou Phone */}
-          {method === "email" || mode === "forgot" ? (
-            <Field
-              id="email"
-              name="email"
-              type="email"
-              label={t("emailLabel")}
-              value={form.email}
-              onChange={setField("email")}
-              placeholder={t("emailPlaceholder")}
-              autoComplete="email"
-              icon={<MailIcon />}
-            />
-          ) : (
-            <Field
-              id="phone"
-              name="phone"
-              type="tel"
-              label={t("phoneLabel")}
-              value={form.phone}
-              onChange={setField("phone")}
-              placeholder={t("phonePlaceholder")}
-              autoComplete="tel"
-              icon={<PhoneIcon />}
-            />
-          )}
+          {/* Email */}
+          <Field
+            id="email"
+            name="email"
+            type="email"
+            label={t("emailLabel")}
+            value={form.email}
+            onChange={setField("email")}
+            placeholder={t("emailPlaceholder")}
+            autoComplete="email"
+            icon={<MailIcon />}
+          />
 
           {/* Password (login / signup) */}
           {mode !== "forgot" && (

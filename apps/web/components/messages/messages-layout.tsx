@@ -21,7 +21,7 @@ function ConversationRow({
       type="button"
       onClick={onClick}
       className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card ${
-        active ? "bg-card" : ""
+        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : ""
       }`}
     >
       <div className="relative shrink-0">

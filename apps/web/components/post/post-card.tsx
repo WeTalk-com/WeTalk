@@ -28,7 +28,7 @@ export function PostCard({ post }: { post: Post }) {
     <Card as="article" className="p-4">
       {/* En-tete */}
       <div className="flex items-center gap-3">
-        <Link href="/profile" className="min-w-0 flex-1">
+        <Link href={`/profile/${author.handle}`} className="min-w-0 flex-1">
           <UserChip
             user={author}
             subtitle={`@${author.handle} · ${post.timeAgo}`}
