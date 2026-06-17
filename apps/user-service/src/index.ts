@@ -31,7 +31,8 @@ async function main(): Promise<void> {
 
 main().catch((err) => {
 	logger.error("failed to start user-service", {
-		error: err instanceof Error ? err.message : String(err),
+		// error: err instanceof Error ? err.message : String(err),
+		error: JSON.stringify(err),
 	});
 	process.exit(1);
 });

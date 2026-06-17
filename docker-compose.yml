@@ -26,7 +26,7 @@ services:
     networks:
       - wetalk-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -86,69 +86,69 @@ services:
       retries: 5
       start_period: 20s
 
-  post-service:
-    build:
-      context: .
-      dockerfile: apps/post-service/Dockerfile
-    container_name: wetalk-post-service
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      MONGO_URI: ${MONGO_URI_POST}
-    networks:
-      - wetalk-net
-    expose:
-      - "4002"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4002/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 20s
+#  post-service:
+#    build:
+#      context: .
+#      dockerfile: apps/post-service/Dockerfile
+#    container_name: wetalk-post-service
+#    restart: unless-stopped
+#    env_file:
+#      - .env
+#    environment:
+#      MONGO_URI: ${MONGO_URI_POST}
+#    networks:
+#      - wetalk-net
+#    expose:
+#      - "4002"
+#    healthcheck:
+#      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4002/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+#      interval: 10s
+#      timeout: 3s
+#      retries: 5
+#      start_period: 20s
 
-  notification-service:
-    build:
-      context: .
-      dockerfile: apps/notification-service/Dockerfile
-    container_name: wetalk-notification-service
-    restart: unless-stopped
-    env_file:
-      - .env
+#  notification-service:
+#    build:
+#      context: .
+#      dockerfile: apps/notification-service/Dockerfile
+#    container_name: wetalk-notification-service
+#    restart: unless-stopped
+#    env_file:
+#      - .env
       # Faut qu'on précise la DB juste ici quand on aura décidé si mongo ou postgre
       #
       #
       #
       #
-    networks:
-      - wetalk-net
-    expose:
-      - "4003"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4003/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 20s
+#    networks:
+#      - wetalk-net
+#    expose:
+#      - "4003"
+#    healthcheck:
+#      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4003/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+#      interval: 10s
+#      timeout: 3s
+#      retries: 5
+#      start_period: 20s
 
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: wetalk-web
-    restart: unless-stopped
-    env_file:
-      - .env
-    networks:
-      - wetalk-net
-    expose:
-      - "3000"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 30s
+#  web:
+#    build:
+#      context: .
+#      dockerfile: apps/web/Dockerfile
+#    container_name: wetalk-web
+#    restart: unless-stopped
+#    env_file:
+#      - .env
+#    networks:
+#      - wetalk-net
+#    expose:
+#      - "3000"
+#    healthcheck:
+#      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+#      interval: 10s
+#      timeout: 3s
+#      retries: 5
+#      start_period: 30s
 
   gateway:
     build:
@@ -163,12 +163,12 @@ services:
         condition: service_healthy
       user-service:
         condition: service_healthy
-      post-service:
-        condition: service_healthy
-      notification-service:
-        condition: service_healthy
-      web:
-        condition: service_healthy
+#      post-service:
+#        condition: service_healthy
+#      notification-service:
+#        condition: service_healthy
+#      web:
+#        condition: service_healthy
     networks:
       - wetalk-net
 

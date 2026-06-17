@@ -1,15 +1,20 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
 import {
-    register,
-    adminCreateUser,
-    login,
-    refresh,
-    logout,
     me,
 	getUsers,
 	getUser,
+	updateMe,
+	deleteMe,
+	getFollowing,
+	getFollowers,
+	follow,
+	unfollow,
+	blockList,
+	block,
+	unblock,
+	mute,
+	unmute,
 } from "../controllers/user.controller.js";
 
 export const userRouter = Router();
@@ -38,19 +43,19 @@ DELETE /users/:id/mute : Ne plus masquer un utilisateur.
 // Profils
 userRouter.get("/", getUsers);
 userRouter.get("/me", requireAuth, me);
-userRouter.get("/:uuid", getUser);
+userRouter.get("/:id", getUser);
 userRouter.put("/me", requireAuth, updateMe);
 userRouter.delete("/me", requireAuth, deleteMe);
 
 // Abonnements
-userRouter.get("/:uuid/following", getFollowing);
-userRouter.get("/:uuid/followers", getFollowers);
-userRouter.post("/:uuid/follow", requireAuth, follow);
-userRouter.delete("/:uuid/follow", requireAuth, unfollow);
+userRouter.get("/:id/following", getFollowing);
+userRouter.get("/:id/followers", getFollowers);
+userRouter.post("/:id/follow", requireAuth, follow);
+userRouter.delete("/:id/follow", requireAuth, unfollow);
 
 // Modération
 userRouter.get("/me/blocks", requireAuth, blockList);
-userRouter.post("/:uuid/block", requireAuth, block);
-userRouter.delete("/:uuid/block", requireAuth, unblock);
-userRouter.post("/:uuid/mute", requireAuth, mute);
-userRouter.delete("/:uuid/mute", requireAuth, unmute);
+userRouter.post("/:id/block", requireAuth, block);
+userRouter.delete("/:id/block", requireAuth, unblock);
+userRouter.post("/:id/mute", requireAuth, mute);
+userRouter.delete("/:id/mute", requireAuth, unmute);

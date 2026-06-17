@@ -1,20 +1,6 @@
 import type { Request, Response } from "express";
-import { randomUUID } from "node:crypto";
-import bcrypt from "bcryptjs";
-import {type CreationOptional, Op, UniqueConstraintError} from "sequelize";
-import { z } from "zod";
-import { User, type UserRole } from "../models/user.js";
-import {
-	signAccessToken,
-	signRefreshToken,
-	verifyRefreshToken,
-} from "../utils/jwt.js";
-import {
-	storeRefresh,
-	isRefreshValid,
-	revokeRefresh,
-} from "../utils/refreshStore.js";
-import { logger } from "../utils/logger.js";
+import { Op } from "sequelize";
+import { User, Follow, Mute, Block } from "../models/index.js";
 
 function publicUser(user: User) {
 	return {
@@ -41,6 +27,8 @@ export async function me(req: Request, res: Response): Promise<void> {
 
 export async function getUsers(req: Request, res: Response): Promise<void> {
 	const limit = parseInt(req.query.limit as string) || 10;
+	// TODO: Implémenter la recherche
+	// noinspection JSUnusedLocalSymbols
 	const { search, cursor } = req.query;
 
 	const users = await User.findAll({
@@ -56,7 +44,7 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 }
 
 export async function getUser(req: Request, res: Response): Promise<void> {
-	const userId = req.params.uuid;
+	const userId = req.params.id as string;
 	if (userId) {
 		const user = await User.findByPk(userId);
 		if (user)
@@ -68,7 +56,222 @@ export async function getUser(req: Request, res: Response): Promise<void> {
 	}
 }
 
-// Vérification de token pour la gateway / les autres microservices.
-export function verify(req: Request, res: Response): void {
-	res.json({ valid: true, user: req.user });
+// export async function updateMe(req: Request, res: Response): Promise<void> {}
+
+export async function updateMe(req: Request, res: Response): Promise<void> {
+	try {
+		const { username } = req.body; // Ajoutez ici d'autres champs comme la 'bio' si nécessaire
+
+		const user = await User.findByPk(req.user?.sub);
+		if (!user) {
+			res.status(404).json({ error: "Utilisateur non trouvé." });
+			return;
+		}
+
+		// Exemple de mise à jour simple
+		if (username)
+			user.username = username;
+
+		await user.save();
+
+		res.json({ message: "Profil mis à jour avec succès.", data: { id: user.id, username: user.username } });
+	} catch (error: any) {
+		if (error.name === 'SequelizeUniqueConstraintError') {
+			res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris." });
+			return;
+		}
+		res.status(500).json({ error: "Erreur lors de la mise à jour." });
+	}
+}
+
+export async function deleteMe(req: Request, res: Response): Promise<void> {
+	try {
+		const deleted = await User.destroy({
+			where: { id: req.user?.sub }
+		});
+
+		if (!deleted) {
+			res.status(404).json({ error: "Utilisateur non trouvé." });
+			return;
+		}
+
+		res.json({ message: "Compte supprimé avec succès." });
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la suppression du compte." });
+	}
+}
+
+export async function follow(req: Request, res: Response): Promise<void> {
+	try {
+		const targetId = req.params.id;
+		const myId = req.user?.sub;
+
+		if (targetId === myId) {
+			res.status(400).json({ error: "Vous cannot vous abonner à vous-même." });
+			return;
+		}
+
+		const [_, created] = await Follow.findOrCreate({
+			where: { followerId: myId, followingId: targetId }
+		});
+
+		if (!created) {
+			res.status(400).json({ error: "Vous suivez déjà cet utilisateur." });
+			return;
+		}
+
+		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de l'abonnement." });
+	}
+}
+
+export async function unfollow(req: Request, res: Response): Promise<void> {
+	try {
+		const destroyed = await Follow.destroy({
+			where: { followerId: req.user?.sub, followingId: req.params.id }
+		});
+
+		if (!destroyed) {
+			res.status(400).json({ error: "Vous ne suiviez pas cet utilisateur." });
+			return;
+		}
+
+		res.json({ message: "Vous vous êtes désabonné avec succès." });
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors du désabonnement." });
+	}
+}
+
+export async function getFollowing(req: Request, res: Response): Promise<void> {
+	try {
+		// TODO: Réviser la pagination
+		// noinspection JSUnusedLocalSymbols
+		const { cursor } = req.query;
+		const limit = parseInt(req.query.limit as string, 10) || 10;
+
+		const whereConditions = { followerId: req.params.id };
+
+		const followRelations = await Follow.findAll({
+			where: whereConditions,
+			limit: limit,
+			order: [['createdAt', 'DESC'], ['followingId', 'DESC']],
+			// On inclut le modèle User lié pour récupérer les infos du compte suivi
+			include: [{ model: User, as: 'Following', attributes: ['id', 'username'] }]
+		});
+
+		res.json({
+			data: followRelations.map(f => {
+				// @ts-ignore
+				return f.Following;
+			})
+		});
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
+	}
+}
+
+export async function getFollowers(req: Request, res: Response): Promise<void> {
+	try {
+		// TODO: Réviser la pagination
+		// noinspection JSUnusedLocalSymbols
+		const { cursor } = req.query;
+		const limit = parseInt(req.query.limit as string, 10) || 10;
+
+		const whereConditions = { followingId: req.params.id };
+
+		const followRelations = await Follow.findAll({
+			where: whereConditions,
+			limit: limit,
+			order: [['createdAt', 'DESC'], ['followerId', 'DESC']],
+			// On inclut le modèle User lié pour récupérer les infos du compte suivi
+			include: [{ model: User, as: 'Followers', attributes: ['id', 'username'] }]
+		});
+
+		// @ts-ignore
+		res.json({
+			data: followRelations.map(f => {
+				// @ts-ignore
+				return f.Followers;
+			})
+		});
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
+	}
+}
+
+export async function blockList(req: Request, res: Response): Promise<void> {
+	try {
+		const blocks = await Block.findAll({
+			where: { blockerId: req.user?.sub },
+			include: [{ model: User, as: 'BlockedUser', attributes: ['id', 'username'] }]
+		});
+		res.json({ data: blocks.map(b => {
+				// @ts-ignore
+				return b.BlockedUser;
+			})
+		});
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la récupération." });
+	}
+}
+
+export async function block(req: Request, res: Response): Promise<void> {
+	try {
+		const targetId = req.params.id;
+		const myId = req.user?.sub;
+
+		if (targetId === myId) {
+			res.status(400).json({ error: "Action impossible." });
+			return;
+		}
+
+		// Règle métier Twitter : Bloquer quelqu'un force le désabonnement mutuel automatique
+		await Follow.destroy({
+			where: {
+				[Op.or]: [
+					{ followerId: myId, followingId: targetId },
+					{ followerId: targetId, followingId: myId }
+				]
+			}
+		});
+
+		await Block.findOrCreate({ where: { blockerId: myId, blockedId: targetId } });
+
+		res.json({ message: "Utilisateur bloqué." });
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors du blocage." });
+	}
+}
+
+export async function unblock(req: Request, res: Response): Promise<void> {
+	try {
+		await Block.destroy({ where: { blockerId: req.user?.sub, blockedId: req.params.id } });
+		res.json({ message: "Utilisateur débloqué." });
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors du déblocage." });
+	}
+}
+
+export async function mute(req: Request, res: Response): Promise<void> {
+	try {
+		if (req.params.id === req.user?.sub) {
+			res.status(400).json({ error: "Action impossible." });
+			return;
+		}
+
+		await Mute.findOrCreate({ where: { muterId: req.user?.sub, mutedId: req.params.id } });
+		res.json({ message: "Utilisateur masqué." });
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors du masquage." });
+	}
+}
+
+export async function unmute(req: Request, res: Response): Promise<void> {
+	try {
+		await Mute.destroy({ where: { muterId: req.user?.sub, mutedId: req.params.id } });
+		res.json({ message: "L'utilisateur n'est plus masqué." });
+	} catch (error) {
+		res.status(500).json({ error: "Erreur." });
+	}
 }

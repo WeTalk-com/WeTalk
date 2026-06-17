@@ -4,7 +4,7 @@ import { logger } from "../utils/logger.js";
 
 export const redis = createClient({ url: env.redisUrl });
 
-redis.on("error", (err) => {
+redis.on("error", (err: any) => {
   logger.error("redis error", { error: err instanceof Error ? err.message : String(err) });
 });
 

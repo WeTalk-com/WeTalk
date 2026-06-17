@@ -1,4 +1,5 @@
 import "dotenv/config";
+import process from "process";
 
 function required(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;
