@@ -13,7 +13,10 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const res = await fetch(`${env.apiUrl}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: new Headers({
+      "Content-Type": "application/json",
+      ...Object.fromEntries(new Headers(init?.headers ?? {})),
+    }),
   });
 
   if (!res.ok) {
