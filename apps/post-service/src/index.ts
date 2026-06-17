@@ -15,7 +15,10 @@ async function main(): Promise<void> {
   // Arrête le serveur puis ferme la connexion à la base.
   async function shutdown(signal: string): Promise<void> {
     logger.info("shutting down", { signal });
-    server.close();
+    // Attend la fin des requêtes en cours avant de fermer la base.
+    await new Promise<void>((resolve, reject) => {
+      server.close((err) => (err ? reject(err) : resolve()));
+    });
     await mongoose.connection.close();
     process.exit(0);
   }

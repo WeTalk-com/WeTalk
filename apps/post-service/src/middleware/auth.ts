@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyAccessToken, type JwtPayload } from "../utils/jwt.js";
+import { logger } from "../utils/logger.js";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -21,7 +22,9 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   try {
     req.user = verifyAccessToken(token);
     next();
-  } catch {
+  } catch (err) {
+    logger.warn("token rejected", { error: err instanceof Error ? err.message : String(err) });
     res.status(401).json({ error: "Invalid or expired token" });
+    return;
   }
 }

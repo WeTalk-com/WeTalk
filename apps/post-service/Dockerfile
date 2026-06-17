@@ -26,4 +26,6 @@ COPY --from=builder /app/apps/post-service/dist ./apps/post-service/dist
 
 EXPOSE 4002
 WORKDIR /app/apps/post-service
+# Abandonne les privilèges root : exécute en utilisateur non-privilégié.
+USER node
 CMD ["node", "dist/index.js"]

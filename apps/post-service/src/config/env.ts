@@ -1,16 +1,28 @@
 import "dotenv/config";
 
 function required(name: string, fallback?: string): string {
-  const value = process.env[name] ?? fallback;
-  if (value === undefined) {
-    throw new Error(`Missing required env var: ${name}`);
+  // Nettoie les espaces ; rejette aussi bien l'absence qu'une valeur vide.
+  const value = (process.env[name] ?? fallback)?.trim();
+  if (!value) {
+    throw new Error(`Missing or empty required env var: ${name}`);
   }
   return value;
 }
 
+// Valide un port : entier dans 1..65535, sinon échec explicite au démarrage.
+function requiredPort(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > 65535) {
+    throw new Error(`Invalid ${name}: "${raw}" (expected integer 1-65535)`);
+  }
+  return n;
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
-  port: Number(process.env.PORT ?? 4002),
+  port: requiredPort("PORT", 4002),
 
   // Adresse de la base de données des posts.
   mongoUri: required("MONGO_URI", "mongodb://localhost:27017/post_db"),
