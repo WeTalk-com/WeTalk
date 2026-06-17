@@ -8,7 +8,6 @@ import type {
   Post,
   TrendingTopic,
   Profile,
-  ExploreTile,
   Notification,
   Conversation,
 } from "./types";
@@ -117,20 +116,6 @@ export const myPosts: Post[] = [
     comments: 21,
     shares: 4,
   },
-];
-
-/* ----------------------------- Explore ----------------------------- */
-
-export const exploreTiles: ExploreTile[] = [
-  { id: "e1", tag: "#goldenhour", height: 280, likes: "12.4K" },
-  { id: "e2", tag: "#warmtones", height: 200, likes: "3.1K" },
-  { id: "e3", tag: "#slowmornings", height: 320, likes: "8.7K" },
-  { id: "e4", tag: "#film", height: 240, likes: "5.2K" },
-  { id: "e5", tag: "#desksetup", height: 200, likes: "1.9K" },
-  { id: "e6", tag: "#travel", height: 300, likes: "9.6K" },
-  { id: "e7", tag: "#coffee", height: 220, likes: "6.0K" },
-  { id: "e8", tag: "#wetalk", height: 260, likes: "31.9K" },
-  { id: "e9", tag: "#cozy", height: 200, likes: "2.4K" },
 ];
 
 /* -------------------------- Notifications -------------------------- */

@@ -41,13 +41,6 @@ export type Profile = User & {
   stats: { posts: number; followers: string; following: number };
 };
 
-export type ExploreTile = {
-  id: string;
-  tag: string;
-  /** hauteur du placeholder (effet masonry) */
-  height: number;
-  likes: string;
-};
 
 export type NotificationType = "like" | "comment" | "follow" | "mention";
 

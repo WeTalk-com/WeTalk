@@ -50,7 +50,9 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Maquette : pas de backend
-    console.log("submit", { mode, remember, ...form });
+    if (process.env.NODE_ENV === "development") {
+      console.log("submit", { mode, remember, ...form });
+    }
   };
 
   return (

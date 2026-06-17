@@ -31,8 +31,8 @@ function HomeScene({ active }: { active: boolean }) {
       setLiked(false);
       return;
     }
-    const t = setTimeout(() => setLiked(true), 1300);
-    return () => clearTimeout(t);
+    const timeoutId = setTimeout(() => setLiked(true), 1300);
+    return () => clearTimeout(timeoutId);
   }, [active]);
 
   return (

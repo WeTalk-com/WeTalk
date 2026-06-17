@@ -19,5 +19,3 @@ export const env = {
   apiUrl: parseApiUrl(process.env.NEXT_PUBLIC_API_URL),
 } as const;
 
-/** Vrai quand une vraie API est configuree (sinon : mode mock). */
-export const isApiConfigured = env.apiUrl.length > 0;
