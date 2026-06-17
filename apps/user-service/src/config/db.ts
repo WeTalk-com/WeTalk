@@ -11,5 +11,5 @@ export const sequelize = new Sequelize(env.dbName, env.dbUser, env.dbPassword, {
 export async function connectDb(): Promise<void> {
   await sequelize.authenticate();
   // Dev convenience: sync schema. Use migrations in production.
-  await sequelize.sync();
+  await sequelize.sync({ alter: true, force: true });
 }
