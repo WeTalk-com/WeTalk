@@ -24,5 +24,10 @@ export async function apiFetch<T>(
   }
 
   const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  if (!text) return undefined as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(`API ${res.status} — invalid JSON response from ${path}`);
+  }
 }
