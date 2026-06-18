@@ -62,6 +62,9 @@ export function createApp() {
 
 	// Gestionnaire d'erreurs centralisé
 	app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+		if (res.headersSent) {
+			return _next(err);
+		}
 		logger.error("unhandled error", {
 			method: req.method,
 			path: req.originalUrl,

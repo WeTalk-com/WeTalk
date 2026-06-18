@@ -217,11 +217,11 @@ export async function blockList(req: Request, res: Response): Promise<void> {
 	try {
 		const blocks = await Block.findAll({
 			where: { blockerId: req.user?.sub },
-			include: [{ model: User, as: 'BlockedUsers', attributes: ['id', 'username'] }]
+			include: [{ model: User, as: 'BlockedUser', attributes: ['id', 'username'] }]
 		});
 		res.json({ data: blocks.map(b => {
 				// @ts-ignore
-				return b.BlockedUsers;
+				return b.BlockedUser;
 			})
 		});
 	} catch (error) {
