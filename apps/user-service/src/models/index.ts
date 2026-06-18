@@ -11,6 +11,10 @@ User.belongsToMany(User, {
 	foreignKey: 'followerId',
 	otherKey: 'followingId'
 });
+
+Follow.belongsTo(User, { as: "Following", foreignKey: "followingId" });
+Follow.belongsTo(User, { as: "Follower", foreignKey: "followerId" });
+
 // Les gens qui ME suivent
 User.belongsToMany(User, {
 	as: 'Followers',
@@ -26,6 +30,9 @@ User.belongsToMany(User, {
 	foreignKey: 'blockerId',
 	otherKey: 'blockedId'
 });
+
+Block.belongsTo(User, { as: "BlockedUser", foreignKey: "blockedId" });
+Block.belongsTo(User, { as: "Blocker", foreignKey: "blockerId" });
 
 // --- ASSOCIATIONS POUR LES MASQUAGES ---
 User.belongsToMany(User, {

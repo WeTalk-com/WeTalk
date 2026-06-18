@@ -5,10 +5,9 @@ import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 
 async function main(): Promise<void> {
-	// TODO: Dé-commenter
 	await connectDb();
 	logger.info("connected to PostgreSQL");
-	// TODO: Dé-commenter
+
 	await connectRedis();
 	logger.info("connected to Redis");
 
@@ -20,7 +19,9 @@ async function main(): Promise<void> {
 	// Arrêt propre : ferme le serveur HTTP puis les connexions DB/Redis.
 	async function shutdown(signal: string): Promise<void> {
 		logger.info("shutting down", { signal });
-		server.close();
+		await new Promise<void>((resolve, reject) => {
+			server.close((err) => (err ? reject(err) : resolve()));
+		});
 		await Promise.allSettled([redis.quit(), sequelize.close()]);
 		process.exit(0);
 	}
@@ -31,8 +32,8 @@ async function main(): Promise<void> {
 
 main().catch((err) => {
 	logger.error("failed to start user-service", {
-		// error: err instanceof Error ? err.message : String(err),
-		error: JSON.stringify(err),
+		error: err instanceof Error ? err.message : String(err),
+		// error: JSON.stringify(err),
 	});
 	process.exit(1);
 });

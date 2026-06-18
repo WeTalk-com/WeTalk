@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { Op } from "sequelize";
+import {type CreationOptional, Op} from "sequelize";
 import { User, Follow, Mute, Block } from "../models/index.js";
 
 function publicUser(user: User) {
@@ -8,7 +8,7 @@ function publicUser(user: User) {
 		username: user.username,
 		displayName: user.displayName,
 		description: user.description,
-		email: user.email,
+		// email: user.email,
 		role: user.role,
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
@@ -60,7 +60,8 @@ export async function getUser(req: Request, res: Response): Promise<void> {
 
 export async function updateMe(req: Request, res: Response): Promise<void> {
 	try {
-		const { username } = req.body; // Ajoutez ici d'autres champs comme la 'bio' si nécessaire
+		// TODO: Est-ce que l'on permet de changer le nom d'utilisateur (handle) ?
+		const { displayName, profileImage, profileBanner, description } = req.body; // Ajoutez ici d'autres champs comme la 'bio' si nécessaire
 
 		const user = await User.findByPk(req.user?.sub);
 		if (!user) {
@@ -69,8 +70,14 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 		}
 
 		// Exemple de mise à jour simple
-		if (username)
-			user.username = username;
+		if (displayName)
+			user.displayName = displayName;
+		if (profileImage)
+			user.profileImage = profileImage;
+		if (profileBanner)
+			user.profileBanner = profileBanner;
+		if (description)
+			user.description = description;
 
 		await user.save();
 
@@ -103,11 +110,17 @@ export async function deleteMe(req: Request, res: Response): Promise<void> {
 
 export async function follow(req: Request, res: Response): Promise<void> {
 	try {
-		const targetId = req.params.id;
-		const myId = req.user?.sub;
+		const targetId = req.params.id as string;
+		const myId = req.user?.sub as string;
 
 		if (targetId === myId) {
-			res.status(400).json({ error: "Vous cannot vous abonner à vous-même." });
+			res.status(400).json({ error: "Vous ne pouvez pas vous abonner à vous-même." });
+			return;
+		}
+
+		const targetUser = await User.findByPk(targetId);
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
 			return;
 		}
 
@@ -204,11 +217,11 @@ export async function blockList(req: Request, res: Response): Promise<void> {
 	try {
 		const blocks = await Block.findAll({
 			where: { blockerId: req.user?.sub },
-			include: [{ model: User, as: 'BlockedUser', attributes: ['id', 'username'] }]
+			include: [{ model: User, as: 'BlockedUsers', attributes: ['id', 'username'] }]
 		});
 		res.json({ data: blocks.map(b => {
 				// @ts-ignore
-				return b.BlockedUser;
+				return b.BlockedUsers;
 			})
 		});
 	} catch (error) {
@@ -218,11 +231,17 @@ export async function blockList(req: Request, res: Response): Promise<void> {
 
 export async function block(req: Request, res: Response): Promise<void> {
 	try {
-		const targetId = req.params.id;
-		const myId = req.user?.sub;
+		const targetId = req.params.id as string;
+		const myId = req.user?.sub as string;
 
 		if (targetId === myId) {
 			res.status(400).json({ error: "Action impossible." });
+			return;
+		}
+
+		const targetUser = await User.findByPk(targetId);
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
 			return;
 		}
 
@@ -255,12 +274,21 @@ export async function unblock(req: Request, res: Response): Promise<void> {
 
 export async function mute(req: Request, res: Response): Promise<void> {
 	try {
-		if (req.params.id === req.user?.sub) {
+		const targetId = req.params.id as string;
+		const myId = req.user?.sub as string;
+
+		if (targetId === myId) {
 			res.status(400).json({ error: "Action impossible." });
 			return;
 		}
 
-		await Mute.findOrCreate({ where: { muterId: req.user?.sub, mutedId: req.params.id } });
+		const targetUser = await User.findByPk(targetId);
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
+			return;
+		}
+
+		await Mute.findOrCreate({ where: { muterId: myId, mutedId: targetId } });
 		res.json({ message: "Utilisateur masqué." });
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors du masquage." });

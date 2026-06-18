@@ -11,11 +11,11 @@ function required(name: string, fallback?: string): string {
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
-  port: Number(process.env.PORT ?? 4000),
+  port: Number(process.env.PORT) || 4000,
 
   // PostgreSQL (Sequelize) — datastore des utilisateurs
   dbHost: required("DB_HOST", "localhost"),
-  dbPort: Number(process.env.DB_PORT ?? 5432),
+  dbPort: Number(process.env.DB_PORT) || 5432,
   dbName: required("DB_NAME", "auth_db"),
   dbUser: required("DB_USER", "auth"),
   dbPassword: required("DB_PASSWORD", "auth"),

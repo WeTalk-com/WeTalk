@@ -32,23 +32,23 @@ User.init(
 		},
 		displayName: {
 			type: DataTypes.STRING(50),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 			validate: { len: [3, 50] },
 		},
 		profileImage: {
 			type: DataTypes.STRING(256),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 		},
 		profileBanner: {
 			type: DataTypes.STRING(256),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 		},
 		description: {
 			type: DataTypes.STRING(280),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 			validate: { len: [1, 280] },
 		},
