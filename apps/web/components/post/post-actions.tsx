@@ -8,9 +8,10 @@ type Props = {
   likes: number;
   comments: number;
   shares: number;
+  onComment?: () => void;
 };
 
-export function PostActions({ likes, comments, shares }: Props) {
+export function PostActions({ likes, comments, shares, onComment }: Props) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const t = useTranslations("app.post");
@@ -33,6 +34,7 @@ export function PostActions({ likes, comments, shares }: Props) {
       <button
         type="button"
         aria-label={t("comment")}
+        onClick={onComment}
         className="flex items-center gap-2 hover:text-ink transition-colors"
       >
         <MessageCircle className="size-5" />

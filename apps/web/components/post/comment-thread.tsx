@@ -1,0 +1,231 @@
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { X, Heart, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
+import type { Comment, Reply } from "@/lib/types";
+import { Avatar } from "@/components/ui/avatar";
+import { createComment, createReply } from "@/lib/api";
+
+function ReplyRow({ reply }: { reply: Reply }) {
+  const [liked, setLiked] = useState(false);
+  return (
+    <div className="ml-11 mt-2 flex gap-2.5">
+      <Avatar initial={reply.author.initial} size={28} />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold text-brown">
+          {reply.author.name}{" "}
+          <span className="font-normal text-brown-sec">@{reply.author.handle} · {reply.timeAgo}</span>
+        </p>
+        <p className="mt-0.5 text-sm text-ink">{reply.text}</p>
+        <button
+          type="button"
+          onClick={() => setLiked((v) => !v)}
+          aria-pressed={liked}
+          className={`mt-1 flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
+        >
+          <Heart className={`size-3 ${liked ? "fill-live" : ""}`} />
+          {reply.likes + (liked ? 1 : 0)}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CommentRow({
+  comment,
+  onReply,
+}: {
+  comment: Comment;
+  onReply: (id: string) => void;
+}) {
+  const t = useTranslations("app.comments");
+  const [liked, setLiked] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+
+  return (
+    <div className="border-b border-border py-3 last:border-0">
+      <div className="flex gap-3">
+        <Avatar initial={comment.author.initial} size={36} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-brown">
+            {comment.author.name}{" "}
+            <span className="font-normal text-brown-sec">
+              @{comment.author.handle} · {comment.timeAgo}
+            </span>
+          </p>
+          <p className="mt-0.5 text-sm text-ink">{comment.text}</p>
+
+          <div className="mt-2 flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setLiked((v) => !v)}
+              aria-pressed={liked}
+              className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
+            >
+              <Heart className={`size-3.5 ${liked ? "fill-live" : ""}`} />
+              {comment.likes + (liked ? 1 : 0)}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onReply(comment.id)}
+              className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-brown"
+            >
+              <CornerDownRight className="size-3.5" />
+              {t("reply")}
+            </button>
+
+            {comment.replies.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowReplies((v) => !v)}
+                className="ml-auto flex items-center gap-1 text-xs text-gold hover:underline"
+              >
+                {showReplies ? (
+                  <ChevronUp className="size-3.5" />
+                ) : (
+                  <ChevronDown className="size-3.5" />
+                )}
+                {comment.replies.length}{" "}
+                {comment.replies.length === 1 ? t("reply") : t("replies")}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {showReplies &&
+        comment.replies.map((r) => <ReplyRow key={r.id} reply={r} />)}
+    </div>
+  );
+}
+
+export function CommentThread({
+  postId,
+  initialComments,
+  onClose,
+}: {
+  postId: string;
+  initialComments: Comment[];
+  onClose: () => void;
+}) {
+  const t = useTranslations("app.comments");
+  const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [input, setInput] = useState("");
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit() {
+    const text = input.trim();
+    if (!text || pending) return;
+    setPending(true);
+    try {
+      if (replyingTo) {
+        const reply = await createReply(replyingTo, text);
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === replyingTo ? { ...c, replies: [...c.replies, reply] } : c,
+          ),
+        );
+        setReplyingTo(null);
+      } else {
+        const comment = await createComment(postId, text);
+        setComments((prev) => [...prev, comment]);
+      }
+      setInput("");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-60 flex items-end justify-center bg-dark/50 backdrop-blur-sm p-4 sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("title")}
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[80dvh] w-full max-w-lg flex-col rounded-card border border-border bg-card shadow-card"
+      >
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="font-head text-lg font-bold text-brown">
+            {t("title")} ({comments.length})
+          </h2>
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={onClose}
+            className="grid size-8 place-items-center rounded-full text-brown-sec hover:bg-card"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Liste des commentaires */}
+        <div className="flex-1 overflow-y-auto px-5">
+          {comments.length > 0 ? (
+            comments.map((c) => (
+              <CommentRow
+                key={c.id}
+                comment={c}
+                onReply={(id) => {
+                  setReplyingTo(id);
+                  setInput("");
+                }}
+              />
+            ))
+          ) : (
+            <p className="py-12 text-center text-sm text-brown-sec">
+              {t("empty")}
+            </p>
+          )}
+        </div>
+
+        {/* Champ de saisie */}
+        <div className="shrink-0 border-t border-border px-5 py-4">
+          {replyingTo && (
+            <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
+              <CornerDownRight className="size-3" />
+              <span>{t("replyingTo")}</span>
+              <button
+                type="button"
+                onClick={() => setReplyingTo(null)}
+                className="text-gold hover:underline"
+              >
+                {t("cancel")}
+              </button>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
+              className="min-w-0 flex-1 rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
+            />
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!input.trim() || pending}
+              className="shrink-0 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+            >
+              {t("send")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
