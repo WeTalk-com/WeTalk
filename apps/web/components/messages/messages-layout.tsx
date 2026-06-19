@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Send, ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Conversation } from "@/lib/types";
+import { sendMessage } from "@/lib/api";
 import { Avatar } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/icons/brand";
 
@@ -59,11 +60,23 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
     setMobileShowChat(true);
   }
 
+  async function handleSend() {
+    const text = input.trim();
+    if (!text || !selected) return;
+    setInput("");
+    const msg = await sendMessage(selected.id, text);
+    setSelected((prev) =>
+      prev
+        ? { ...prev, messages: [...prev.messages, msg], lastMessage: text }
+        : prev,
+    );
+  }
+
   return (
     <div className="flex min-h-0 flex-1">
       {/* Liste des conversations */}
       <div
-        className={`flex w-full flex-col border-r border-border lg:w-[340px] lg:shrink-0 ${
+        className={`flex w-full flex-col border-r border-border lg:w-85 lg:shrink-0 ${
           mobileShowChat ? "hidden lg:flex" : "flex"
         }`}
       >
@@ -141,7 +154,7 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && input.trim()) setInput("");
+                  if (e.key === "Enter") handleSend();
                 }}
                 placeholder={t("typeMessage")}
                 className="min-w-0 flex-1 rounded-full border border-border bg-card px-4 py-2.5 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
@@ -150,7 +163,7 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
                 type="button"
                 aria-label={t("send")}
                 disabled={!input.trim()}
-                onClick={() => setInput("")}
+                onClick={handleSend}
                 className="grid size-10 shrink-0 place-items-center rounded-full bg-gold text-white transition-opacity disabled:opacity-40"
               >
                 <Send className="size-4" />
