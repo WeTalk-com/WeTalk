@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { X, ImageIcon, Smile, MapPin, Sparkles } from "lucide-react";
+import { X, ImageIcon, Film, Smile, MapPin, Sparkles } from "lucide-react";
 import type { User } from "@/lib/types";
 import { createPost } from "@/lib/api";
 import { Avatar } from "../ui/avatar";
@@ -26,53 +26,89 @@ export function CreatePostModal({
 }) {
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [video, setVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("app.create");
 
   const remaining = MAX_CHARS - text.length;
   const tags = parseTags(text);
   const canPost = text.trim().length > 0 && remaining >= 0;
 
-  // Fermeture clavier (Échap) + blocage du scroll de fond + nettoyage blob URL
+  // Refs stables pour le cleanup — évite de révoquer les blob URLs prématurément
+  // si le parent re-rend et change l'identité de onClose.
+  const onCloseRef = useRef(onClose);
+  const imagePreviewRef = useRef(imagePreview);
+  const videoPreviewRef = useRef(videoPreview);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  useEffect(() => { imagePreviewRef.current = imagePreview; }, [imagePreview]);
+  useEffect(() => { videoPreviewRef.current = videoPreview; }, [videoPreview]);
+
+  // Fermeture clavier (Échap) + blocage scroll fond + nettoyage blob URLs au démontage
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     }
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
-      // Révoquer l'URL blob si le modal se ferme avec une image chargée
-      if (preview) URL.revokeObjectURL(preview);
+      if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
+      if (videoPreviewRef.current) URL.revokeObjectURL(videoPreviewRef.current);
     };
-  }, [onClose, preview]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
+    removeVideo();
     setImage(file);
-    setPreview(URL.createObjectURL(file));
+    setImagePreview(URL.createObjectURL(file));
+  }
+
+  function handleVideoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    if (!file) return;
+    removeImage();
+    setVideo(file);
+    setVideoPreview(URL.createObjectURL(file));
   }
 
   function removeImage() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImage(null);
-    if (preview) URL.revokeObjectURL(preview);
-    setPreview(null);
-    if (fileRef.current) fileRef.current.value = "";
+    setImagePreview(null);
+    if (imageRef.current) imageRef.current.value = "";
+  }
+
+  function removeVideo() {
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideo(null);
+    setVideoPreview(null);
+    if (videoRef.current) videoRef.current.value = "";
   }
 
   async function handlePost() {
     setPending(true);
     try {
-      await createPost({ text, tags, image: image ?? undefined });
+      await createPost({
+        text,
+        tags,
+        image: image ?? undefined,
+        video: video ?? undefined,
+      });
       onClose();
     } finally {
       setPending(false);
     }
   }
+
+  const hasMedia = imagePreview || videoPreview;
 
   return (
     <div
@@ -108,14 +144,14 @@ export function CreatePostModal({
           />
         </div>
 
-        {/* Aperçu image ou placeholder */}
-        {preview ? (
+        {/* Aperçu image */}
+        {imagePreview && (
           <div className="relative mt-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={preview}
+              src={imagePreview}
               alt="Aperçu"
-              className="w-full rounded-2xl object-cover max-h-64"
+              className="max-h-64 w-full rounded-2xl object-cover"
             />
             <button
               type="button"
@@ -126,12 +162,34 @@ export function CreatePostModal({
               <X className="size-4" />
             </button>
           </div>
-        ) : (
+        )}
+
+        {/* Aperçu vidéo */}
+        {videoPreview && (
+          <div className="relative mt-3">
+            <video
+              src={videoPreview}
+              controls
+              className="max-h-64 w-full rounded-2xl object-cover"
+            />
+            <button
+              type="button"
+              onClick={removeVideo}
+              aria-label={t("removeVideo")}
+              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors hover:bg-dark"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Zone placeholder si pas de media */}
+        {!hasMedia && (
           <button
             type="button"
             aria-label={t("addImage")}
-            onClick={() => fileRef.current?.click()}
-            className="mt-3 grid w-full aspect-16/10 cursor-pointer place-items-center rounded-2xl border border-dashed border-border bg-gold/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(186,117,23,0.10)_12px,rgba(186,117,23,0.10)_24px)] transition-colors hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
+            onClick={() => imageRef.current?.click()}
+            className="mt-3 grid aspect-16/10 w-full cursor-pointer place-items-center rounded-2xl border border-dashed border-border bg-gold/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(186,117,23,0.10)_12px,rgba(186,117,23,0.10)_24px)] transition-colors hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
           >
             <span className="flex flex-col items-center gap-1 text-sm text-brown-sec">
               <ImageIcon className="size-6" />
@@ -140,19 +198,29 @@ export function CreatePostModal({
           </button>
         )}
 
-        {/* Input fichier caché */}
+        {/* Inputs fichiers cachés */}
         <input
-          ref={fileRef}
+          ref={imageRef}
           type="file"
           accept="image/*"
           className="hidden"
           onChange={handleImageChange}
         />
+        <input
+          ref={videoRef}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={handleVideoChange}
+        />
 
         {/* Barre d'actions */}
         <div className="mt-4 flex items-center gap-1 border-t border-border pt-4">
-          <IconButton label={t("addImage")} onClick={() => fileRef.current?.click()}>
+          <IconButton label={t("addImage")} onClick={() => imageRef.current?.click()}>
             <ImageIcon className="size-5" />
+          </IconButton>
+          <IconButton label={t("addVideo")} onClick={() => videoRef.current?.click()}>
+            <Film className="size-5" />
           </IconButton>
           <IconButton label={t("addEmoji")}>
             <Smile className="size-5" />
@@ -177,10 +245,7 @@ export function CreatePostModal({
             {remaining}
           </span>
 
-          <Button
-            disabled={!canPost || pending}
-            onClick={handlePost}
-          >
+          <Button disabled={!canPost || pending} onClick={handlePost}>
             {t("post")}
           </Button>
         </div>
