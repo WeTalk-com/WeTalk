@@ -176,11 +176,14 @@
     },
     "post": {
       "image": "post image · {ratio}",
+      "video": "Video",
       "more": "More options",
       "like": "Like",
       "comment": "Comment",
       "share": "Share",
-      "save": "Save"
+      "save": "Save",
+      "report": "Report",
+      "copyLink": "Copy link"
     },
     "messages": {
       "title": "Messages",
@@ -195,13 +198,55 @@
       "placeholder": "Share something warm…",
       "addPhoto": "Add a photo",
       "addImage": "Add image",
+      "addVideo": "Add video",
       "addEmoji": "Add emoji",
       "addLocation": "Add location",
       "enhance": "Enhance",
       "post": "Post",
       "close": "Close",
       "removeImage": "Remove image",
+      "removeVideo": "Remove video",
       "charCount": "{count}/{max}"
+    },
+    "comments": {
+      "title": "Comments",
+      "empty": "No comments yet. Be the first!",
+      "close": "Close",
+      "placeholder": "Add a comment…",
+      "replyPlaceholder": "Write a reply…",
+      "replyingTo": "Replying to a comment",
+      "cancel": "Cancel",
+      "send": "Send",
+      "reply": "Reply",
+      "replies": "replies"
+    },
+    "report": {
+      "title": "Report",
+      "subtitle": "Why are you reporting this post?",
+      "reasonLabel": "Reason",
+      "reason_spam": "Spam",
+      "reason_harassment": "Harassment",
+      "reason_inappropriate": "Inappropriate content",
+      "reason_misinformation": "Misinformation",
+      "reason_other": "Other",
+      "detailsPlaceholder": "Tell us more…",
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "close": "Close",
+      "successTitle": "Report submitted",
+      "successText": "Thanks, we'll review this shortly."
+    },
+    "admin": {
+      "title": "Moderation",
+      "statReports": "Pending reports",
+      "statUsers": "Users",
+      "statPosts": "Posts",
+      "queueTitle": "Reported posts",
+      "reasonLabel": "Reason:",
+      "reportedBy": "Reported by",
+      "dismiss": "Dismiss",
+      "remove": "Remove",
+      "noReports": "No pending reports 🎉"
     }
   },
   "settings": {

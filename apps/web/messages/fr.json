@@ -176,11 +176,14 @@
     },
     "post": {
       "image": "image du post · {ratio}",
+      "video": "Vidéo",
       "more": "Plus d'options",
       "like": "J'aime",
       "comment": "Commenter",
       "share": "Partager",
-      "save": "Enregistrer"
+      "save": "Enregistrer",
+      "report": "Signaler",
+      "copyLink": "Copier le lien"
     },
     "messages": {
       "title": "Messages",
@@ -195,13 +198,55 @@
       "placeholder": "Partage quelque chose de chaleureux…",
       "addPhoto": "Ajouter une photo",
       "addImage": "Ajouter une image",
+      "addVideo": "Ajouter une vidéo",
       "addEmoji": "Ajouter un emoji",
       "addLocation": "Ajouter un lieu",
       "enhance": "Améliorer",
       "post": "Publier",
       "close": "Fermer",
       "removeImage": "Supprimer l'image",
+      "removeVideo": "Supprimer la vidéo",
       "charCount": "{count}/{max}"
+    },
+    "comments": {
+      "title": "Commentaires",
+      "empty": "Aucun commentaire. Soyez le premier !",
+      "close": "Fermer",
+      "placeholder": "Ajouter un commentaire…",
+      "replyPlaceholder": "Écrire une réponse…",
+      "replyingTo": "En réponse à un commentaire",
+      "cancel": "Annuler",
+      "send": "Envoyer",
+      "reply": "Répondre",
+      "replies": "réponses"
+    },
+    "report": {
+      "title": "Signaler",
+      "subtitle": "Pourquoi signalez-vous ce post ?",
+      "reasonLabel": "Raison",
+      "reason_spam": "Spam",
+      "reason_harassment": "Harcèlement",
+      "reason_inappropriate": "Contenu inapproprié",
+      "reason_misinformation": "Désinformation",
+      "reason_other": "Autre",
+      "detailsPlaceholder": "Dites-nous en plus…",
+      "submit": "Soumettre",
+      "cancel": "Annuler",
+      "close": "Fermer",
+      "successTitle": "Signalement envoyé",
+      "successText": "Merci, nous allons examiner ça prochainement."
+    },
+    "admin": {
+      "title": "Modération",
+      "statReports": "Signalements en attente",
+      "statUsers": "Utilisateurs",
+      "statPosts": "Posts",
+      "queueTitle": "Posts signalés",
+      "reasonLabel": "Raison :",
+      "reportedBy": "Signalé par",
+      "dismiss": "Ignorer",
+      "remove": "Supprimer",
+      "noReports": "Aucun signalement en attente 🎉"
     }
   },
   "settings": {
