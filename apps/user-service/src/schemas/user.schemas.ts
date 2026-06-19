@@ -26,10 +26,13 @@ export const suspendBodySchema = z.object({
 });
 
 // Query de la liste des utilisateurs : pagination par offset + recherche.
+// `ids` : récupération par lot (CSV d'UUID), utilisé par post-service pour
+// enrichir les posts avec leur auteur. Prioritaire sur search/pagination.
 export const listUsersQuerySchema = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(10),
 	cursor: z.coerce.number().int().min(0).optional(),
 	search: z.string().trim().min(1).optional(),
+	ids: z.string().trim().min(1).optional(),
 });
 
 // Query des listes d'abonnements/abonnés.

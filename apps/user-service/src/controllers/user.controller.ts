@@ -93,7 +93,23 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
 		return;
 	}
-	const { limit, cursor, search } = parsed.data;
+	const { limit, cursor, search, ids } = parsed.data;
+
+	if (ids) {
+		const idList = ids
+			.split(",")
+			.map((s) => s.trim())
+			.filter((s) => UUID_RE.test(s))
+			.slice(0, 100);
+		if (idList.length === 0) {
+			res.json([]);
+			return;
+		}
+		const found = await User.findAll({ where: { id: { [Op.in]: idList } } });
+		const showMod = req.user?.role === "moderator" || req.user?.role === "admin";
+		res.json(found.map((u) => ({ ...publicUser(u, showMod), isBanned: u.isBanned })));
+		return;
+	}
 
 	// Recherche (Fx13) : match partiel insensible à la casse sur username + displayName.
 	let where: WhereOptions | undefined;
@@ -296,6 +312,19 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 				return f.Follower;
 			})
 		});
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
+	}
+}
+
+export async function followingIds(req: Request, res: Response): Promise<void> {
+	try {
+		const rows = await Follow.findAll({
+			where: { followerId: req.params.id },
+			attributes: ["followingId"],
+			limit: 5000,
+		});
+		res.json({ ids: rows.map((r) => r.get("followingId") as string) });
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
