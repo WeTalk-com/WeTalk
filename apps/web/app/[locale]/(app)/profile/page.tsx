@@ -5,10 +5,9 @@ import { getProfile, getMyPosts } from "@/lib/api";
 import { MapPin, CalendarDays } from "lucide-react";
 import { TopBar } from "@/components/layout/top-bar";
 import { Avatar } from "@/components/ui/avatar";
-import { PillTabs } from "@/components/ui/pill-tabs";
 import { VerifiedBadge } from "@/components/icons/brand";
-import { PostCard } from "@/components/post/post-card";
 import { EditProfileButton } from "@/components/profile/edit-profile-modal";
+import { ProfileTabs } from "@/components/profile/profile-tabs";
 
 export async function generateMetadata({
   params,
@@ -77,16 +76,9 @@ export default async function ProfilePage() {
           <Stat value={p.stats.following} label={t("statFollowing")} />
         </div>
 
-        <div className="mt-5 border-b border-border pb-2">
-          <PillTabs tabs={[t("tabPosts"), t("tabMedia"), t("tabLikes")]} />
-        </div>
       </div>
 
-      <div className="flex flex-col gap-5 px-4 pb-24 pt-5 lg:pb-10">
-        {myPosts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
+      <ProfileTabs posts={myPosts} />
     </main>
   );
 }
