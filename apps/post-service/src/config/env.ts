@@ -23,6 +23,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: requiredPort("PORT", 4002),
   mongoUri: required("MONGO_URI", "mongodb://localhost:27017/post_db"),
+  userServiceUrl: required("USER_SERVICE_URL", "http://user-service:4001"),
   jwtAccessSecret: required("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
   corsOrigins: (process.env.CORS_ORIGIN ?? "")
     .split(",")

@@ -87,6 +87,7 @@ services:
     env_file:
       - .env
     environment:
+      PORT: 4001
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     depends_on:
       postgres:
@@ -112,8 +113,11 @@ services:
       - .env
     environment:
       MONGO_URI: ${MONGO_URI_POST}
+      USER_SERVICE_URL: http://user-service:4001
     depends_on:
       mongo:
+        condition: service_healthy
+      user-service:
         condition: service_healthy
     networks:
       - wetalk-net
