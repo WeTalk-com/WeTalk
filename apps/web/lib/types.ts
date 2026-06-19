@@ -11,6 +11,7 @@ export type User = {
   /** Initiale affichee dans l'avatar (placeholder design) */
   initial: string;
   verified?: boolean;
+  role?: "user" | "moderator" | "admin";
 };
 
 export type Post = {
@@ -23,9 +24,27 @@ export type Post = {
   tags: string[];
   hasImage?: boolean;
   imageRatio?: string; // ex. "1600x1000"
+  hasVideo?: boolean;
   likes: number;
   comments: number;
   shares: number;
+};
+
+export type Reply = {
+  id: string;
+  author: User;
+  text: string;
+  timeAgo: string;
+  likes: number;
+};
+
+export type Comment = {
+  id: string;
+  author: User;
+  text: string;
+  timeAgo: string;
+  likes: number;
+  replies: Reply[];
 };
 
 export type TrendingTopic = {
@@ -70,4 +89,20 @@ export type Conversation = {
   timeAgo: string;
   unread?: number;
   messages: Message[];
+};
+
+export type ReportReason =
+  | "spam"
+  | "harassment"
+  | "inappropriate"
+  | "misinformation"
+  | "other";
+
+export type ReportedPost = {
+  id: string;
+  post: Post;
+  reason: ReportReason;
+  reportedBy: User;
+  reportedAt: string;
+  status: "pending" | "resolved" | "dismissed";
 };

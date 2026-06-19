@@ -10,6 +10,8 @@ import type {
   Profile,
   Notification,
   Conversation,
+  Comment,
+  ReportedPost,
 } from "./types";
 
 export const currentUser: User = {
@@ -17,6 +19,7 @@ export const currentUser: User = {
   name: "Katty Abrahams",
   handle: "kattyabra",
   initial: "K",
+  role: "admin",
 };
 
 export const posts: Post[] = [
@@ -65,6 +68,17 @@ export const posts: Post[] = [
     likes: 318,
     comments: 44,
     shares: 12,
+  },
+  {
+    id: "p4",
+    author: { id: "u4", name: "Lara Moons", handle: "laramoons", initial: "L" },
+    timeAgo: "1d",
+    text: "Behind-the-scenes from yesterday's shoot — short reel dropping tonight 🎬",
+    tags: ["#film", "#bts"],
+    hasVideo: true,
+    likes: 567,
+    comments: 89,
+    shares: 34,
   },
 ];
 
@@ -118,7 +132,117 @@ export const myPosts: Post[] = [
   },
 ];
 
-/* -------------------------- Notifications -------------------------- */
+/* -------------------------- Comments -------------------------- */
+
+const _u1: User = { id: "u1", name: "Maya Rivera", handle: "mayarivera", initial: "M", verified: true };
+const _u2: User = { id: "u2", name: "Theo Lang", handle: "theolang", initial: "T", verified: true };
+const _u3: User = { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" };
+const _u4: User = { id: "u4", name: "Lara Moons", handle: "laramoons", initial: "L" };
+
+export const postComments: Record<string, Comment[]> = {
+  p1: [
+    {
+      id: "cm1",
+      author: _u2,
+      text: "This golden hour lighting is unreal! What time did you shoot this?",
+      timeAgo: "1h",
+      likes: 24,
+      replies: [
+        {
+          id: "rp1",
+          author: _u1,
+          text: "Around 7pm! The dunes catch the light perfectly at that hour.",
+          timeAgo: "55m",
+          likes: 8,
+        },
+      ],
+    },
+    {
+      id: "cm2",
+      author: _u3,
+      text: "Golden hours and slow mornings — my whole aesthetic 🌅",
+      timeAgo: "45m",
+      likes: 12,
+      replies: [],
+    },
+  ],
+  p2: [
+    {
+      id: "cm3",
+      author: _u3,
+      text: "Those warm studio tones are everything. Presets available? 🙏",
+      timeAgo: "3h",
+      likes: 41,
+      replies: [
+        {
+          id: "rp2",
+          author: _u2,
+          text: "Dropping them next week on the newsletter! Stay tuned 🎞️",
+          timeAgo: "2h",
+          likes: 18,
+        },
+      ],
+    },
+  ],
+  p3: [],
+  p4: [
+    {
+      id: "cm4",
+      author: _u1,
+      text: "Can't wait for this reel 🔥 your BTS content is always chef's kiss",
+      timeAgo: "20h",
+      likes: 57,
+      replies: [
+        {
+          id: "rp3",
+          author: _u4,
+          text: "Thank you! Dropping midnight tonight 🌙",
+          timeAgo: "19h",
+          likes: 21,
+        },
+      ],
+    },
+  ],
+};
+
+/* --------------------------- Signalements -------------------------- */
+
+export const reportedPosts: ReportedPost[] = [
+  {
+    id: "rep1",
+    post: {
+      id: "px1",
+      author: { id: "ux1", name: "Bad Actor", handle: "badactor", initial: "B" },
+      timeAgo: "3h",
+      text: "Buy followers now! Best prices guaranteed ✨✨✨",
+      tags: [],
+      likes: 2,
+      comments: 0,
+      shares: 0,
+    },
+    reason: "spam",
+    reportedBy: { id: "w3", name: "Remy Cole", handle: "remycole", initial: "R" },
+    reportedAt: "2h",
+    status: "pending",
+  },
+  {
+    id: "rep2",
+    post: {
+      id: "px2",
+      author: { id: "ux2", name: "TrollUser99", handle: "trolluser99", initial: "T" },
+      timeAgo: "6h",
+      text: "This is completely false information about a public health topic.",
+      tags: [],
+      likes: 14,
+      comments: 3,
+      shares: 7,
+    },
+    reason: "misinformation",
+    reportedBy: { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" },
+    reportedAt: "5h",
+    status: "pending",
+  },
+];
 
 /* ---------------------------- Messages ---------------------------- */
 
