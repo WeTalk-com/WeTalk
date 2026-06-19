@@ -186,7 +186,3 @@ flowchart TB
 | **Fx21.** Suspension ou bannissement des utilisateurs | ❌ | ❌ | ✅ | ✅ |
 | **Fx22.** Interface multi-langues | ❌ | ✅ | ✅ | ✅ |
 | **Fx23.** Thème personnalisé | ✅ | ✅ | ✅ | ✅ |
-
-## Questions
-
-- On peut tout centraliser dans `packages/auth/shared` ? (middleware `requireAuth`/`requireRole`, `banStore`, modèle `User`, utils JWT — actuellement dupliqués entre auth-service, user-service et post-service)

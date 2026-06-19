@@ -46,6 +46,97 @@ const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
+const feedQuerySchema = z.object({
+  cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+type AuthorLite = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  profileImage: string | null;
+  isBanned: boolean;
+};
+
+async function fetchFollowingIds(userId: string, authHeader: string | undefined): Promise<string[]> {
+  try {
+    const res = await fetch(`${env.userServiceUrl}/users/${userId}/following/ids`, {
+      headers: authHeader ? { authorization: authHeader } : {},
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) {
+      logger.warn("following ids lookup non-ok", { userId, status: res.status });
+      return [];
+    }
+    const data = (await res.json()) as { ids?: string[] };
+    return Array.isArray(data.ids) ? data.ids : [];
+  } catch (err) {
+    logger.warn("following ids lookup failed", {
+      userId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return [];
+  }
+}
+
+async function fetchAuthors(
+  ids: string[],
+  authHeader: string | undefined,
+): Promise<Map<string, AuthorLite>> {
+  const map = new Map<string, AuthorLite>();
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return map;
+  try {
+    const res = await fetch(`${env.userServiceUrl}/users?ids=${unique.join(",")}`, {
+      headers: authHeader ? { authorization: authHeader } : {},
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) {
+      logger.warn("authors lookup non-ok", { status: res.status });
+      return map;
+    }
+    const users = (await res.json()) as AuthorLite[];
+    for (const u of users) {
+      map.set(u.id, {
+        id: u.id,
+        username: u.username,
+        displayName: u.displayName ?? null,
+        profileImage: u.profileImage ?? null,
+        isBanned: Boolean(u.isBanned),
+      });
+    }
+  } catch (err) {
+    logger.warn("authors lookup failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+  return map;
+}
+
+// Attache l'auteur à chaque post. Si l'auteur est banni, on masque le post au
+// read-time : contenu non servi + author anonymisé + flag authorBanned. Rien
+// n'est muté en base, donc c'est réversible automatiquement à l'unban. Le front
+// affiche un message dédié quand authorBanned est vrai.
+async function withAuthors<T extends { authorId: string }>(
+  posts: T[],
+  authHeader: string | undefined,
+) {
+  const authors = await fetchAuthors(posts.map((p) => p.authorId), authHeader);
+  return posts.map((p) => {
+    const author = authors.get(p.authorId) ?? null;
+    if (author?.isBanned) {
+      return {
+        ...p,
+        content: null,
+        authorBanned: true,
+        author: { ...author, displayName: "Utilisateur banni", profileImage: null },
+      };
+    }
+    return { ...p, authorBanned: false, author };
+  });
+}
+
 export async function createPost(req: Request, res: Response): Promise<void> {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -84,7 +175,31 @@ export async function listPosts(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  res.json({ posts, nextCursor });
+  const enriched = await withAuthors(posts, req.headers.authorization);
+  res.json({ posts: enriched, nextCursor });
+}
+
+export async function feed(req: Request, res: Response): Promise<void> {
+  const parsed = feedQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const { cursor, limit } = parsed.data;
+  const me = req.user!.sub;
+
+  const following = await fetchFollowingIds(me, req.headers.authorization);
+  const authorIds = [...new Set([me, ...following])];
+
+  const filter: Record<string, unknown> = { authorId: { $in: authorIds } };
+  if (cursor) filter._id = { $lt: cursor };
+
+  const posts = await PostModel.find(filter).sort({ _id: -1 }).limit(limit).lean();
+  const last = posts[posts.length - 1];
+  const nextCursor = posts.length === limit && last ? String(last._id) : null;
+
+  const enriched = await withAuthors(posts, req.headers.authorization);
+  res.json({ posts: enriched, nextCursor });
 }
 
 export async function getPost(req: Request, res: Response): Promise<void> {
@@ -93,12 +208,13 @@ export async function getPost(req: Request, res: Response): Promise<void> {
     res.status(400).json({ error: "Invalid post id" });
     return;
   }
-  const post = await PostModel.findById(id);
+  const post = await PostModel.findById(id).lean();
   if (!post) {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  res.json({ post });
+  const [enriched] = await withAuthors([post], req.headers.authorization);
+  res.json({ post: enriched });
 }
 
 export async function updatePost(req: Request, res: Response): Promise<void> {

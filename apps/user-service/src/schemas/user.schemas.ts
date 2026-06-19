@@ -30,6 +30,7 @@ export const listUsersQuerySchema = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(10),
 	cursor: z.coerce.number().int().min(0).optional(),
 	search: z.string().trim().min(1).optional(),
+	ids: z.string().trim().min(1).optional(),
 });
 
 // Query des listes d'abonnements/abonnés.
