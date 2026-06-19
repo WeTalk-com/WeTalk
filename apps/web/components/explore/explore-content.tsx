@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import type { Post, TrendingTopic, User } from "@/lib/types";
 import { PostCard } from "@/components/post/post-card";
 import { UserChip } from "@/components/ui/user-chip";
-import { Button } from "@/components/ui/button";
+import { FollowButton } from "@/components/ui/follow-button";
 
 type Tab = "trending" | "foryou" | "people";
 
@@ -15,14 +15,39 @@ export function ExploreContent({
   posts,
   trending,
   users,
+  query = "",
 }: {
   posts: Post[];
   trending: TrendingTopic[];
   users: User[];
+  query?: string;
 }) {
   const t = useTranslations("app.explore");
-  const tRail = useTranslations("app.rightRail");
   const [tab, setTab] = useState<Tab>("trending");
+
+  const q = query.toLowerCase().trim();
+  const filteredPosts = q
+    ? posts.filter(
+        (p) =>
+          p.text.toLowerCase().includes(q) ||
+          p.tags.some((tag) => tag.toLowerCase().includes(q)) ||
+          p.author.name.toLowerCase().includes(q),
+      )
+    : posts;
+  const filteredTrending = q
+    ? trending.filter(
+        (tp) =>
+          tp.tag.toLowerCase().includes(q) ||
+          tp.category.toLowerCase().includes(q),
+      )
+    : trending;
+  const filteredUsers = q
+    ? users.filter(
+        (u) =>
+          u.name.toLowerCase().includes(q) ||
+          u.handle.toLowerCase().includes(q),
+      )
+    : users;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "trending", label: t("tabTrending") },
@@ -54,7 +79,7 @@ export function ExploreContent({
       {/* Tendances */}
       {tab === "trending" && (
         <ul>
-          {trending.map((topic, i) => (
+          {filteredTrending.map((topic, i) => (
             <li
               key={topic.tag}
               className="group flex cursor-pointer items-start gap-4 border-b border-border px-5 py-4 transition-colors hover:bg-card last:border-0"
@@ -87,26 +112,36 @@ export function ExploreContent({
       {/* Pour vous — feed de posts */}
       {tab === "foryou" && (
         <div className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
+          ) : (
+            <p className="py-12 text-center text-sm text-brown-sec">
+              {t("noResults", { query })}
+            </p>
+          )}
         </div>
       )}
 
       {/* Personnes */}
       {tab === "people" && (
         <ul>
-          {users.map((u) => (
-            <li
-              key={u.id}
-              className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0"
-            >
-              <Link href={`/profile/${u.handle}`} className="min-w-0 flex-1">
-                <UserChip user={u} />
-              </Link>
-              <Button size="sm">{tRail("follow")}</Button>
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((u) => (
+              <li
+                key={u.id}
+                className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0"
+              >
+                <Link href={`/profile/${u.handle}`} className="min-w-0 flex-1">
+                  <UserChip user={u} />
+                </Link>
+                <FollowButton userId={u.id} />
+              </li>
+            ))
+          ) : (
+            <li className="py-12 text-center text-sm text-brown-sec">
+              {t("noResults", { query })}
             </li>
-          ))}
+          )}
         </ul>
       )}
     </>

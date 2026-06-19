@@ -18,8 +18,13 @@ export async function generateMetadata({
   return { title: t("explore") };
 }
 
-export default async function ExplorePage() {
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const t = await getTranslations("app.explore");
+  const { q } = await searchParams;
   const [trending, users, posts] = await Promise.all([
     getTrending(),
     getWhoToFollow(),
@@ -28,8 +33,8 @@ export default async function ExplorePage() {
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-      <TopBar searchPlaceholder={t("searchPlaceholder")} />
-      <ExploreContent trending={trending} users={users} posts={posts} />
+      <TopBar searchPlaceholder={t("searchPlaceholder")} searchable />
+      <ExploreContent trending={trending} users={users} posts={posts} query={q ?? ""} />
     </main>
   );
 }
