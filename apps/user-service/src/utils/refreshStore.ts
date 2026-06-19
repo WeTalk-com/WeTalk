@@ -16,3 +16,16 @@ export async function isRefreshValid(userId: string, jti: string): Promise<boole
 export async function revokeRefresh(userId: string, jti: string): Promise<void> {
   await redis.del(key(userId, jti));
 }
+
+// Révocation au niveau du sujet : supprime tous les refresh tokens d'un user
+export async function revokeAllRefresh(userId: string): Promise<void> {
+  const pattern = `refresh:${userId}:*`;
+  let cursor = "0";
+  do {
+    const reply = await redis.scan(cursor, { MATCH: pattern, COUNT: 100 });
+    cursor = reply.cursor;
+    if (reply.keys.length > 0) {
+      await redis.del(reply.keys);
+    }
+  } while (cursor !== "0");
+}

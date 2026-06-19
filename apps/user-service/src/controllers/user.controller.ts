@@ -3,6 +3,7 @@ import { Op, type WhereOptions } from "sequelize";
 import { User, Follow } from "../models/index.js";
 import type { UserRole } from "../models/user.js";
 import { markAccessBanned, clearAccessBanned } from "../utils/banStore.js";
+import { revokeAllRefresh } from "../utils/refreshStore.js";
 import {
 	listUsersQuerySchema,
 	followListQuerySchema,
@@ -60,6 +61,8 @@ function publicUser(user: User, includeModeration = false) {
 		username: user.username,
 		displayName: user.displayName,
 		description: user.description,
+		profileImage: user.profileImage,
+		profileBanner: user.profileBanner,
 		// email: user.email,
 		role: user.role,
 		createdAt: user.createdAt,
@@ -178,7 +181,9 @@ export async function deleteMe(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
-		await clearAccessBanned(myId);
+		// Le compte est supprimé mais son access token reste valide jusqu'à expiration. Donc on le révoque immédiatement
+		await markAccessBanned(myId);
+		await revokeAllRefresh(myId);
 
 		res.json({ message: "Compte supprimé avec succès." });
 	} catch (error) {

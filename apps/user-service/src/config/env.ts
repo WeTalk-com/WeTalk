@@ -65,7 +65,13 @@ function durationToSeconds(value: string): number | null {
 }
 
 const accessLifetimeSeconds = durationToSeconds(env.jwtAccessExpiresIn);
-if (accessLifetimeSeconds !== null && env.accessRevokeTtlSeconds < accessLifetimeSeconds) {
+if (accessLifetimeSeconds === null) {
+  throw new Error(
+    `JWT_ACCESS_EXPIRES_IN="${env.jwtAccessExpiresIn}" must be an integer number of seconds ` +
+      `or use one of the supported suffixes: s, m, h, d.`,
+  );
+}
+if (env.accessRevokeTtlSeconds < accessLifetimeSeconds) {
   throw new Error(
     `ACCESS_REVOKE_TTL_SECONDS (${env.accessRevokeTtlSeconds}s) must be >= access token lifetime ` +
       `(${accessLifetimeSeconds}s, from JWT_ACCESS_EXPIRES_IN="${env.jwtAccessExpiresIn}"). ` +
