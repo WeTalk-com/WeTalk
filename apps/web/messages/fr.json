@@ -129,7 +129,9 @@
       "catTravel": "Voyage",
       "catDesign": "Design",
       "catFilm": "Film",
-      "catFood": "Cuisine"
+      "catFood": "Cuisine",
+      "noResults": "Aucun résultat pour « {query} »",
+      "searchResults": "Résultats pour « {query} »"
     },
     "notifications": {
       "title": "Notifications",
@@ -155,12 +157,17 @@
       "tabPosts": "Posts",
       "tabMedia": "Médias",
       "tabLikes": "J'aime",
-      "handleComingSoon": "Profil de @{handle} — bientôt disponible"
+      "handleComingSoon": "Profil de @{handle} — bientôt disponible",
+      "postsEmpty": "Aucun post pour l'instant.",
+      "mediaEmpty": "Aucun média pour l'instant.",
+      "likesEmpty": "Aucun j'aime pour l'instant."
     },
     "rightRail": {
       "whoToFollow": "À suivre",
       "trending": "Tendances",
       "follow": "Suivre",
+      "following": "Suivi",
+      "unfollow": "Se désabonner",
       "linkAbout": "À propos",
       "linkHelp": "Aide",
       "linkTerms": "Conditions",
@@ -192,7 +199,9 @@
       "addLocation": "Ajouter un lieu",
       "enhance": "Améliorer",
       "post": "Publier",
-      "close": "Fermer"
+      "close": "Fermer",
+      "removeImage": "Supprimer l'image",
+      "charCount": "{count}/{max}"
     }
   },
   "settings": {

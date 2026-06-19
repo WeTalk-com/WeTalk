@@ -129,7 +129,9 @@
       "catTravel": "Travel",
       "catDesign": "Design",
       "catFilm": "Film",
-      "catFood": "Food"
+      "catFood": "Food",
+      "noResults": "No results for \"{query}\"",
+      "searchResults": "Results for \"{query}\""
     },
     "notifications": {
       "title": "Notifications",
@@ -155,12 +157,17 @@
       "tabPosts": "Posts",
       "tabMedia": "Media",
       "tabLikes": "Likes",
-      "handleComingSoon": "Profile of @{handle} — coming soon"
+      "handleComingSoon": "Profile of @{handle} — coming soon",
+      "postsEmpty": "No posts yet.",
+      "mediaEmpty": "No media yet.",
+      "likesEmpty": "No likes yet."
     },
     "rightRail": {
       "whoToFollow": "Who to follow",
       "trending": "Trending",
       "follow": "Follow",
+      "following": "Following",
+      "unfollow": "Unfollow",
       "linkAbout": "About",
       "linkHelp": "Help",
       "linkTerms": "Terms",
@@ -192,7 +199,9 @@
       "addLocation": "Add location",
       "enhance": "Enhance",
       "post": "Post",
-      "close": "Close"
+      "close": "Close",
+      "removeImage": "Remove image",
+      "charCount": "{count}/{max}"
     }
   },
   "settings": {
