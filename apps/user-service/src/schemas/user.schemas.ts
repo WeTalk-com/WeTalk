@@ -13,10 +13,10 @@ export const userIdentifierParamSchema = z.object({
 // bornes alignées sur le modèle User (longueurs, URLs).
 export const updateMeSchema = z
 	.object({
-		displayName: z.string().min(3).max(50),
-		profileImage: z.string().url().max(256),
-		profileBanner: z.string().url().max(256),
-		description: z.string().min(1).max(280),
+		displayName: z.string().min(3).max(50).nullable(),
+		profileImage: z.string().url().max(256).nullable(),
+		profileBanner: z.string().url().max(256).nullable(),
+		description: z.string().min(1).max(280).nullable(),
 	})
 	.partial();
 

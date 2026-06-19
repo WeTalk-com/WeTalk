@@ -52,3 +52,23 @@ if (
     "Refusing to start in production with default JWT secrets. Set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET.",
   );
 }
+
+// Convertit une durée jsonwebtoken ("15m"/"900s"/"1h"/"7d" ou un nombre = secondes)
+// en secondes. Renvoie null si le format n'est pas reconnu.
+function durationToSeconds(value: string): number | null {
+  const trimmed = value.trim();
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  const match = /^(\d+)\s*(s|m|h|d)$/.exec(trimmed);
+  if (!match) return null;
+  const mult = { s: 1, m: 60, h: 3600, d: 86400 }[match[2] as "s" | "m" | "h" | "d"];
+  return Number(match[1]) * mult;
+}
+
+const accessLifetimeSeconds = durationToSeconds(env.jwtAccessExpiresIn);
+if (accessLifetimeSeconds !== null && env.accessRevokeTtlSeconds < accessLifetimeSeconds) {
+  throw new Error(
+    `ACCESS_REVOKE_TTL_SECONDS (${env.accessRevokeTtlSeconds}s) must be >= access token lifetime ` +
+      `(${accessLifetimeSeconds}s, from JWT_ACCESS_EXPIRES_IN="${env.jwtAccessExpiresIn}"). ` +
+      `Otherwise a banned user keeps a valid access token after the denylist entry expires.`,
+  );
+}
