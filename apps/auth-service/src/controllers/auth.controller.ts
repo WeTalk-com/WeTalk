@@ -150,6 +150,12 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  if (user.isBanned) {
+    logger.warn("login blocked: banned user", { userId: user.id });
+    res.status(403).json({ error: "Account banned" });
+    return;
+  }
+
   const tokens = await issueTokens(user.id, user.role);
   logger.info("login success", { userId: user.id });
   res.json({ user: publicUser(user), ...tokens });
@@ -178,9 +184,17 @@ export async function refresh(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  const user = await User.findByPk(decoded.sub);
+  if (!user || user.isBanned) {
+    await revokeRefresh(decoded.sub, decoded.jti);
+    logger.warn("refresh blocked: banned or missing user", { userId: decoded.sub });
+    res.status(403).json({ error: "Account banned" });
+    return;
+  }
+
   // Rotation : on invalide l'ancien jti et on émet une nouvelle paire.
   await revokeRefresh(decoded.sub, decoded.jti);
-  const tokens = await issueTokens(decoded.sub, decoded.role);
+  const tokens = await issueTokens(decoded.sub, user.role);
   logger.info("token refreshed", { userId: decoded.sub });
   res.json(tokens);
 }
