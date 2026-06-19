@@ -13,9 +13,21 @@ export async function getMyPosts(): Promise<Post[]> {
   return structuredClone(myPosts);
 }
 
+export type CreatePostInput = {
+  text: string;
+  /** Hashtags extraits du texte (ex: ["#wetalk", "#photo"]) */
+  tags: string[];
+  /** Fichier image sélectionné par l'utilisateur */
+  image?: File;
+};
+
 /** Creation d'un post (maquette : pas de persistance). */
-export async function createPost(input: { text: string }): Promise<void> {
-  // TODO(api): await apiFetch("/posts", { method: "POST", body: JSON.stringify(input) });
+export async function createPost(input: CreatePostInput): Promise<void> {
+  // TODO(api): si image présente → multipart/form-data, sinon → JSON
+  // const body = input.image
+  //   ? (() => { const fd = new FormData(); fd.append("text", input.text); fd.append("tags", JSON.stringify(input.tags)); fd.append("image", input.image!); return fd; })()
+  //   : JSON.stringify({ text: input.text, tags: input.tags });
+  // await apiFetch("/posts", { method: "POST", body });
   if (process.env.NODE_ENV === "development") {
     console.log("createPost (mock)", input);
   }
