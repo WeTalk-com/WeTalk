@@ -1,6 +1,49 @@
 import type { Request, Response } from "express";
-import {type CreationOptional, Op} from "sequelize";
-import { User, Follow, Mute, Block } from "../models/index.js";
+import { Op, type WhereOptions } from "sequelize";
+import { User, Follow } from "../models/index.js";
+import { markAccessBanned, clearAccessBanned } from "../utils/banStore.js";
+import {
+	listUsersQuerySchema,
+	followListQuerySchema,
+	suspendBodySchema,
+} from "../schemas/user.schemas.js";
+
+// Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Échappe les jokers LIKE (\ % _) pour qu'un terme de recherche soit traité
+// littéralement et ne permette pas à l'utilisateur d'injecter des wildcards.
+function escapeLike(term: string): string {
+	return term.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+// Suspension active = date future. On normalise les dates passées à "non suspendu".
+function isSuspended(user: User): boolean {
+	return user.suspendedUntil != null && user.suspendedUntil.getTime() > Date.now();
+}
+
+// Calcule la date de fin de suspension à partir de maintenant + (montant, unité).
+function computeSuspendedUntil(amount: number, unit: string): Date {
+	const until = new Date();
+	switch (unit) {
+		case "minutes":
+			until.setMinutes(until.getMinutes() + amount);
+			break;
+		case "hours":
+			until.setHours(until.getHours() + amount);
+			break;
+		case "days":
+			until.setDate(until.getDate() + amount);
+			break;
+		case "months":
+			until.setMonth(until.getMonth() + amount);
+			break;
+		case "years":
+			until.setFullYear(until.getFullYear() + amount);
+			break;
+	}
+	return until;
+}
 
 function publicUser(user: User) {
 	return {
@@ -10,6 +53,9 @@ function publicUser(user: User) {
 		description: user.description,
 		// email: user.email,
 		role: user.role,
+		isBanned: user.isBanned,
+		isSuspended: isSuspended(user),
+		suspendedUntil: isSuspended(user) ? user.suspendedUntil : null,
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
 	};
@@ -26,34 +72,49 @@ export async function me(req: Request, res: Response): Promise<void> {
 }
 
 export async function getUsers(req: Request, res: Response): Promise<void> {
-	const limit = parseInt(req.query.limit as string) || 10;
-	// TODO: Implémenter la recherche
-	// noinspection JSUnusedLocalSymbols
-	const { search, cursor } = req.query;
+	const parsed = listUsersQuerySchema.safeParse(req.query);
+	if (!parsed.success) {
+		res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+		return;
+	}
+	const { limit, cursor, search } = parsed.data;
+
+	// Recherche (Fx13) : match partiel insensible à la casse sur username + displayName.
+	let where: WhereOptions | undefined;
+	if (search) {
+		const pattern = `%${escapeLike(search)}%`;
+		where = {
+			[Op.or]: [
+				{ username: { [Op.iLike]: pattern } },
+				{ displayName: { [Op.iLike]: pattern } },
+			],
+		};
+	}
 
 	const users = await User.findAll({
-		limit: limit > 100 ? 100 : limit,
-		...(cursor && {
-			offset: parseInt(cursor as string) || 0
-		}),
+		...(where && { where }),
+		limit,
+		...(cursor !== undefined && { offset: cursor }),
 		order: [
 			["id", "DESC"]
 		],
 	});
-	res.json(users);
+	res.json(users.map(publicUser));
 }
 
 export async function getUser(req: Request, res: Response): Promise<void> {
-	const userId = req.params.id as string;
-	if (userId) {
-		const user = await User.findByPk(userId);
-		if (user)
-			res.json(user);
-		else
-			res.status(404).json({ error: "User not found" });
-	} else {
-		res.status(404).json({ error: "User ID does not exists" });
+	const identifier = req.params.id as string;
+
+	// Lookup par UUID si l'identifiant en est un, sinon par username.
+	const user = UUID_RE.test(identifier)
+		? await User.findByPk(identifier)
+		: await User.findOne({ where: { username: identifier } });
+
+	if (!user) {
+		res.status(404).json({ error: "User not found" });
+		return;
 	}
+	res.json(publicUser(user));
 }
 
 // export async function updateMe(req: Request, res: Response): Promise<void> {}
@@ -158,10 +219,13 @@ export async function unfollow(req: Request, res: Response): Promise<void> {
 
 export async function getFollowing(req: Request, res: Response): Promise<void> {
 	try {
-		// TODO: Réviser la pagination
-		// noinspection JSUnusedLocalSymbols
-		const { cursor } = req.query;
-		const limit = parseInt(req.query.limit as string, 10) || 10;
+		const parsed = followListQuerySchema.safeParse(req.query);
+		if (!parsed.success) {
+			res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+			return;
+		}
+		// TODO: Réviser la pagination (parsed.data.cursor)
+		const { limit } = parsed.data;
 
 		const whereConditions = { followerId: req.params.id };
 
@@ -186,10 +250,13 @@ export async function getFollowing(req: Request, res: Response): Promise<void> {
 
 export async function getFollowers(req: Request, res: Response): Promise<void> {
 	try {
-		// TODO: Réviser la pagination
-		// noinspection JSUnusedLocalSymbols
-		const { cursor } = req.query;
-		const limit = parseInt(req.query.limit as string, 10) || 10;
+		const parsed = followListQuerySchema.safeParse(req.query);
+		if (!parsed.success) {
+			res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+			return;
+		}
+		// TODO: Réviser la pagination (parsed.data.cursor)
+		const { limit } = parsed.data;
 
 		const whereConditions = { followingId: req.params.id };
 
@@ -197,15 +264,14 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 			where: whereConditions,
 			limit: limit,
 			order: [['createdAt', 'DESC'], ['followerId', 'DESC']],
-			// On inclut le modèle User lié pour récupérer les infos du compte suivi
-			include: [{ model: User, as: 'Followers', attributes: ['id', 'username'] }]
+			// On inclut le User abonné (followerId) pour récupérer ses infos
+			include: [{ model: User, as: 'Follower', attributes: ['id', 'username'] }]
 		});
 
-		// @ts-ignore
 		res.json({
 			data: followRelations.map(f => {
 				// @ts-ignore
-				return f.Followers;
+				return f.Follower;
 			})
 		});
 	} catch (error) {
@@ -213,29 +279,15 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 	}
 }
 
-export async function blockList(req: Request, res: Response): Promise<void> {
-	try {
-		const blocks = await Block.findAll({
-			where: { blockerId: req.user?.sub },
-			include: [{ model: User, as: 'BlockedUser', attributes: ['id', 'username'] }]
-		});
-		res.json({ data: blocks.map(b => {
-				// @ts-ignore
-				return b.BlockedUser;
-			})
-		});
-	} catch (error) {
-		res.status(500).json({ error: "Erreur lors de la récupération." });
-	}
-}
-
-export async function block(req: Request, res: Response): Promise<void> {
+// Fx21 — bannissement par un modérateur/admin. Un utilisateur banni ne peut
+// plus se connecter (vérifié dans auth-service au login et au refresh).
+export async function banUser(req: Request, res: Response): Promise<void> {
 	try {
 		const targetId = req.params.id as string;
 		const myId = req.user?.sub as string;
 
 		if (targetId === myId) {
-			res.status(400).json({ error: "Action impossible." });
+			res.status(400).json({ error: "Vous ne pouvez pas vous bannir vous-même." });
 			return;
 		}
 
@@ -245,40 +297,56 @@ export async function block(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
-		// Règle métier Twitter : Bloquer quelqu'un force le désabonnement mutuel automatique
-		await Follow.destroy({
-			where: {
-				[Op.or]: [
-					{ followerId: myId, followingId: targetId },
-					{ followerId: targetId, followingId: myId }
-				]
-			}
-		});
+		// On protège les admins : un modérateur ne peut pas bannir un admin.
+		if (targetUser.role === "admin") {
+			res.status(403).json({ error: "Impossible de bannir un administrateur." });
+			return;
+		}
 
-		await Block.findOrCreate({ where: { blockerId: myId, blockedId: targetId } });
+		targetUser.isBanned = true;
+		await targetUser.save();
+		// Révoque immédiatement les access tokens encore valides de l'utilisateur.
+		await markAccessBanned(targetId);
 
-		res.json({ message: "Utilisateur bloqué." });
+		res.json({ message: "Utilisateur banni." });
 	} catch (error) {
-		res.status(500).json({ error: "Erreur lors du blocage." });
+		res.status(500).json({ error: "Erreur lors du bannissement." });
 	}
 }
 
-export async function unblock(req: Request, res: Response): Promise<void> {
+export async function unbanUser(req: Request, res: Response): Promise<void> {
 	try {
-		await Block.destroy({ where: { blockerId: req.user?.sub, blockedId: req.params.id } });
-		res.json({ message: "Utilisateur débloqué." });
+		const targetUser = await User.findByPk(req.params.id as string);
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
+			return;
+		}
+
+		targetUser.isBanned = false;
+		await targetUser.save();
+		await clearAccessBanned(targetUser.id);
+
+		res.json({ message: "Utilisateur débanni." });
 	} catch (error) {
-		res.status(500).json({ error: "Erreur lors du déblocage." });
+		res.status(500).json({ error: "Erreur lors du débannissement." });
 	}
 }
 
-export async function mute(req: Request, res: Response): Promise<void> {
+// Fx21 — suspension par un modérateur/admin : l'utilisateur ne peut plus
+// envoyer de posts jusqu'à suspendedUntil (vérifié par post-service à la création).
+export async function suspendUser(req: Request, res: Response): Promise<void> {
 	try {
 		const targetId = req.params.id as string;
 		const myId = req.user?.sub as string;
 
 		if (targetId === myId) {
-			res.status(400).json({ error: "Action impossible." });
+			res.status(400).json({ error: "Vous ne pouvez pas vous suspendre vous-même." });
+			return;
+		}
+
+		const parsed = suspendBodySchema.safeParse(req.body);
+		if (!parsed.success) {
+			res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
 			return;
 		}
 
@@ -288,18 +356,34 @@ export async function mute(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
-		await Mute.findOrCreate({ where: { muterId: myId, mutedId: targetId } });
-		res.json({ message: "Utilisateur masqué." });
+		// On protège les admins : un modérateur ne peut pas suspendre un admin.
+		if (targetUser.role === "admin") {
+			res.status(403).json({ error: "Impossible de suspendre un administrateur." });
+			return;
+		}
+
+		targetUser.suspendedUntil = computeSuspendedUntil(parsed.data.amount, parsed.data.unit);
+		await targetUser.save();
+
+		res.json({ message: "Utilisateur suspendu.", suspendedUntil: targetUser.suspendedUntil });
 	} catch (error) {
-		res.status(500).json({ error: "Erreur lors du masquage." });
+		res.status(500).json({ error: "Erreur lors de la suspension." });
 	}
 }
 
-export async function unmute(req: Request, res: Response): Promise<void> {
+export async function unsuspendUser(req: Request, res: Response): Promise<void> {
 	try {
-		await Mute.destroy({ where: { muterId: req.user?.sub, mutedId: req.params.id } });
-		res.json({ message: "L'utilisateur n'est plus masqué." });
+		const targetUser = await User.findByPk(req.params.id as string);
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
+			return;
+		}
+
+		targetUser.suspendedUntil = null;
+		await targetUser.save();
+
+		res.json({ message: "Suspension levée." });
 	} catch (error) {
-		res.status(500).json({ error: "Erreur." });
+		res.status(500).json({ error: "Erreur lors de la levée de suspension." });
 	}
 }

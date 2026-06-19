@@ -22,7 +22,8 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.21.0",
     "redis": "^6.0.0",
-    "sequelize": "^6.37.8"
+    "sequelize": "^6.37.8",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

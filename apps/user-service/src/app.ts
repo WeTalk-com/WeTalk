@@ -3,6 +3,7 @@ import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { userRouter } from "./routes/user.routes.js";
+import { apiLimiter } from "./middleware/rateLimit.js";
 import { logger } from "./utils/logger.js";
 import qs from "qs";
 
@@ -53,7 +54,7 @@ export function createApp() {
 		res.json({ status: "ok", service: "user-service" });
 	});
 
-	app.use("/users", userRouter);
+	app.use("/users", apiLimiter, userRouter);
 
 	// 404
 	app.use((_req: Request, res: Response) => {
