@@ -195,8 +195,9 @@ services:
         condition: service_healthy
       post-service:
         condition: service_healthy
-      notification-service:
-        condition: service_healthy
+      # Desactive tant que notification-service n'est pas implemente (feature notifications).
+      # notification-service:
+      #   condition: service_healthy
       web:
         condition: service_healthy
     networks:
