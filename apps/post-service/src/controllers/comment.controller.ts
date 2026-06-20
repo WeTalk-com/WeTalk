@@ -57,7 +57,9 @@ export async function createComment(req: Request, res: Response): Promise<void> 
     content: parsed.data.content,
     parentId: parsed.data.parentId ?? null,
   });
-  res.status(201).json({ comment });
+  // likedBy (ids des likers) n'est jamais exposé au client.
+  const { likedBy: _likedBy, ...commentOut } = comment.toObject();
+  res.status(201).json({ comment: commentOut });
 }
 
 // GET /posts/:id/comments — liste paginée (cursor _id décroissant), auteurs enrichis.

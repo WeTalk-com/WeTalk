@@ -196,7 +196,9 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     authorId: req.user!.sub,
     content: parsed.data.content,
   });
-  res.status(201).json({ post });
+  // likedBy (ids des likers) n'est jamais exposé au client.
+  const { likedBy: _likedBy, ...postOut } = post.toObject();
+  res.status(201).json({ post: postOut });
 }
 
 export async function listPosts(req: Request, res: Response): Promise<void> {
