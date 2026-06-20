@@ -169,7 +169,9 @@ export function PostCard({ post }: { post: Post }) {
         {/* Actions */}
         <div className="mt-4">
           <PostActions
+            postId={post.id}
             likes={post.likes}
+            likedByMe={post.likedByMe}
             comments={post.comments}
             shares={post.shares}
             onComment={openComments}

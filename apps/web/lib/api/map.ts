@@ -16,7 +16,7 @@ export type BackendUser = {
   createdAt?: string;
 };
 
-// Post enrichi renvoye par post-service.
+// Post enrichi renvoye par post-service (likedBy n'est jamais expose au client).
 export type BackendPost = {
   _id: string;
   authorId: string;
@@ -24,6 +24,9 @@ export type BackendPost = {
   createdAt: string;
   authorBanned?: boolean;
   author: BackendUser | null;
+  likeCount: number;
+  likedByMe: boolean;
+  commentCount: number;
 };
 
 export function mapUser(u: BackendUser): User {
@@ -47,8 +50,9 @@ export function mapPost(p: BackendPost): Post {
     createdAt: p.createdAt,
     text: p.content ?? "",
     tags: [],
-    likes: 0,
-    comments: 0,
+    likes: p.likeCount,
+    likedByMe: p.likedByMe,
+    comments: p.commentCount,
     shares: 0,
   };
 }

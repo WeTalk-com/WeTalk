@@ -34,6 +34,18 @@ export async function createPost(input: CreatePostInput): Promise<void> {
   });
 }
 
+export type LikeState = { likeCount: number; likedByMe: boolean };
+
+/** Like un post (idempotent côté back). */
+export function likePost(postId: string): Promise<LikeState> {
+  return apiFetch<LikeState>(`/posts/${postId}/like`, { method: "POST" });
+}
+
+/** Retire son like (idempotent côté back). */
+export function unlikePost(postId: string): Promise<LikeState> {
+  return apiFetch<LikeState>(`/posts/${postId}/like`, { method: "DELETE" });
+}
+
 /** Commentaires d'un post. */
 export async function getComments(postId: string): Promise<Comment[]> {
   // TODO(api): return apiFetch<Comment[]>(`/posts/${postId}/comments`);

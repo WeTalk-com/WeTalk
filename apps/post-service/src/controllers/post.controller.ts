@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, Types } from "mongoose";
 import { z } from "zod";
 import { PostModel } from "../models/post.js";
+import { CommentModel } from "../models/comment.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 
@@ -145,6 +146,36 @@ export async function withAuthors<T extends { authorId: string }>(
   });
 }
 
+// Nombre de commentaires par post, en une seule passe d'agrégation.
+async function commentCounts(postIds: string[]): Promise<Map<string, number>> {
+  if (postIds.length === 0) return new Map();
+  const rows = await CommentModel.aggregate<{ _id: Types.ObjectId; count: number }>([
+    { $match: { postId: { $in: postIds.map((id) => new Types.ObjectId(id)) } } },
+    { $group: { _id: "$postId", count: { $sum: 1 } } },
+  ]);
+  return new Map(rows.map((r) => [String(r._id), r.count]));
+}
+
+// Enrichit pour le lecteur courant : auteur (+ masquage banni) puis likeCount /
+// likedByMe / commentCount. likedBy (ids des likers) n'est jamais renvoyé au client.
+async function enrichForViewer<T extends { _id: unknown; authorId: string; likedBy: string[] }>(
+  posts: T[],
+  req: Request,
+) {
+  const authored = await withAuthors(posts, forwardAuth(req));
+  const counts = await commentCounts(posts.map((p) => String(p._id)));
+  const me = req.user!.sub;
+  return authored.map((p) => {
+    const { likedBy, ...rest } = p;
+    return {
+      ...rest,
+      likeCount: likedBy.length,
+      likedByMe: likedBy.includes(me),
+      commentCount: counts.get(String(p._id)) ?? 0,
+    };
+  });
+}
+
 export async function createPost(req: Request, res: Response): Promise<void> {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -183,7 +214,7 @@ export async function listPosts(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, forwardAuth(req));
+  const enriched = await enrichForViewer(posts, req);
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -206,7 +237,7 @@ export async function feed(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, forwardAuth(req));
+  const enriched = await enrichForViewer(posts, req);
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -221,7 +252,7 @@ export async function getPost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  const [enriched] = await withAuthors([post], forwardAuth(req));
+  const [enriched] = await enrichForViewer([post], req);
   res.json({ post: enriched });
 }
 

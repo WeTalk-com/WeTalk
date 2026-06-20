@@ -26,6 +26,8 @@ export type Post = {
   imageRatio?: string; // ex. "1600x1000"
   hasVideo?: boolean;
   likes: number;
+  /** Le lecteur courant a-t-il liké ce post (état initial du bouton). */
+  likedByMe?: boolean;
   comments: number;
   shares: number;
 };
