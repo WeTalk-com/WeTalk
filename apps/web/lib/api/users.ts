@@ -1,20 +1,29 @@
 import type { User, Profile } from "@/lib/types";
-import { currentUser, currentUserProfile, whoToFollow } from "@/lib/mock-data";
+import { whoToFollow } from "@/lib/mock-data";
+import { apiFetch } from "./client";
+import { mapUser, mapProfile, type BackendUser } from "./map";
 
-/** Utilisateur connecte (proviendra de la session/auth). */
+/** Utilisateur connecté (depuis le cookie de session). */
 export async function getCurrentUser(): Promise<User> {
-  // TODO(api): return apiFetch<User>("/me");
-  return structuredClone(currentUser);
+  return mapUser(await apiFetch<BackendUser>("/users/me"));
 }
 
-/** Profil affiche (par handle ; ici le profil courant). */
+/** Profil affiché — ici le profil de l'utilisateur courant. */
 export async function getProfile(): Promise<Profile> {
-  // TODO(api): return apiFetch<Profile>(`/users/${handle}`);
-  return structuredClone(currentUserProfile);
+  return mapProfile(await apiFetch<BackendUser>("/users/me"));
 }
 
-/** Suggestions "a suivre". */
+/** S'abonner à un utilisateur. */
+export function followUser(id: string): Promise<unknown> {
+  return apiFetch(`/users/${id}/follow`, { method: "POST" });
+}
+
+/** Se désabonner. */
+export function unfollowUser(id: string): Promise<unknown> {
+  return apiFetch(`/users/${id}/follow`, { method: "DELETE" });
+}
+
+/** Suggestions "à suivre" — pas d'endpoint backend, reste mock. */
 export async function getWhoToFollow(): Promise<User[]> {
-  // TODO(api): return apiFetch<User[]>("/suggestions/follow");
   return structuredClone(whoToFollow);
 }
