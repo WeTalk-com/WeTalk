@@ -1,4 +1,5 @@
 import express, { type Request, type Response, type NextFunction } from "express";
+import cookieParser from "cookie-parser";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
@@ -31,6 +32,7 @@ export function createApp() {
   app.use(helmet());
   app.use(cors(corsOptions));
   app.use(express.json());
+  app.use(cookieParser());
 
   // Access log : une ligne par requête une fois la réponse terminée.
   app.use((req: Request, res: Response, next: NextFunction) => {

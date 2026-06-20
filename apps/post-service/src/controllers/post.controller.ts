@@ -5,14 +5,22 @@ import { PostModel } from "../models/post.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 
+// Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
+function forwardAuth(req: Request): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (req.headers.authorization) headers.authorization = req.headers.authorization;
+  if (req.headers.cookie) headers.cookie = req.headers.cookie;
+  return headers;
+}
+
 // Vérifie auprès du user-service si l'auteur peut publier
 async function authorPostingBlock(
   userId: string,
-  authHeader: string | undefined,
+  headers: Record<string, string>,
 ): Promise<{ blocked: boolean; reason: string; status: number }> {
   try {
     const res = await fetch(`${env.userServiceUrl}/users/${userId}`, {
-      headers: authHeader ? { authorization: authHeader } : {},
+      headers,
       signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) {
@@ -59,10 +67,10 @@ type AuthorLite = {
   isBanned: boolean;
 };
 
-async function fetchFollowingIds(userId: string, authHeader: string | undefined): Promise<string[]> {
+async function fetchFollowingIds(userId: string, headers: Record<string, string>): Promise<string[]> {
   try {
     const res = await fetch(`${env.userServiceUrl}/users/${userId}/following/ids`, {
-      headers: authHeader ? { authorization: authHeader } : {},
+      headers,
       signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) {
@@ -82,14 +90,14 @@ async function fetchFollowingIds(userId: string, authHeader: string | undefined)
 
 async function fetchAuthors(
   ids: string[],
-  authHeader: string | undefined,
+  headers: Record<string, string>,
 ): Promise<Map<string, AuthorLite>> {
   const map = new Map<string, AuthorLite>();
   const unique = [...new Set(ids)];
   if (unique.length === 0) return map;
   try {
     const res = await fetch(`${env.userServiceUrl}/users?ids=${unique.join(",")}`, {
-      headers: authHeader ? { authorization: authHeader } : {},
+      headers,
       signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) {
@@ -120,9 +128,9 @@ async function fetchAuthors(
 // affiche un message dédié quand authorBanned est vrai.
 async function withAuthors<T extends { authorId: string }>(
   posts: T[],
-  authHeader: string | undefined,
+  headers: Record<string, string>,
 ) {
-  const authors = await fetchAuthors(posts.map((p) => p.authorId), authHeader);
+  const authors = await fetchAuthors(posts.map((p) => p.authorId), headers);
   return posts.map((p) => {
     const author = authors.get(p.authorId) ?? null;
     if (author?.isBanned) {
@@ -145,7 +153,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
   }
 
   // L'auteur ne doit être ni banni ni suspendu (Fx21).
-  const { blocked, reason, status } = await authorPostingBlock(req.user!.sub, req.headers.authorization);
+  const { blocked, reason, status } = await authorPostingBlock(req.user!.sub, forwardAuth(req));
   if (blocked) {
     res.status(status).json({ error: reason });
     return;
@@ -175,7 +183,7 @@ export async function listPosts(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, req.headers.authorization);
+  const enriched = await withAuthors(posts, forwardAuth(req));
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -188,7 +196,7 @@ export async function feed(req: Request, res: Response): Promise<void> {
   const { cursor, limit } = parsed.data;
   const me = req.user!.sub;
 
-  const following = await fetchFollowingIds(me, req.headers.authorization);
+  const following = await fetchFollowingIds(me, forwardAuth(req));
   const authorIds = [...new Set([me, ...following])];
 
   const filter: Record<string, unknown> = { authorId: { $in: authorIds } };
@@ -198,7 +206,7 @@ export async function feed(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, req.headers.authorization);
+  const enriched = await withAuthors(posts, forwardAuth(req));
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -213,7 +221,7 @@ export async function getPost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  const [enriched] = await withAuthors([post], req.headers.authorization);
+  const [enriched] = await withAuthors([post], forwardAuth(req));
   res.json({ post: enriched });
 }
 

@@ -137,29 +137,25 @@ services:
       retries: 5
       start_period: 20s
 
-  notification-service:
-    build:
-      context: .
-      dockerfile: apps/notification-service/Dockerfile
-    container_name: wetalk-notification-service
-    restart: unless-stopped
-    env_file:
-      - .env
-      # Faut qu'on précise la DB juste ici quand on aura décidé si mongo ou postgre
-      #
-      #
-      #
-      #
-    networks:
-      - wetalk-net
-    expose:
-      - "4003"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4003/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 20s
+  # notification-service:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/notification-service/Dockerfile
+  #   container_name: wetalk-notification-service
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #     # Préciser la DB ici quand on aura décidé mongo ou postgres.
+  #   networks:
+  #     - wetalk-net
+  #   expose:
+  #     - "4003"
+  #   healthcheck:
+  #     test: ["CMD", "node", "-e", "require('http').get('http://localhost:4003/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+  #     start_period: 20s
 
   web:
     build:
@@ -195,8 +191,9 @@ services:
         condition: service_healthy
       post-service:
         condition: service_healthy
-      notification-service:
-        condition: service_healthy
+      # Desactive tant que notification-service n'est pas implemente (feature notifications).
+      # notification-service:
+      #   condition: service_healthy
       web:
         condition: service_healthy
     networks:
