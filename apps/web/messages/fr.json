@@ -69,6 +69,7 @@
   "auth": {
     "subtitle": "Parlez plus chaleureux · Partagez plus lentement",
     "invalidCredentials": "Identifiants invalides",
+    "emailTaken": "Cet email ou nom d'utilisateur est déjà utilisé",
     "logout": "Se déconnecter",
     "backToLogin": "Retour à la connexion",
     "toggleLogin": "Se connecter",

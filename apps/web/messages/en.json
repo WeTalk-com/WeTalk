@@ -69,6 +69,7 @@
   "auth": {
     "subtitle": "Talk warmer · Share slower",
     "invalidCredentials": "Invalid credentials",
+    "emailTaken": "This email or username is already in use",
     "logout": "Log out",
     "backToLogin": "Back to log in",
     "toggleLogin": "Log in",

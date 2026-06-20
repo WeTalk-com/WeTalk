@@ -3,9 +3,15 @@ import { postComments, currentUser } from "@/lib/mock-data";
 import { apiFetch } from "./client";
 import { mapPost, type BackendPost } from "./map";
 
-/** Fil principal — posts récents réels (post-service). */
+/** Fil global — tous les posts récents (page Explore). */
 export async function getPosts(): Promise<Post[]> {
   const data = await apiFetch<{ posts: BackendPost[] }>("/posts");
+  return data.posts.map(mapPost);
+}
+
+/** Fil d'accueil (Fx5) — posts de l'utilisateur courant + des comptes qu'il suit. */
+export async function getFeed(): Promise<Post[]> {
+  const data = await apiFetch<{ posts: BackendPost[] }>("/posts/feed");
   return data.posts.map(mapPost);
 }
 
