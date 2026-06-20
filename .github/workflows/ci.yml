@@ -59,11 +59,7 @@ jobs:
       - name: Build Docker image (${{ matrix.service }})
         run: docker build -t wetalk/${{ matrix.service }} -f apps/${{ matrix.service }}/Dockerfile .
       - name: Scan image with Trivy
-<<<<<<< HEAD
         uses: aquasecurity/trivy-action@v0.36.0
-=======
-        uses: aquasecurity/trivy-action@0.28.0
->>>>>>> 1f50b783c5a39259ac52cbd7de9ca10e234d0f74
         with:
           image-ref: wetalk/${{ matrix.service }}
           format: sarif
