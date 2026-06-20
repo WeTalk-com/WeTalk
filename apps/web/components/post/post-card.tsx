@@ -87,6 +87,7 @@ export function PostCard({ post }: { post: Post }) {
   const [showReport, setShowReport] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const [commentCount, setCommentCount] = useState(post.comments);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -172,7 +173,7 @@ export function PostCard({ post }: { post: Post }) {
             postId={post.id}
             likes={post.likes}
             likedByMe={post.likedByMe}
-            comments={post.comments}
+            comments={commentCount}
             shares={post.shares}
             onComment={openComments}
           />
@@ -184,6 +185,7 @@ export function PostCard({ post }: { post: Post }) {
           postId={post.id}
           initialComments={comments ?? []}
           onClose={() => setShowComments(false)}
+          onCommentAdded={() => setCommentCount((c) => c + 1)}
         />
       )}
 

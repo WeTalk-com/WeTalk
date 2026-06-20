@@ -79,7 +79,14 @@ export async function listComments(req: Request, res: Response): Promise<void> {
   const comments = await CommentModel.find(filter).sort({ _id: -1 }).limit(limit).lean();
   const last = comments.at(-1);
   const nextCursor = comments.length === limit && last ? String(last._id) : null;
-  const enriched = await withAuthors(comments, forwardAuth(req));
+
+  // Auteur enrichi + likeCount/likedByMe ; likedBy (ids des likers) jamais expose.
+  const authored = await withAuthors(comments, forwardAuth(req));
+  const me = req.user!.sub;
+  const enriched = authored.map((c) => {
+    const { likedBy, ...rest } = c;
+    return { ...rest, likeCount: likedBy.length, likedByMe: likedBy.includes(me) };
+  });
   res.json({ comments: enriched, nextCursor });
 }
 

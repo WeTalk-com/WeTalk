@@ -1,7 +1,11 @@
 import type { Post, Comment, Reply, ReportReason } from "@/lib/types";
-import { myPosts, postComments, currentUser } from "@/lib/mock-data";
+import { myPosts } from "@/lib/mock-data";
 import { apiFetch } from "./client";
-import { mapPost, type BackendPost } from "./map";
+import { getCurrentUser } from "./users";
+import { mapPost, mapCommentTree, type BackendPost, type BackendComment } from "./map";
+
+// Reponse brute de creation d'un commentaire (pas encore enrichi auteur/likes).
+type CreatedComment = { _id: string; content: string; createdAt: string };
 
 /** Fil principal — posts récents réels (post-service). */
 export async function getPosts(): Promise<Post[]> {
@@ -46,41 +50,58 @@ export function unlikePost(postId: string): Promise<LikeState> {
   return apiFetch<LikeState>(`/posts/${postId}/like`, { method: "DELETE" });
 }
 
-/** Commentaires d'un post. */
+/** Commentaires d'un post (liste plate -> arbre 1 niveau). */
 export async function getComments(postId: string): Promise<Comment[]> {
-  // TODO(api): return apiFetch<Comment[]>(`/posts/${postId}/comments`);
-  return structuredClone(postComments[postId] ?? []);
+  const data = await apiFetch<{ comments: BackendComment[] }>(`/posts/${postId}/comments`);
+  return mapCommentTree(data.comments);
 }
 
-/** Ajoute un commentaire (optimiste côté client). */
+/** Ajoute un commentaire racine ; l'auteur est le lecteur courant. */
 export async function createComment(postId: string, text: string): Promise<Comment> {
-  // TODO(api): return apiFetch<Comment>(`/posts/${postId}/comments`, { method: "POST", body: JSON.stringify({ text }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("createComment (mock)", { postId, text });
-  }
+  const { comment } = await apiFetch<{ comment: CreatedComment }>(
+    `/posts/${postId}/comments`,
+    { method: "POST", body: JSON.stringify({ content: text }) },
+  );
+  const me = await getCurrentUser();
   return {
-    id: `cm-${Date.now()}`,
-    author: structuredClone(currentUser),
-    text,
-    createdAt: new Date().toISOString(),
+    id: comment._id,
+    author: me,
+    text: comment.content,
+    createdAt: comment.createdAt,
     likes: 0,
+    likedByMe: false,
     replies: [],
   };
 }
 
-/** Ajoute une réponse à un commentaire. */
-export async function createReply(commentId: string, text: string): Promise<Reply> {
-  // TODO(api): return apiFetch<Reply>(`/comments/${commentId}/replies`, { method: "POST", body: JSON.stringify({ text }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("createReply (mock)", { commentId, text });
-  }
+/** Ajoute une réponse : commentaire avec parentId (le back traite les réponses comme des commentaires). */
+export async function createReply(
+  postId: string,
+  commentId: string,
+  text: string,
+): Promise<Reply> {
+  const { comment } = await apiFetch<{ comment: CreatedComment }>(
+    `/posts/${postId}/comments`,
+    { method: "POST", body: JSON.stringify({ content: text, parentId: commentId }) },
+  );
+  const me = await getCurrentUser();
   return {
-    id: `rp-${Date.now()}`,
-    author: structuredClone(currentUser),
-    text,
-    createdAt: new Date().toISOString(),
+    id: comment._id,
+    author: me,
+    text: comment.content,
+    createdAt: comment.createdAt,
     likes: 0,
+    likedByMe: false,
   };
+}
+
+/** Like / unlike un commentaire (idempotent côté back). */
+export function likeComment(commentId: string): Promise<LikeState> {
+  return apiFetch<LikeState>(`/comments/${commentId}/like`, { method: "POST" });
+}
+
+export function unlikeComment(commentId: string): Promise<LikeState> {
+  return apiFetch<LikeState>(`/comments/${commentId}/like`, { method: "DELETE" });
 }
 
 /** Signale un post. */

@@ -38,6 +38,7 @@ export type Reply = {
   text: string;
   createdAt: string;
   likes: number;
+  likedByMe?: boolean;
 };
 
 export type Comment = {
@@ -46,6 +47,7 @@ export type Comment = {
   text: string;
   createdAt: string;
   likes: number;
+  likedByMe?: boolean;
   replies: Reply[];
 };
 
