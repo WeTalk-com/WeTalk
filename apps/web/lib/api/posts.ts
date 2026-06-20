@@ -1,10 +1,12 @@
 import type { Post, Comment, Reply, ReportReason } from "@/lib/types";
-import { posts, myPosts, postComments, currentUser } from "@/lib/mock-data";
+import { myPosts, postComments, currentUser } from "@/lib/mock-data";
+import { apiFetch } from "./client";
+import { mapPost, type BackendPost } from "./map";
 
-/** Fil principal. */
+/** Fil principal — posts récents réels (post-service). */
 export async function getPosts(): Promise<Post[]> {
-  // TODO(api): return apiFetch<Post[]>("/posts");
-  return structuredClone(posts);
+  const data = await apiFetch<{ posts: BackendPost[] }>("/posts");
+  return data.posts.map(mapPost);
 }
 
 /** Publications de l'utilisateur courant (page profil). */
@@ -23,17 +25,13 @@ export type CreatePostInput = {
   video?: File;
 };
 
-/** Creation d'un post (maquette : pas de persistance). */
+/** Création d'un post. Le backend ne gère que le texte (tags/médias = feature à venir). */
 export async function createPost(input: CreatePostInput): Promise<void> {
-  // TODO(api): multipart/form-data si media présent, sinon JSON
-  // const fd = new FormData();
-  // fd.append("text", input.text); fd.append("tags", JSON.stringify(input.tags));
-  // if (input.image) fd.append("image", input.image);
-  // if (input.video) fd.append("video", input.video);
-  // await apiFetch("/posts", { method: "POST", body: input.image || input.video ? fd : JSON.stringify({ text: input.text, tags: input.tags }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("createPost (mock)", input);
-  }
+  // TODO(feature médias): image/vidéo en multipart/form-data quand le media-service existera.
+  await apiFetch("/posts", {
+    method: "POST",
+    body: JSON.stringify({ content: input.text }),
+  });
 }
 
 /** Commentaires d'un post. */
