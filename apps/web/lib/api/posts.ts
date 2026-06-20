@@ -1,5 +1,5 @@
 import type { Post, Comment, Reply, ReportReason } from "@/lib/types";
-import { myPosts, postComments, currentUser } from "@/lib/mock-data";
+import { postComments, currentUser } from "@/lib/mock-data";
 import { apiFetch } from "./client";
 import { mapPost, type BackendPost } from "./map";
 
@@ -9,10 +9,12 @@ export async function getPosts(): Promise<Post[]> {
   return data.posts.map(mapPost);
 }
 
-/** Publications de l'utilisateur courant (page profil). */
-export async function getMyPosts(): Promise<Post[]> {
-  // TODO(api): return apiFetch<Post[]>("/me/posts");
-  return structuredClone(myPosts);
+/** Publications d'un auteur (page profil — soi-même ou autrui). */
+export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
+  const data = await apiFetch<{ posts: BackendPost[] }>(
+    `/posts?authorId=${encodeURIComponent(authorId)}`,
+  );
+  return data.posts.map(mapPost);
 }
 
 export type CreatePostInput = {

@@ -69,6 +69,7 @@
   "auth": {
     "subtitle": "Parlez plus chaleureux · Partagez plus lentement",
     "invalidCredentials": "Identifiants invalides",
+    "logout": "Se déconnecter",
     "backToLogin": "Retour à la connexion",
     "toggleLogin": "Se connecter",
     "toggleSignup": "S'inscrire",
@@ -258,7 +259,9 @@
     "languageFr": "Français",
     "languageEn": "English",
     "themeLabel": "Thème",
-    "themeDescription": "Personnalisez l'apparence de WeTalk."
+    "themeDescription": "Personnalisez l'apparence de WeTalk.",
+    "accountLabel": "Compte",
+    "accountDescription": "Gérez votre session."
   },
   "theme": {
     "changeTheme": "Changer de thème",

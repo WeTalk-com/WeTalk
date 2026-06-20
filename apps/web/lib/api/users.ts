@@ -13,6 +13,19 @@ export async function getProfile(): Promise<Profile> {
   return mapProfile(await apiFetch<BackendUser>("/users/me"));
 }
 
+/** Profil public d'un utilisateur par handle (username) ou id. */
+export async function getUserProfile(handle: string): Promise<Profile> {
+  return mapProfile(await apiFetch<BackendUser>(`/users/${encodeURIComponent(handle)}`));
+}
+
+/** IDs des utilisateurs suivis par `userId` (pour l'état initial du bouton Suivre). */
+export async function getFollowingIds(userId: string): Promise<string[]> {
+  const data = await apiFetch<{ ids: string[] }>(
+    `/users/${encodeURIComponent(userId)}/following/ids`,
+  );
+  return data.ids;
+}
+
 /** S'abonner à un utilisateur. */
 export function followUser(id: string): Promise<unknown> {
   return apiFetch(`/users/${id}/follow`, { method: "POST" });

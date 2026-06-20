@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import {
@@ -15,6 +16,7 @@ import {
 import type { User as UserModel } from "@/lib/types";
 import { UserChip } from "../ui/user-chip";
 import { CreateButton } from "../create/create-button";
+import { LogoutButton } from "../auth/logout-button";
 
 type NavKey = "home" | "explore" | "notifications" | "messages" | "profile" | "settings";
 
@@ -46,6 +48,19 @@ const NAV: NavItem[] = [
 export function LeftSidebar({ user }: { user: UserModel }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [menuOpen]);
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col px-4 py-6 lg:flex">
@@ -87,15 +102,25 @@ export function LeftSidebar({ user }: { user: UserModel }) {
       <CreateButton variant="sidebar" />
 
       {/* Carte utilisateur */}
-      <div className="mt-auto flex items-center gap-3 rounded-2xl px-2 py-2">
+      <div ref={menuRef} className="relative mt-auto flex items-center gap-3 rounded-2xl px-2 py-2">
         <UserChip user={user} solid className="min-w-0 flex-1" />
         <button
           type="button"
           aria-label={t("accountMenu")}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
           className="text-brown-sec transition-colors hover:text-brown"
         >
           <MoreHorizontal className="size-5" />
         </button>
+        {menuOpen && (
+          <div
+            role="menu"
+            className="absolute bottom-14 right-0 z-20 min-w-44 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-card"
+          >
+            <LogoutButton variant="menu" />
+          </div>
+        )}
       </div>
     </aside>
   );
