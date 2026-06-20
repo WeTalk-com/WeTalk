@@ -15,8 +15,27 @@ import {
   revokeRefresh,
 } from "../utils/refreshStore.js";
 import { logger } from "../utils/logger.js";
+import { env } from "../config/env.js";
 
 const SALT_ROUNDS = 12;
+
+// Cookies httpOnly portant les JWT — invisibles au JS (anti-XSS), SameSite=Lax (anti-CSRF).
+const ACCESS_COOKIE = "wetalk_session";
+const REFRESH_COOKIE = "wetalk_refresh";
+const cookieBase = {
+  httpOnly: true,
+  secure: env.nodeEnv === "production", // exige HTTPS en prod, toléré en http local
+  sameSite: "lax" as const,
+  path: "/",
+};
+function setAuthCookies(res: Response, access: string, refresh: string) {
+  res.cookie(ACCESS_COOKIE, access, { ...cookieBase, maxAge: env.accessRevokeTtlSeconds * 1000 });
+  res.cookie(REFRESH_COOKIE, refresh, { ...cookieBase, maxAge: env.refreshTtlSeconds * 1000 });
+}
+function clearAuthCookies(res: Response) {
+  res.clearCookie(ACCESS_COOKIE, cookieBase);
+  res.clearCookie(REFRESH_COOKIE, cookieBase);
+}
 
 const registerSchema = z.object({
   username: z.string().min(3).max(50),
@@ -32,10 +51,6 @@ const adminCreateSchema = registerSchema.extend({
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
-});
-
-const refreshSchema = z.object({
-  refreshToken: z.string().min(1),
 });
 
 function publicUser(user: User) {
@@ -157,21 +172,22 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 
   const tokens = await issueTokens(user.id, user.role);
+  setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
   logger.info("login success", { userId: user.id });
-  res.json({ user: publicUser(user), ...tokens });
+  res.json({ user: publicUser(user) });
 }
 
 // Renouvellement du token d'accès, avec rotation du refresh token.
 export async function refresh(req: Request, res: Response): Promise<void> {
-  const parsed = refreshSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Validation failed" });
+  const token = req.cookies?.[REFRESH_COOKIE];
+  if (!token) {
+    res.status(401).json({ error: "Missing refresh token" });
     return;
   }
 
   let decoded;
   try {
-    decoded = verifyRefreshToken(parsed.data.refreshToken);
+    decoded = verifyRefreshToken(token);
   } catch {
     res.status(401).json({ error: "Invalid or expired refresh token" });
     return;
@@ -195,25 +211,24 @@ export async function refresh(req: Request, res: Response): Promise<void> {
   // Rotation : on invalide l'ancien jti et on émet une nouvelle paire.
   await revokeRefresh(decoded.sub, decoded.jti);
   const tokens = await issueTokens(decoded.sub, user.role);
+  setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
   logger.info("token refreshed", { userId: decoded.sub });
-  res.json(tokens);
+  res.json({ ok: true });
 }
 
 // Déconnexion : révoque le refresh token côté serveur.
 export async function logout(req: Request, res: Response): Promise<void> {
-  const parsed = refreshSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Validation failed" });
-    return;
+  const token = req.cookies?.[REFRESH_COOKIE];
+  if (token) {
+    try {
+      const decoded = verifyRefreshToken(token);
+      await revokeRefresh(decoded.sub, decoded.jti);
+      logger.info("logout", { userId: decoded.sub });
+    } catch {
+      // Token déjà invalide/expiré : logout idempotent.
+    }
   }
-
-  try {
-    const decoded = verifyRefreshToken(parsed.data.refreshToken);
-    await revokeRefresh(decoded.sub, decoded.jti);
-    logger.info("logout", { userId: decoded.sub });
-  } catch {
-    // Token déjà invalide/expiré : logout idempotent, on renvoie 204 quand même.
-  }
+  clearAuthCookies(res);
   res.status(204).send();
 }
 
