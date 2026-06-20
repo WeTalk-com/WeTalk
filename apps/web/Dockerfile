@@ -27,6 +27,10 @@ RUN npm run build --workspace=web
 # Runtime avec next standalone
 FROM base AS runner
 ENV NODE_ENV=production
+# Next standalone lit HOSTNAME pour son bind ; Docker le met a l'id du conteneur.
+# On force 0.0.0.0 pour que localhost (healthcheck) et le nom de service repondent.
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
