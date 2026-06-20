@@ -99,7 +99,7 @@ export function ExploreContent({
               </div>
               <button
                 type="button"
-                aria-label="Plus"
+                aria-label={t("moreOptions")}
                 className="mt-0.5 shrink-0 rounded-full p-1 text-brown-sec opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gold/10 hover:text-gold"
               >
                 <MoreHorizontal className="size-4" />
