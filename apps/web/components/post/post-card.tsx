@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { formatTimeAgo } from "@/lib/format-time";
 import { Card } from "../ui/card";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
@@ -79,6 +80,8 @@ function PostMenu({
 export function PostCard({ post }: { post: Post }) {
   const { author } = post;
   const t = useTranslations("app.post");
+  // Langue active, pour formater la date relative du post.
+  const locale = useLocale();
 
   const [showMenu, setShowMenu] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -114,7 +117,7 @@ export function PostCard({ post }: { post: Post }) {
             href={{ pathname: "/profile/[handle]", params: { handle: author.handle } }}
             className="min-w-0 flex-1"
           >
-            <UserChip user={author} subtitle={`@${author.handle} · ${post.timeAgo}`} />
+            <UserChip user={author} subtitle={`@${author.handle} · ${formatTimeAgo(post.createdAt, locale)}`} />
           </Link>
 
           <div ref={menuRef} className="relative shrink-0">

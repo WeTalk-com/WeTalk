@@ -1,21 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { X, Heart, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { createComment, createReply } from "@/lib/api";
+import { formatTimeAgo } from "@/lib/format-time";
 
 function ReplyRow({ reply }: { reply: Reply }) {
   const [liked, setLiked] = useState(false);
+  // Langue active, pour formater la date relative de la reponse.
+  const locale = useLocale();
   return (
     <div className="ml-11 mt-2 flex gap-2.5">
       <Avatar initial={reply.author.initial} size={28} />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-brown">
           {reply.author.name}{" "}
-          <span className="font-normal text-brown-sec">@{reply.author.handle} · {reply.timeAgo}</span>
+          <span className="font-normal text-brown-sec">@{reply.author.handle} · {formatTimeAgo(reply.createdAt, locale)}</span>
         </p>
         <p className="mt-0.5 text-sm text-ink">{reply.text}</p>
         <button
@@ -40,6 +43,8 @@ function CommentRow({
   onReply: (id: string) => void;
 }) {
   const t = useTranslations("app.comments");
+  // Langue active, pour formater la date relative du commentaire.
+  const locale = useLocale();
   const [liked, setLiked] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -51,7 +56,7 @@ function CommentRow({
           <p className="text-sm font-semibold text-brown">
             {comment.author.name}{" "}
             <span className="font-normal text-brown-sec">
-              @{comment.author.handle} · {comment.timeAgo}
+              @{comment.author.handle} · {formatTimeAgo(comment.createdAt, locale)}
             </span>
           </p>
           <p className="mt-0.5 text-sm text-ink">{comment.text}</p>

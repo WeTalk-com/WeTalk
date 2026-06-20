@@ -15,5 +15,5 @@ export async function sendMessage(
   if (process.env.NODE_ENV === "development") {
     console.log("sendMessage (mock)", { conversationId, text });
   }
-  return { id: `msg-${Date.now()}`, text, timeAgo: "maintenant", mine: true };
+  return { id: `msg-${Date.now()}`, text, createdAt: new Date().toISOString(), mine: true };
 }

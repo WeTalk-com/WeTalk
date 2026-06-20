@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Heart,
   MessageCircle,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "../ui/avatar";
 import type { Notification, NotificationType } from "@/lib/types";
+import { formatTimeAgo } from "@/lib/format-time";
 
 type ActionKey =
   | "actionLike"
@@ -30,9 +31,11 @@ export function NotificationItem({
 }: {
   notification: Notification;
 }) {
-  const { actor, type, preview, timeAgo, read } = notification;
+  const { actor, type, preview, createdAt, read } = notification;
   const { Icon, badge, action } = TYPE[type];
   const t = useTranslations("app.notifications");
+  // useLocale/useTranslations de next-intl marchent aussi en Server Component (RSC).
+  const locale = useLocale();
 
   return (
     <li
@@ -56,7 +59,7 @@ export function NotificationItem({
         {preview && (
           <p className="mt-1 truncate text-sm text-brown-sec">{preview}</p>
         )}
-        <p className="mt-1 text-xs text-brown-sec">{timeAgo}</p>
+        <p className="mt-1 text-xs text-brown-sec">{formatTimeAgo(createdAt, locale)}</p>
       </div>
 
       {!read && (

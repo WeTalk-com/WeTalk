@@ -52,7 +52,7 @@ export async function createComment(postId: string, text: string): Promise<Comme
     id: `cm-${Date.now()}`,
     author: structuredClone(currentUser),
     text,
-    timeAgo: "maintenant",
+    createdAt: new Date().toISOString(),
     likes: 0,
     replies: [],
   };
@@ -68,7 +68,7 @@ export async function createReply(commentId: string, text: string): Promise<Repl
     id: `rp-${Date.now()}`,
     author: structuredClone(currentUser),
     text,
-    timeAgo: "maintenant",
+    createdAt: new Date().toISOString(),
     likes: 0,
   };
 }
