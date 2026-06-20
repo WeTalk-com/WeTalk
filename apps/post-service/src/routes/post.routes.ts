@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { createPost, listPosts, feed, getPost, updatePost, deletePost, likePost, unlikePost } from "../controllers/post.controller.js";
+import { createComment, listComments } from "../controllers/comment.controller.js";
 
 export const postRouter = Router();
 
@@ -12,3 +13,5 @@ postRouter.patch("/:id", requireAuth, updatePost);
 postRouter.delete("/:id", requireAuth, deletePost);
 postRouter.post("/:id/like", requireAuth, likePost);
 postRouter.delete("/:id/like", requireAuth, unlikePost);
+postRouter.post("/:id/comments", requireAuth, createComment);
+postRouter.get("/:id/comments", requireAuth, listComments);

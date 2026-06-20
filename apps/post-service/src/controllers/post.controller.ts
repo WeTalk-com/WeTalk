@@ -6,7 +6,7 @@ import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 
 // Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
-function forwardAuth(req: Request): Record<string, string> {
+export function forwardAuth(req: Request): Record<string, string> {
   const headers: Record<string, string> = {};
   if (req.headers.authorization) headers.authorization = req.headers.authorization;
   if (req.headers.cookie) headers.cookie = req.headers.cookie;
@@ -14,7 +14,7 @@ function forwardAuth(req: Request): Record<string, string> {
 }
 
 // Vérifie auprès du user-service si l'auteur peut publier
-async function authorPostingBlock(
+export async function authorPostingBlock(
   userId: string,
   headers: Record<string, string>,
 ): Promise<{ blocked: boolean; reason: string; status: number }> {
@@ -126,7 +126,7 @@ async function fetchAuthors(
 // read-time : contenu non servi + author anonymisé + flag authorBanned. Rien
 // n'est muté en base, donc c'est réversible automatiquement à l'unban. Le front
 // affiche un message dédié quand authorBanned est vrai.
-async function withAuthors<T extends { authorId: string }>(
+export async function withAuthors<T extends { authorId: string }>(
   posts: T[],
   headers: Record<string, string>,
 ) {
