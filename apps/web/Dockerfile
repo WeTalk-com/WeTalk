@@ -20,6 +20,8 @@ RUN npm ci
 COPY packages/ui ./packages/ui
 COPY packages/typescript-config ./packages/typescript-config
 COPY apps/web ./apps/web
+# NEXT_PUBLIC_* doit etre present au build : Next l'inline dans le bundle client.
+ENV NEXT_PUBLIC_API_URL=/api
 RUN npm run build --workspace=web
 
 # Runtime avec next standalone
