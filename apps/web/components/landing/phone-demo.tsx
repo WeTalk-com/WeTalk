@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Bell,
   Heart,
@@ -25,6 +25,8 @@ const SCENE_MS = 3600;
 function HomeScene({ active }: { active: boolean }) {
   const [liked, setLiked] = useState(false);
   const t = useTranslations("landing.phone");
+  // Langue active, pour formater le nombre de likes selon la locale.
+  const locale = useLocale();
 
   useEffect(() => {
     if (!active) {
@@ -97,7 +99,7 @@ function HomeScene({ active }: { active: boolean }) {
           <Comment className="size-5" />
           <Send className="size-5" />
           <span className="ml-auto text-xs font-medium text-brown">
-            {(liked ? 1246 : 1245).toLocaleString("en-US")} {t("likes")}
+            {(liked ? 1246 : 1245).toLocaleString(locale)} {t("likes")}
           </span>
         </div>
       </div>
