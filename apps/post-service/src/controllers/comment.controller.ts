@@ -84,7 +84,8 @@ export async function listComments(req: Request, res: Response): Promise<void> {
   const authored = await withAuthors(comments, forwardAuth(req));
   const me = req.user!.sub;
   const enriched = authored.map((c) => {
-    const { likedBy, ...rest } = c;
+    // likedBy peut manquer sur d'anciens commentaires : default Mongoose non appliqué en lecture.
+    const { likedBy = [], ...rest } = c;
     return { ...rest, likeCount: likedBy.length, likedByMe: likedBy.includes(me) };
   });
   res.json({ comments: enriched, nextCursor });
@@ -126,7 +127,7 @@ export async function likeComment(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Comment not found" });
     return;
   }
-  res.json({ likeCount: comment.likedBy.length, likedByMe: true });
+  res.json({ likeCount: (comment.likedBy ?? []).length, likedByMe: true });
 }
 
 // Unlike idempotent : $pull, retirer un like absent = no-op.
@@ -145,5 +146,5 @@ export async function unlikeComment(req: Request, res: Response): Promise<void> 
     res.status(404).json({ error: "Comment not found" });
     return;
   }
-  res.json({ likeCount: comment.likedBy.length, likedByMe: false });
+  res.json({ likeCount: (comment.likedBy ?? []).length, likedByMe: false });
 }

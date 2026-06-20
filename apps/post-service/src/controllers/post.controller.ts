@@ -166,7 +166,9 @@ async function enrichForViewer<T extends { _id: unknown; authorId: string; liked
   const counts = await commentCounts(posts.map((p) => String(p._id)));
   const me = req.user!.sub;
   return authored.map((p) => {
-    const { likedBy, ...rest } = p;
+    // likedBy peut manquer sur d'anciens documents (champ ajouté après coup) :
+    // le default Mongoose ne s'applique qu'à la création, pas à la lecture.
+    const { likedBy = [], ...rest } = p;
     return {
       ...rest,
       likeCount: likedBy.length,
@@ -316,7 +318,7 @@ export async function likePost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  res.json({ likeCount: post.likedBy.length, likedByMe: true });
+  res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: true });
 }
 
 // Unlike idempotent : $pull, retirer un like absent = no-op.
@@ -335,5 +337,5 @@ export async function unlikePost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  res.json({ likeCount: post.likedBy.length, likedByMe: false });
+  res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: false });
 }
