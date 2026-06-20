@@ -268,3 +268,41 @@ export async function deletePost(req: Request, res: Response): Promise<void> {
   await post.deleteOne();
   res.status(204).send();
 }
+
+// Like idempotent : $addToSet évite les doublons, re-liker = no-op.
+export async function likePost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const post = await PostModel.findByIdAndUpdate(
+    id,
+    { $addToSet: { likedBy: req.user!.sub } },
+    { new: true },
+  ).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  res.json({ likeCount: post.likedBy.length, likedByMe: true });
+}
+
+// Unlike idempotent : $pull, retirer un like absent = no-op.
+export async function unlikePost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const post = await PostModel.findByIdAndUpdate(
+    id,
+    { $pull: { likedBy: req.user!.sub } },
+    { new: true },
+  ).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  res.json({ likeCount: post.likedBy.length, likedByMe: false });
+}
