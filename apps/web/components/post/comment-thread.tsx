@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { X, Heart, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { createComment, createReply, likeComment, unlikeComment } from "@/lib/api";
@@ -151,11 +151,13 @@ function CommentRow({
 export function CommentThread({
   postId,
   initialComments,
+  loading,
   onClose,
   onCommentAdded,
 }: {
   postId: string;
   initialComments: Comment[];
+  loading?: boolean;
   onClose: () => void;
   onCommentAdded?: () => void;
 }) {
@@ -164,6 +166,12 @@ export function CommentThread({
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+
+  // La modale s'ouvre avant la fin du fetch : resynchroniser l'état interne
+  // quand les commentaires chargés arrivent (un useState(prop) ne suit pas le prop).
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
 
   async function handleSubmit() {
     const text = input.trim();
@@ -218,7 +226,11 @@ export function CommentThread({
 
         {/* Liste des commentaires */}
         <div className="flex-1 overflow-y-auto px-5">
-          {comments.length > 0 ? (
+          {loading && comments.length === 0 ? (
+            <div className="grid place-items-center py-12">
+              <Loader2 className="size-5 animate-spin text-brown-sec" />
+            </div>
+          ) : comments.length > 0 ? (
             comments.map((c) => (
               <CommentRow
                 key={c.id}

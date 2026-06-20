@@ -87,6 +87,7 @@ export function PostCard({ post }: { post: Post }) {
   const [showReport, setShowReport] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -104,8 +105,13 @@ export function PostCard({ post }: { post: Post }) {
   async function openComments() {
     setShowComments(true);
     if (comments === null) {
-      const data = await getComments(post.id);
-      setComments(data);
+      setCommentsLoading(true);
+      try {
+        const data = await getComments(post.id);
+        setComments(data);
+      } finally {
+        setCommentsLoading(false);
+      }
     }
   }
 
@@ -184,6 +190,7 @@ export function PostCard({ post }: { post: Post }) {
         <CommentThread
           postId={post.id}
           initialComments={comments ?? []}
+          loading={commentsLoading}
           onClose={() => setShowComments(false)}
           onCommentAdded={() => setCommentCount((c) => c + 1)}
         />
