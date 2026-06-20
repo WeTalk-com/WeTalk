@@ -18,6 +18,9 @@ function parseApiUrl(raw: string | undefined): string {
 }
 
 export const env = {
+  // Base navigateur : relative (/api, same-origin via gateway).
   apiUrl: parseApiUrl(process.env.NEXT_PUBLIC_API_URL),
+  // Base serveur (SSR) : le fetch Node exige une URL absolue et n'a pas le cookie navigateur.
+  internalApiUrl: (process.env.API_INTERNAL_URL ?? "").replace(/\/$/, ""),
 } as const;
 

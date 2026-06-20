@@ -2,22 +2,33 @@ import { env } from "@/lib/env";
 
 /**
  * Wrapper fetch de l'API — point d'integration UNIQUE du back-end.
- *
- * Aujourd'hui les fonctions de lib/api/ renvoient les mocks ; le jour ou le
- * back existe, on remplace `return <mock>` par `return apiFetch(...)` et c'est
- * le seul endroit a modifier.
+ * Isomorphe :
+ *  - navigateur : base relative (/api) + cookie httpOnly envoye automatiquement.
+ *  - Server Component : base interne absolue + cookie relaye depuis la requete entrante.
  */
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${env.apiUrl}${path}`, {
+  const isServer = typeof window === "undefined";
+  const base = isServer ? env.internalApiUrl : env.apiUrl;
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    ...Object.fromEntries(new Headers(init?.headers ?? {})),
+  });
+
+  // SSR : le fetch serveur n'a pas le cookie navigateur -> on relaie celui de la requete.
+  if (isServer) {
+    const { cookies } = await import("next/headers");
+    const cookieHeader = (await cookies()).toString();
+    if (cookieHeader) headers.set("cookie", cookieHeader);
+  }
+
+  const res = await fetch(`${base}${path}`, {
     ...init,
-    credentials: "include", // envoie le cookie httpOnly d'auth (same-origin gateway)
-    headers: new Headers({
-      "Content-Type": "application/json",
-      ...Object.fromEntries(new Headers(init?.headers ?? {})),
-    }),
+    credentials: "include",
+    headers,
   });
 
   if (!res.ok) {
