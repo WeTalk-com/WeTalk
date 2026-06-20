@@ -18,10 +18,19 @@ import { CreateButton } from "../create/create-button";
 
 type NavKey = "home" | "explore" | "notifications" | "messages" | "profile" | "settings";
 
+// Chemins typés acceptés par le Link locale-aware (évite le `string` brut).
+type NavHref =
+  | "/home"
+  | "/explore"
+  | "/notifications"
+  | "/messages"
+  | "/profile"
+  | "/settings";
+
 type NavItem = {
   key: NavKey;
   Icon: LucideIcon;
-  href: string;
+  href: NavHref;
   badge?: number;
 };
 

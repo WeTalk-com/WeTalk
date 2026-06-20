@@ -28,7 +28,15 @@ export function LanguageSwitcher() {
             aria-checked={selected}
             disabled={isPending}
             onClick={() =>
-              startTransition(() => router.replace(pathname, { locale }))
+              startTransition(() =>
+                // Le pathname courant peut être une route dynamique (ex. /profile/[handle]) ;
+                // on renavigue tel quel vers l'autre locale (next-intl tolère ce cas via ts-expect-error).
+                router.replace(
+                  // @ts-expect-error -- pathname dynamique sans params, renavigation même route
+                  pathname,
+                  { locale },
+                ),
+              )
             }
             className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium transition-colors disabled:opacity-60 ${
               selected
