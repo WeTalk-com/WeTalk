@@ -1,4 +1,5 @@
 import "dotenv/config";
+import process from "process";
 
 function required(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;
@@ -25,7 +26,6 @@ export const env = {
   jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
   // TTL (s) de la denylist de révocation d'access token dans Redis. Doit couvrir
   // la durée de vie d'un access token (>= JWT_ACCESS_EXPIRES_IN). 15 min par défaut.
-  // Doit rester aligné avec la même variable côté user-service (clé Redis partagée).
   accessRevokeTtlSeconds: Number(process.env.ACCESS_REVOKE_TTL_SECONDS ?? 15 * 60),
   // Durée de vie du refresh token, en secondes (sert au JWT ET au TTL Redis). 7j par défaut.
   refreshTtlSeconds: Number(process.env.REFRESH_TTL_SECONDS ?? 60 * 60 * 24 * 7),
@@ -50,5 +50,31 @@ if (
 ) {
   throw new Error(
     "Refusing to start in production with default JWT secrets. Set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET.",
+  );
+}
+
+// Convertit une durée jsonwebtoken ("15m"/"900s"/"1h"/"7d" ou un nombre = secondes)
+// en secondes. Renvoie null si le format n'est pas reconnu.
+function durationToSeconds(value: string): number | null {
+  const trimmed = value.trim();
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  const match = /^(\d+)\s*(s|m|h|d)$/.exec(trimmed);
+  if (!match) return null;
+  const mult = { s: 1, m: 60, h: 3600, d: 86400 }[match[2] as "s" | "m" | "h" | "d"];
+  return Number(match[1]) * mult;
+}
+
+const accessLifetimeSeconds = durationToSeconds(env.jwtAccessExpiresIn);
+if (accessLifetimeSeconds === null) {
+  throw new Error(
+    `JWT_ACCESS_EXPIRES_IN="${env.jwtAccessExpiresIn}" must be an integer number of seconds ` +
+      `or use one of the supported suffixes: s, m, h, d.`,
+  );
+}
+if (env.accessRevokeTtlSeconds < accessLifetimeSeconds) {
+  throw new Error(
+    `ACCESS_REVOKE_TTL_SECONDS (${env.accessRevokeTtlSeconds}s) must be >= access token lifetime ` +
+      `(${accessLifetimeSeconds}s, from JWT_ACCESS_EXPIRES_IN="${env.jwtAccessExpiresIn}"). ` +
+      `Otherwise a banned user keeps a valid access token after the denylist entry expires.`,
   );
 }

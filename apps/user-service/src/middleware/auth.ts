@@ -31,8 +31,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return;
   }
 
-  // Révocation immédiate : access token rejeté si l'utilisateur figure dans la
-  // denylist Redis (banni par user-service). Fail-open si Redis indisponible.
+  // Révocation immédiate : un access token encore valide est rejeté si l'utilisateur
+  // figure dans la denylist Redis (banni). Fail-open si Redis est indisponible.
   try {
     if (await isAccessBanned(req.user.sub)) {
       res.status(403).json({ error: "Account banned" });

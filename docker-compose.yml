@@ -26,7 +26,7 @@ services:
     networks:
       - wetalk-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -87,9 +87,17 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PORT: 4001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_URL: redis://redis:6379
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - wetalk-net
@@ -112,8 +120,11 @@ services:
       - .env
     environment:
       MONGO_URI: ${MONGO_URI_POST}
+      USER_SERVICE_URL: http://user-service:4001
     depends_on:
       mongo:
+        condition: service_healthy
+      user-service:
         condition: service_healthy
     networks:
       - wetalk-net
