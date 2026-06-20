@@ -68,6 +68,7 @@
   },
   "auth": {
     "subtitle": "Talk warmer · Share slower",
+    "invalidCredentials": "Invalid credentials",
     "backToLogin": "Back to log in",
     "toggleLogin": "Log in",
     "toggleSignup": "Sign up",

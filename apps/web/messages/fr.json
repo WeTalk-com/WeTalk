@@ -68,6 +68,7 @@
   },
   "auth": {
     "subtitle": "Parlez plus chaleureux · Partagez plus lentement",
+    "invalidCredentials": "Identifiants invalides",
     "backToLogin": "Retour à la connexion",
     "toggleLogin": "Se connecter",
     "toggleSignup": "S'inscrire",
