@@ -13,6 +13,7 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const res = await fetch(`${env.apiUrl}${path}`, {
     ...init,
+    credentials: "include", // envoie le cookie httpOnly d'auth (same-origin gateway)
     headers: new Headers({
       "Content-Type": "application/json",
       ...Object.fromEntries(new Headers(init?.headers ?? {})),

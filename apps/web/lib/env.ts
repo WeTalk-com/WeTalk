@@ -6,6 +6,8 @@
 function parseApiUrl(raw: string | undefined): string {
   const trimmed = raw?.trim() ?? "";
   if (!trimmed) return "";
+  // Chemin relatif (same-origin via la gateway) : utilise tel quel.
+  if (trimmed.startsWith("/")) return trimmed.replace(/\/$/, "");
   try {
     const url = new URL(trimmed);
     return (url.origin + url.pathname).replace(/\/$/, "");
