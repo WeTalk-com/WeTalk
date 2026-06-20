@@ -2,8 +2,13 @@ import type { Request, Response } from "express";
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { Op, UniqueConstraintError } from "sequelize";
-import { z } from "zod";
 import { User, type UserRole } from "../models/user.js";
+import {
+  registerSchema,
+  adminCreateSchema,
+  loginSchema,
+  refreshSchema,
+} from "../schemas/auth.schemas.js";
 import {
   signAccessToken,
   signRefreshToken,
@@ -17,26 +22,6 @@ import {
 import { logger } from "../utils/logger.js";
 
 const SALT_ROUNDS = 12;
-
-const registerSchema = z.object({
-  username: z.string().min(3).max(50),
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
-});
-
-// Un admin peut imposer le rôle à la création (Fx1, cf. matrice de permissions).
-const adminCreateSchema = registerSchema.extend({
-  role: z.enum(["user", "moderator", "admin"]).optional(),
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
-
-const refreshSchema = z.object({
-  refreshToken: z.string().min(1),
-});
 
 function publicUser(user: User) {
   return {
@@ -150,12 +135,6 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  if (user.isBanned) {
-    logger.warn("login blocked: banned user", { userId: user.id });
-    res.status(403).json({ error: "Account banned" });
-    return;
-  }
-
   const tokens = await issueTokens(user.id, user.role);
   logger.info("login success", { userId: user.id });
   res.json({ user: publicUser(user), ...tokens });
@@ -184,17 +163,9 @@ export async function refresh(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const user = await User.findByPk(decoded.sub);
-  if (!user || user.isBanned) {
-    await revokeRefresh(decoded.sub, decoded.jti);
-    logger.warn("refresh blocked: banned or missing user", { userId: decoded.sub });
-    res.status(403).json({ error: "Account banned" });
-    return;
-  }
-
   // Rotation : on invalide l'ancien jti et on émet une nouvelle paire.
   await revokeRefresh(decoded.sub, decoded.jti);
-  const tokens = await issueTokens(decoded.sub, user.role);
+  const tokens = await issueTokens(decoded.sub, decoded.role);
   logger.info("token refreshed", { userId: decoded.sub });
   res.json(tokens);
 }

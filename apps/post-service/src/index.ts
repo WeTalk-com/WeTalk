@@ -1,33 +1,17 @@
-import { createApp } from "./app.js";
-import { connectDb, mongoose } from "./config/db.js";
-import { env } from "./config/env.js";
-import { logger } from "./utils/logger.js";
+import http from "node:http";
 
-async function main(): Promise<void> {
-  await connectDb();
-  logger.info("connected to MongoDB");
+const PORT = parseInt(process.env.PORT ?? "4002", 10);
 
-  const app = createApp();
-  const server = app.listen(env.port, () => {
-    logger.info("post-service listening", { port: env.port, env: env.nodeEnv });
-  });
-
-  async function shutdown(signal: string): Promise<void> {
-    logger.info("shutting down", { signal });
-    await new Promise<void>((resolve, reject) => {
-      server.close((err) => (err ? reject(err) : resolve()));
-    });
-    await mongoose.connection.close();
-    process.exit(0);
+const server = http.createServer((req, res) => {
+  if (req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", service: "post-service" }));
+    return;
   }
+  res.writeHead(404, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ error: "Not found" }));
+});
 
-  process.on("SIGTERM", () => void shutdown("SIGTERM"));
-  process.on("SIGINT", () => void shutdown("SIGINT"));
-}
-
-main().catch((err) => {
-  logger.error("failed to start post-service", {
-    error: err instanceof Error ? err.message : String(err),
-  });
-  process.exit(1);
+server.listen(PORT, () => {
+  console.log(`[post-service] HTTP server running on port ${PORT}`);
 });

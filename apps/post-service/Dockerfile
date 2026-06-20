@@ -4,8 +4,9 @@ WORKDIR /app
 
 # Dependencies + build
 FROM base AS builder
-COPY package.json package-lock.json ./
-COPY turbo.json ./
+# npm ci valide le fichier de verrouillage par rapport à chaque package.json référencé dans package-lock.json. 
+# Tout fichier manquant = la ci échoue
+COPY package.json package-lock.json turbo.json ./
 COPY apps/auth-service/package.json ./apps/auth-service/package.json
 COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json

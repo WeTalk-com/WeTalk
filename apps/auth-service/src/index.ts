@@ -4,6 +4,7 @@ import { connectRedis, redis } from "./config/redis.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 
+
 async function main(): Promise<void> {
   await connectDb();
   logger.info("connected to PostgreSQL");
@@ -32,5 +33,5 @@ main().catch((err) => {
   logger.error("failed to start auth-service", {
     error: err instanceof Error ? err.message : String(err),
   });
-  process.exit(1);
+  process.exit(1);  
 });

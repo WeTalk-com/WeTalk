@@ -1,9 +1,12 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
+import { openApiSpec } from "./config/openapi.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { logger } from "./utils/logger.js";
+
 
 export function createApp() {
   const app = express();
@@ -53,6 +56,11 @@ export function createApp() {
 
   app.use("/auth", authRouter);
 
+  // Swagger UI — accessible uniquement en développement
+  if (env.nodeEnv === "development") {
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+  }
+
   // 404
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: "Not found" });
@@ -71,3 +79,4 @@ export function createApp() {
 
   return app;
 }
+

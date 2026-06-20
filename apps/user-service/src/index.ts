@@ -1,39 +1,17 @@
-import { createApp } from "./app.js";
-import { connectDb, sequelize } from "./config/db.js";
-import { connectRedis, redis } from "./config/redis.js";
-import { env } from "./config/env.js";
-import { logger } from "./utils/logger.js";
+import http from "node:http";
 
-async function main(): Promise<void> {
-	await connectDb();
-	logger.info("connected to PostgreSQL");
+const PORT = parseInt(process.env.PORT ?? "4001", 10);
 
-	await connectRedis();
-	logger.info("connected to Redis");
+const server = http.createServer((req, res) => {
+  if (req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", service: "user-service" }));
+    return;
+  }
+  res.writeHead(404, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ error: "Not found" }));
+});
 
-	const app = createApp();
-	const server = app.listen(env.port, () => {
-		logger.info("user-service listening", { port: env.port, env: env.nodeEnv });
-	});
-
-	// Arrêt propre : ferme le serveur HTTP puis les connexions DB/Redis.
-	async function shutdown(signal: string): Promise<void> {
-		logger.info("shutting down", { signal });
-		await new Promise<void>((resolve, reject) => {
-			server.close((err) => (err ? reject(err) : resolve()));
-		});
-		await Promise.allSettled([redis.quit(), sequelize.close()]);
-		process.exit(0);
-	}
-
-	process.on("SIGTERM", () => void shutdown("SIGTERM"));
-	process.on("SIGINT", () => void shutdown("SIGINT"));
-}
-
-main().catch((err) => {
-	logger.error("failed to start user-service", {
-		error: err instanceof Error ? err.message : String(err),
-		// error: JSON.stringify(err),
-	});
-	process.exit(1);
+server.listen(PORT, () => {
+  console.log(`[user-service] HTTP server running on port ${PORT}`);
 });

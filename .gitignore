@@ -60,9 +60,15 @@ yarn-error.log
 tests/baselines/reference/dt
 .failed-tests
 TEST-results.xml
-package-lock.json
+# package-lock.json est versionné pour garantir la reproductibilité des installations (npm ci)
 .eslintcache
 *v8.log
 /lib/
 .turbo
 .env
+# PKI — clés privées et CA 
+certs/ca/ca.key
+certs/**/*.key
+certs/**/*.csr
+certs/**/*.srl
+certs/ca/ca.crt
