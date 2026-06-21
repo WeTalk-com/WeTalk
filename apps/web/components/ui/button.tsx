@@ -2,8 +2,12 @@ import { Link } from "@/i18n/navigation";
 import type {
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
+  ComponentProps,
   ReactNode,
 } from "react";
+
+// Type de href accepté par le Link locale-aware (route typée, pas un string brut).
+type LinkHref = ComponentProps<typeof Link>["href"];
 
 type Variant = "primary" | "outline";
 type Size = "sm" | "md" | "lg";
@@ -38,7 +42,7 @@ type Props =
       Omit<
         AnchorHTMLAttributes<HTMLAnchorElement>,
         keyof SharedProps | "href"
-      > & { href: string });
+      > & { href: LinkHref });
 
 /**
  * Bouton de marque (pilule doree). Rend un <Link> si `href` est fourni,
@@ -55,12 +59,7 @@ export function Button({
 
   if (rest.href !== undefined) {
     return (
-      <Link
-        className={cls}
-        {...(rest as AnchorHTMLAttributes<HTMLAnchorElement> & {
-          href: string;
-        })}
-      >
+      <Link className={cls} {...(rest as ComponentProps<typeof Link>)}>
         {children}
       </Link>
     );

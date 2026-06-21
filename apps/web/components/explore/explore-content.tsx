@@ -99,7 +99,7 @@ export function ExploreContent({
               </div>
               <button
                 type="button"
-                aria-label="Plus"
+                aria-label={t("moreOptions")}
                 className="mt-0.5 shrink-0 rounded-full p-1 text-brown-sec opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gold/10 hover:text-gold"
               >
                 <MoreHorizontal className="size-4" />
@@ -131,7 +131,10 @@ export function ExploreContent({
                 key={u.id}
                 className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0"
               >
-                <Link href={`/profile/${u.handle}`} className="min-w-0 flex-1">
+                <Link
+                  href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }}
+                  className="min-w-0 flex-1"
+                >
                   <UserChip user={u} />
                 </Link>
                 <FollowButton userId={u.id} />

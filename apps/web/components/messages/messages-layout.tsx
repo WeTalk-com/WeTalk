@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Send, ArrowLeft } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { Conversation } from "@/lib/types";
 import { sendMessage } from "@/lib/api";
+import { formatTimeAgo } from "@/lib/format-time";
 import { Avatar } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/icons/brand";
 
@@ -17,6 +18,8 @@ function ConversationRow({
   active: boolean;
   onClick: () => void;
 }) {
+  // Langue active, pour formater l'heure de la conversation.
+  const locale = useLocale();
   return (
     <button
       type="button"
@@ -39,7 +42,7 @@ function ConversationRow({
             {conv.user.name}
             {conv.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
           </span>
-          <span className="shrink-0 text-xs text-brown-sec">{conv.timeAgo}</span>
+          <span className="shrink-0 text-xs text-brown-sec">{formatTimeAgo(conv.lastMessageAt, locale)}</span>
         </div>
         <p className={`truncate text-sm ${(conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec"}`}>
           {conv.lastMessage}
@@ -51,6 +54,8 @@ function ConversationRow({
 
 export function MessagesLayout({ conversations }: { conversations: Conversation[] }) {
   const t = useTranslations("app.messages");
+  // Langue active, pour formater l'heure des messages.
+  const locale = useLocale();
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [input, setInput] = useState("");
   const [mobileShowChat, setMobileShowChat] = useState(false);
@@ -140,7 +145,7 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
                   >
                     {msg.text}
                     <span className={`mt-1 block text-[10px] ${msg.mine ? "text-white/70" : "text-brown-sec"}`}>
-                      {msg.timeAgo}
+                      {formatTimeAgo(msg.createdAt, locale)}
                     </span>
                   </div>
                 </div>

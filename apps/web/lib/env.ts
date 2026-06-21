@@ -6,6 +6,8 @@
 function parseApiUrl(raw: string | undefined): string {
   const trimmed = raw?.trim() ?? "";
   if (!trimmed) return "";
+  // Chemin relatif (same-origin via la gateway) : utilise tel quel.
+  if (trimmed.startsWith("/")) return trimmed.replace(/\/$/, "");
   try {
     const url = new URL(trimmed);
     return (url.origin + url.pathname).replace(/\/$/, "");
@@ -16,6 +18,9 @@ function parseApiUrl(raw: string | undefined): string {
 }
 
 export const env = {
+  // Base navigateur : relative (/api, same-origin via gateway).
   apiUrl: parseApiUrl(process.env.NEXT_PUBLIC_API_URL),
+  // Base serveur (SSR) : le fetch Node exige une URL absolue et n'a pas le cookie navigateur.
+  internalApiUrl: (process.env.API_INTERNAL_URL ?? "").replace(/\/$/, ""),
 } as const;
 

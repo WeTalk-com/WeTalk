@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCountUp, useReducedMotion } from "./hooks";
 
 function Stat({
@@ -15,10 +15,12 @@ function Stat({
   enabled: boolean;
 }) {
   const value = useCountUp(target, 1600, enabled);
+  // Langue active, pour formater le nombre selon la locale.
+  const locale = useLocale();
   return (
     <div>
       <div className="font-head text-3xl font-extrabold text-brown">
-        {Math.round(value).toLocaleString("en-US")}
+        {Math.round(value).toLocaleString(locale)}
         {suffix}
       </div>
       <div className="text-sm text-brown-sec">{label}</div>

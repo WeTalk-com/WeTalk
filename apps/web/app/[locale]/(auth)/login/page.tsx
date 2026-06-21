@@ -12,6 +12,8 @@ import {
   CheckIcon,
   ArrowLeftIcon,
 } from "@/components/icons/form";
+import { useRouter } from "@/i18n/navigation";
+import { login as apiLogin, register as apiRegister } from "@/lib/api/auth";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -25,6 +27,9 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
 
   const setField = (key: keyof typeof form) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -47,11 +52,22 @@ export default function LoginPage() {
     },
   }[mode];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Maquette : pas de backend
-    if (process.env.NODE_ENV === "development") {
-      console.log("submit", { mode, remember, ...form });
+    // "forgot" n'a pas d'endpoint backend (placeholder).
+    if (pending || mode === "forgot") return;
+    setError(null);
+    setPending(true);
+    try {
+      // L'inscription ne connecte pas : on enchaîne register puis login.
+      if (mode === "signup") {
+        await apiRegister(form.name, form.email, form.password);
+      }
+      await apiLogin(form.email, form.password);
+      router.push("/home");
+    } catch {
+      setError(t("invalidCredentials"));
+      setPending(false);
     }
   };
 
@@ -197,10 +213,14 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* Erreur d'authentification */}
+          {error && <p className="text-sm font-medium text-live">{error}</p>}
+
           {/* CTA */}
           <button
             type="submit"
-            className="h-[52px] rounded-[14px] bg-gold font-bold text-white shadow-gold transition-all hover:brightness-105 active:scale-[0.98]"
+            disabled={pending}
+            className="h-[52px] rounded-[14px] bg-gold font-bold text-white shadow-gold transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
           >
             {copy.cta}
           </button>

@@ -12,7 +12,7 @@ export async function generateMetadata({
   if (!routing.locales.includes(locale as Locale)) {
     notFound();
   }
-  const t = await getTranslations({ locale, namespace: "metadata" });
+  const t = await getTranslations({ locale: locale as Locale, namespace: "metadata" });
   return {
     title: t("login"),
     description: t("loginDescription"),

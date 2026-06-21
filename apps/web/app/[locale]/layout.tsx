@@ -20,7 +20,7 @@ export async function generateMetadata({
   if (!routing.locales.includes(locale as Locale)) {
     notFound();
   }
-  const t = await getTranslations({ locale, namespace: "metadata" });
+  const t = await getTranslations({ locale: locale as Locale, namespace: "metadata" });
   return {
     title: t("rootTitle"),
     description: t("rootDescription"),
@@ -39,7 +39,7 @@ export default async function RootLayout({
     notFound();
   }
   // Active le rendu statique pour cette locale.
-  setRequestLocale(locale);
+  setRequestLocale(locale as Locale);
 
   return (
     <html lang={locale} suppressHydrationWarning>

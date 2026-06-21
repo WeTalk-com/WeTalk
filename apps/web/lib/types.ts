@@ -17,8 +17,8 @@ export type User = {
 export type Post = {
   id: string;
   author: User;
-  /** "5h", "2j"... (relatif, pre-formate cote mock) */
-  timeAgo: string;
+  /** Date de creation au format ISO 8601 (formatee a l'affichage). */
+  createdAt: string;
   text: string;
   /** tags affiches en couleur or dans le texte */
   tags: string[];
@@ -34,7 +34,7 @@ export type Reply = {
   id: string;
   author: User;
   text: string;
-  timeAgo: string;
+  createdAt: string;
   likes: number;
 };
 
@@ -42,7 +42,7 @@ export type Comment = {
   id: string;
   author: User;
   text: string;
-  timeAgo: string;
+  createdAt: string;
   likes: number;
   replies: Reply[];
 };
@@ -71,14 +71,14 @@ export type Notification = {
   text: string;
   /** extrait optionnel (contenu du commentaire / mention / post) */
   preview?: string;
-  timeAgo: string;
+  createdAt: string;
   read?: boolean;
 };
 
 export type Message = {
   id: string;
   text: string;
-  timeAgo: string;
+  createdAt: string;
   mine: boolean;
 };
 
@@ -86,7 +86,7 @@ export type Conversation = {
   id: string;
   user: User;
   lastMessage: string;
-  timeAgo: string;
+  lastMessageAt: string;
   unread?: number;
   messages: Message[];
 };

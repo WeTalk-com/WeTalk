@@ -20,13 +20,18 @@ RUN npm ci
 COPY packages/ui ./packages/ui
 COPY packages/typescript-config ./packages/typescript-config
 COPY apps/web ./apps/web
+# NEXT_PUBLIC_* doit etre present au build : Next l'inline dans le bundle client.
+ENV NEXT_PUBLIC_API_URL=/api
 RUN npm run build --workspace=web
 
 # Runtime avec next standalone
 FROM base AS runner
 ENV NODE_ENV=production
+# Next standalone lit HOSTNAME pour son bind ; Docker le met a l'id du conteneur.
+# On force 0.0.0.0 pour que localhost (healthcheck) et le nom de service repondent.
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
-COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 
