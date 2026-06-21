@@ -13,6 +13,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
 	declare email: string;
 	declare passwordHash: string;
 	declare role: CreationOptional<UserRole>;
+	declare isBanned: CreationOptional<boolean>;
+	declare suspendedUntil: CreationOptional<Date | null>;
 	declare createdAt: CreationOptional<Date>;
 	declare updatedAt: CreationOptional<Date>;
 }
@@ -32,23 +34,23 @@ User.init(
 		},
 		displayName: {
 			type: DataTypes.STRING(50),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 			validate: { len: [3, 50] },
 		},
 		profileImage: {
 			type: DataTypes.STRING(256),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 		},
 		profileBanner: {
 			type: DataTypes.STRING(256),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 		},
 		description: {
 			type: DataTypes.STRING(280),
-			allowNull: false,
+			allowNull: true,
 			unique: false,
 			validate: { len: [1, 280] },
 		},
@@ -66,6 +68,16 @@ User.init(
 			type: DataTypes.ENUM("user", "moderator", "admin"),
 			allowNull: false,
 			defaultValue: "user",
+		},
+		isBanned: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false,
+			defaultValue: false,
+		},
+		suspendedUntil: {
+			type: DataTypes.DATE,
+			allowNull: true,
+			defaultValue: null,
 		},
 		createdAt: DataTypes.DATE,
 		updatedAt: DataTypes.DATE,

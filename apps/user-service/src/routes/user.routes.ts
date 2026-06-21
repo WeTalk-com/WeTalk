@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { writeLimiter } from "../middleware/rateLimit.js";
+import { validateBody, validateParams } from "../middleware/validate.js";
+import { idParamSchema, userIdentifierParamSchema, updateMeSchema } from "../schemas/user.schemas.js";
 import {
     me,
 	getUsers,
@@ -10,11 +13,10 @@ import {
 	getFollowers,
 	follow,
 	unfollow,
-	blockList,
-	block,
-	unblock,
-	mute,
-	unmute,
+	banUser,
+	unbanUser,
+	suspendUser,
+	unsuspendUser,
 } from "../controllers/user.controller.js";
 
 export const userRouter: Router = Router();
@@ -32,30 +34,28 @@ DELETE /users/:id/follow : Se désabonner d'un utilisateur.
 GET    /users/:id/following : Liste des abonnements de l'utilisateur (qui il suit).
 GET    /users/:id/followers : Liste des abonnés de l'utilisateur (qui le suit).
 
-Modération & Confidentialité
-POST   /users/:id/block : Bloquer un utilisateur.
-DELETE /users/:id/block : Débloquer un utilisateur.
-GET    /users/me/blocks : Liste de ses propres utilisateurs bloqués.
-POST   /users/:id/mute : Masquer un utilisateur.
-DELETE /users/:id/mute : Ne plus masquer un utilisateur.
+Modération (modérateur/admin uniquement)
+POST   /users/:id/ban : Bannir un utilisateur (il ne peut plus se connecter).
+DELETE /users/:id/ban : Lever le bannissement.
+POST   /users/:id/suspend : Suspendre l'envoi de posts (body: { amount, unit }).
+DELETE /users/:id/suspend : Lever la suspension.
  */
 
 // Profils
 userRouter.get("/", getUsers);
 userRouter.get("/me", requireAuth, me);
-userRouter.get("/:id", getUser);
-userRouter.put("/me", requireAuth, updateMe);
-userRouter.delete("/me", requireAuth, deleteMe);
+userRouter.get("/:id", validateParams(userIdentifierParamSchema), getUser);
+userRouter.put("/me", requireAuth, writeLimiter, validateBody(updateMeSchema), updateMe);
+userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 
 // Abonnements
-userRouter.get("/:id/following", getFollowing);
-userRouter.get("/:id/followers", getFollowers);
-userRouter.post("/:id/follow", requireAuth, follow);
-userRouter.delete("/:id/follow", requireAuth, unfollow);
+userRouter.get("/:id/following", validateParams(idParamSchema), getFollowing);
+userRouter.get("/:id/followers", validateParams(idParamSchema), getFollowers);
+userRouter.post("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), follow);
+userRouter.delete("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), unfollow);
 
-// Modération
-userRouter.get("/me/blocks", requireAuth, blockList);
-userRouter.post("/:id/block", requireAuth, block);
-userRouter.delete("/:id/block", requireAuth, unblock);
-userRouter.post("/:id/mute", requireAuth, mute);
-userRouter.delete("/:id/mute", requireAuth, unmute);
+// Modération (modérateur/admin uniquement)
+userRouter.post("/:id/ban", requireAuth, requireRole("moderator", "admin"), writeLimiter, validateParams(idParamSchema), banUser);
+userRouter.delete("/:id/ban", requireAuth, requireRole("moderator", "admin"), writeLimiter, validateParams(idParamSchema), unbanUser);
+userRouter.post("/:id/suspend", requireAuth, requireRole("moderator", "admin"), writeLimiter, validateParams(idParamSchema), suspendUser);
+userRouter.delete("/:id/suspend", requireAuth, requireRole("moderator", "admin"), writeLimiter, validateParams(idParamSchema), unsuspendUser);
