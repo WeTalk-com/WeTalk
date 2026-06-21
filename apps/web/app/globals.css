@@ -1,50 +1,289 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design system WeTalk — themable au runtime via next-themes (data-theme).
+
+   Les couleurs vivent dans des variables "brutes" (--canvas, --brown, ...)
+   surchargeables par theme plus bas ; @theme inline les expose en tokens
+   (bg-canvas, text-brown, ...). Le statique (polices, rayons, ombres,
+   couleurs fixes) reste dans un @theme classique.
+--------------------------------------------------------------------------- */
+
+/* Couleurs themables — valeurs par defaut (theme "amber") */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --gold: #ba7517;
+  --gold-bright: #ef9f27;
+  --gold-dark: #9c6213;
+  --canvas: #f0eae0;
+  --cream: #faf7f2;
+  --card: #ffffff;
+  --brown: #412402;
+  --brown-sec: #854f0b;
+  --placeholder: #b69b78;
+  --border: #e8dfd4;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme inline {
+  /* Couleurs themables -> pointent vers les variables runtime */
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-dark: var(--gold-dark);
+  --color-canvas: var(--canvas);
+  --color-cream: var(--cream);
+  --color-card: var(--card);
+  --color-brown: var(--brown);
+  --color-brown-sec: var(--brown-sec);
+  --color-placeholder: var(--placeholder);
+  --color-border: var(--border);
+  /* Alias semantiques (texte/bordures) */
+  --color-ink: var(--brown);
+  --color-ink-soft: var(--brown-sec);
+  --color-line: var(--border);
 }
 
-html,
+@theme {
+  /* Couleurs fixes (non themables) */
+  --color-dark: #1a1410; /* cadre telephone, surfaces sombres */
+  --color-live: #dc2626;
+  --color-blue: #1d9bf6; /* badge verifie */
+  --color-dock: #1c1a17;
+
+  /* Rayons */
+  --radius-field: 13px;
+  --radius-card: 24px;
+
+  /* Ombres chaudes (brun/dore) */
+  --shadow-gold: 0 8px 20px rgba(186, 117, 23, 0.32);
+  --shadow-soft: 0 2px 10px rgba(65, 36, 2, 0.06);
+  --shadow-card: 0 24px 60px rgba(65, 36, 2, 0.1);
+
+  /* Polices (variables injectees par next/font dans layout.tsx) */
+  --font-head: var(--font-playfair), Georgia, serif;
+  --font-body: var(--font-dmsans), system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-dmsans), system-ui, sans-serif;
+}
+
+/* Base */
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  background-color: var(--canvas);
+  color: var(--brown);
+  font-family: var(--font-body);
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
+/* ---------------------------------------------------------------------------
+   Themes utilisateur — surcharge des variables brutes (--gold, --canvas, ...).
+   next-themes pose data-theme sur <html>. "amber" = valeurs par defaut.
+--------------------------------------------------------------------------- */
+
+/* Rose : clair, accent terracotta */
+:root[data-theme="rose"] {
+  --gold: #c0552e;
+  --gold-bright: #e07a4e;
+  --gold-dark: #9e3f1e;
+  --canvas: #f3ebe5;
+  --cream: #fbf5f1;
+  --card: #ffffff;
+  --brown: #3d231b;
+  --brown-sec: #8a4b36;
+  --placeholder: #bb9685;
+  --border: #ecd9cf;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* Dark : sombre chaud */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --gold: #e0992e;
+  --gold-bright: #f2b24e;
+  --gold-dark: #b87c20;
+  --canvas: #15110e;
+  --cream: #2a211a;
+  --card: #211a15;
+  --brown: #f1e8de;
+  --brown-sec: #b6a491;
+  --placeholder: #7c6c5b;
+  --border: #3a2e25;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+/* ---------------------------------------------------------------------------
+   Animations landing (transform/opacity uniquement -> 60fps)
+--------------------------------------------------------------------------- */
+@keyframes wordIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) rotate(6deg);
   }
-
-  .imgLight {
-    display: none;
+  to {
+    opacity: 1;
+    transform: none;
   }
-  .imgDark {
-    display: unset;
+}
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.6deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(0.6deg);
+  }
+}
+@keyframes drift1 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(40px, -30px);
+  }
+}
+@keyframes drift2 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-50px, 40px);
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+@keyframes likePop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes sparkle {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sx), var(--sy)) scale(1);
+  }
+}
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes tileIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.word-in {
+  display: inline-block;
+  animation: wordIn 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    #ba7517,
+    #ef9f27,
+    #f6c766,
+    #ef9f27,
+    #ba7517
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3.4s linear infinite;
+}
+.animate-bob {
+  animation: bob 6s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-drift1 {
+  animation: drift1 13s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-drift2 {
+  animation: drift2 16s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+  will-change: transform;
+}
+.animate-pulse-dot {
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+.tile-in {
+  animation: tileIn 0.5s ease-out both;
+}
+.like-pop {
+  animation: likePop 0.5s ease-out;
+}
+.caret {
+  animation: blink 1s step-end infinite;
+}
+.spark {
+  animation: sparkle 0.6s ease-out forwards;
+}
+
+/* Accessibilite : on fige l'etat final si l'utilisateur reduit les animations */
+@media (prefers-reduced-motion: reduce) {
+  .word-in,
+  .animate-bob,
+  .animate-drift1,
+  .animate-drift2,
+  .animate-marquee,
+  .animate-pulse-dot,
+  .tile-in,
+  .like-pop,
+  .spark,
+  .caret {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .shimmer-text {
+    animation: none;
   }
 }

@@ -2,7 +2,9 @@
 import type { Request, Response } from "express";
 import { Op, type WhereOptions } from "sequelize";
 import { User, Follow } from "../models/index.js";
+import type { UserRole } from "../models/user.js";
 import { markAccessBanned, clearAccessBanned } from "../utils/banStore.js";
+import { revokeAllRefresh } from "../utils/refreshStore.js";
 import {
 	listUsersQuerySchema,
 	followListQuerySchema,
@@ -46,19 +48,33 @@ function computeSuspendedUntil(amount: number, unit: string): Date {
 	return until;
 }
 
-function publicUser(user: User) {
-	return {
+function canSeeModeration(
+	viewer: { sub: string; role: UserRole } | undefined,
+	targetId: string,
+): boolean {
+	if (!viewer) return false;
+	return viewer.role === "moderator" || viewer.role === "admin" || viewer.sub === targetId;
+}
+
+function publicUser(user: User, includeModeration = false) {
+	const base = {
 		id: user.id,
 		username: user.username,
 		displayName: user.displayName,
 		description: user.description,
+		profileImage: user.profileImage,
+		profileBanner: user.profileBanner,
 		// email: user.email,
 		role: user.role,
+		createdAt: user.createdAt,
+		updatedAt: user.updatedAt,
+	};
+	if (!includeModeration) return base;
+	return {
+		...base,
 		isBanned: user.isBanned,
 		isSuspended: isSuspended(user),
 		suspendedUntil: isSuspended(user) ? user.suspendedUntil : null,
-		createdAt: user.createdAt,
-		updatedAt: user.updatedAt,
 	};
 }
 
@@ -69,7 +85,7 @@ export async function me(req: Request, res: Response): Promise<void> {
 		res.status(404).json({ error: "User not found" });
 		return;
 	}
-	res.json(publicUser(user));
+	res.json(publicUser(user, true));
 }
 
 export async function getUsers(req: Request, res: Response): Promise<void> {
@@ -78,7 +94,23 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
 		return;
 	}
-	const { limit, cursor, search } = parsed.data;
+	const { limit, cursor, search, ids } = parsed.data;
+
+	if (ids) {
+		const idList = ids
+			.split(",")
+			.map((s) => s.trim())
+			.filter((s) => UUID_RE.test(s))
+			.slice(0, 100);
+		if (idList.length === 0) {
+			res.json([]);
+			return;
+		}
+		const found = await User.findAll({ where: { id: { [Op.in]: idList } } });
+		const showMod = req.user?.role === "moderator" || req.user?.role === "admin";
+		res.json(found.map((u) => ({ ...publicUser(u, showMod), isBanned: u.isBanned })));
+		return;
+	}
 
 	// Recherche (Fx13) : match partiel insensible à la casse sur username + displayName.
 	let where: WhereOptions | undefined;
@@ -100,7 +132,8 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 			["id", "DESC"]
 		],
 	});
-	res.json(users.map(publicUser));
+	const showModeration = req.user?.role === "moderator" || req.user?.role === "admin";
+	res.json(users.map((u) => publicUser(u, showModeration)));
 }
 
 export async function getUser(req: Request, res: Response): Promise<void> {
@@ -115,7 +148,7 @@ export async function getUser(req: Request, res: Response): Promise<void> {
 		res.status(404).json({ error: "User not found" });
 		return;
 	}
-	res.json(publicUser(user));
+	res.json(publicUser(user, canSeeModeration(req.user, user.id)));
 }
 
 export async function updateMe(req: Request, res: Response): Promise<void> {
@@ -129,14 +162,14 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
-		// Exemple de mise à jour simple
-		if (displayName)
+		// Champ absent = inchangé ; null = vidé ; valeur = mis à jour.
+		if (displayName !== undefined)
 			user.displayName = displayName;
-		if (profileImage)
+		if (profileImage !== undefined)
 			user.profileImage = profileImage;
-		if (profileBanner)
+		if (profileBanner !== undefined)
 			user.profileBanner = profileBanner;
-		if (description)
+		if (description !== undefined)
 			user.description = description;
 
 		await user.save();
@@ -153,14 +186,19 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 
 export async function deleteMe(req: Request, res: Response): Promise<void> {
 	try {
+		const myId = req.user?.sub as string;
 		const deleted = await User.destroy({
-			where: { id: req.user?.sub }
+			where: { id: myId }
 		});
 
 		if (!deleted) {
 			res.status(404).json({ error: "Utilisateur non trouvé." });
 			return;
 		}
+
+		// Le compte est supprimé mais son access token reste valide jusqu'à expiration. Donc on le révoque immédiatement
+		await markAccessBanned(myId);
+		await revokeAllRefresh(myId);
 
 		res.json({ message: "Compte supprimé avec succès." });
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -279,6 +317,19 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 			})
 		});
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
+	}
+}
+
+export async function followingIds(req: Request, res: Response): Promise<void> {
+	try {
+		const rows = await Follow.findAll({
+			where: { followerId: req.params.id },
+			attributes: ["followingId"],
+			limit: 5000,
+		});
+		res.json({ ids: rows.map((r) => r.get("followingId") as string) });
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}

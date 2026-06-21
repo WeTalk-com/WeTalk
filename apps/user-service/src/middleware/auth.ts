@@ -13,17 +13,36 @@ declare global {
   }
 }
 
+const ACCESS_COOKIE = "wetalk_session";
+
+// Lit un cookie depuis l'en-tête brut (user-service est en Express 5, sans cookie-parser).
+function readCookie(req: Request, name: string): string | undefined {
+  const raw = req.headers.cookie;
+  if (!raw) return undefined;
+  for (const part of raw.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return decodeURIComponent(rest.join("="));
+  }
+  return undefined;
+}
+
+// Token d'accès depuis le cookie httpOnly (front) ou le header Bearer (appels est-ouest).
+function extractToken(req: Request): string | undefined {
+  const fromCookie = readCookie(req, ACCESS_COOKIE);
+  if (fromCookie) return fromCookie;
+  const header = req.headers.authorization;
+  return header?.startsWith("Bearer ") ? header.slice("Bearer ".length) : undefined;
+}
+
 // Vérifie le JWT d'accès localement avec JWT_ACCESS_SECRET.
 // Ce secret étant partagé entre tous les microservices, ce middleware est
 // copiable tel quel dans chaque service : pas d'appel réseau à auth-service.
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or malformed Authorization header" });
+  const token = extractToken(req);
+  if (!token) {
+    res.status(401).json({ error: "Missing authentication" });
     return;
   }
-
-  const token = header.slice("Bearer ".length);
   try {
     req.user = verifyAccessToken(token);
   } catch {

@@ -6,10 +6,10 @@ export type UserRole = "user" | "moderator" | "admin";
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
 	declare id: CreationOptional<string>;
 	declare username: string;
-	declare displayName: CreationOptional<string>;
-	declare profileImage: CreationOptional<string>;
-	declare profileBanner: CreationOptional<string>;
-	declare description: CreationOptional<string>;
+	declare displayName: CreationOptional<string | null>;
+	declare profileImage: CreationOptional<string | null>;
+	declare profileBanner: CreationOptional<string | null>;
+	declare description: CreationOptional<string | null>;
 	declare email: string;
 	declare passwordHash: string;
 	declare role: CreationOptional<UserRole>;

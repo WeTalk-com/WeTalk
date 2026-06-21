@@ -11,6 +11,7 @@ import {
 	deleteMe,
 	getFollowing,
 	getFollowers,
+	followingIds,
 	follow,
 	unfollow,
 	banUser,
@@ -43,16 +44,17 @@ DELETE /users/:id/suspend : Lever la suspension.
  */
 
 // Profils
-userRouter.get("/", getUsers);
+userRouter.get("/", requireAuth, getUsers);
 userRouter.get("/me", requireAuth, me);
-userRouter.get("/:id", validateParams(userIdentifierParamSchema), getUser);
+userRouter.get("/:id", requireAuth, validateParams(userIdentifierParamSchema), getUser);
 userRouter.get("/:id/status", validateParams(userIdentifierParamSchema), isUserAvailable);
-userRouter.put("/me", requireAuth, writeLimiter, validateBody(updateMeSchema), updateMe);
+userRouter.patch("/me", requireAuth, writeLimiter, validateBody(updateMeSchema), updateMe);
 userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 
 // Abonnements
-userRouter.get("/:id/following", validateParams(idParamSchema), getFollowing);
-userRouter.get("/:id/followers", validateParams(idParamSchema), getFollowers);
+userRouter.get("/:id/following", requireAuth, validateParams(idParamSchema), getFollowing);
+userRouter.get("/:id/following/ids", requireAuth, validateParams(idParamSchema), followingIds);
+userRouter.get("/:id/followers", requireAuth, validateParams(idParamSchema), getFollowers);
 userRouter.post("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), follow);
 userRouter.delete("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), unfollow);
 
