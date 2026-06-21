@@ -8,7 +8,7 @@ function required(name: string, fallback?: string): string {
   return value;
 }
 
-// Port Invalidation between 1 and 65535
+// Port valide entre 1 et 65535.
 function requiredPort(name: string, fallback: number): number {
   const raw = process.env[name];
   if (raw === undefined) return fallback;
@@ -19,12 +19,22 @@ function requiredPort(name: string, fallback: number): number {
   return n;
 }
 
+function requiredBytes(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === "") return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`Invalid ${name}: "${raw}" (expected positive integer)`);
+  }
+  return n;
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
-  port: requiredPort("PORT", 4002),
-  mongoUri: required("MONGO_URI", "mongodb://localhost:27017/post_db"),
-  userServiceUrl: required("USER_SERVICE_URL", "http://user-service:4001"),
-  mediaServiceUrl: required("MEDIA_SERVICE_URL", "http://media-service:4004"),
+  port: requiredPort("PORT", 4004),
+  uploadDir: required("UPLOAD_DIR", "/data/uploads"),
+  maxImageBytes: requiredBytes("MAX_IMAGE_BYTES", 5 * 1024 * 1024),
+  maxVideoBytes: requiredBytes("MAX_VIDEO_BYTES", 50 * 1024 * 1024),
   jwtAccessSecret: required("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
   corsOrigins: (process.env.CORS_ORIGIN ?? "")
     .split(",")
@@ -32,7 +42,7 @@ export const env = {
     .filter(Boolean),
 } as const;
 
-// Prevents starting in production with the default secret
+// Empêche le démarrage en production avec le secret par défaut.
 if (env.nodeEnv === "production" && env.jwtAccessSecret === "dev-access-secret-change-me") {
   throw new Error("Refusing to start in production with the default JWT secret.");
 }

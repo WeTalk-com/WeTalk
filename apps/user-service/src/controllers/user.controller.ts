@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Op, type WhereOptions } from "sequelize";
+import { env } from "../config/env.js";
 import { User, Follow } from "../models/index.js";
 import type { UserRole } from "../models/user.js";
 import { markAccessBanned, clearAccessBanned } from "../utils/banStore.js";
@@ -12,6 +13,49 @@ import {
 
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Headers d'auth à relayer vers le media-service (cookie front ou Bearer est-ouest).
+function forwardAuth(req: Request): Record<string, string> {
+	const headers: Record<string, string> = {};
+	if (req.headers.authorization) headers.authorization = req.headers.authorization;
+	if (req.headers.cookie) headers.cookie = req.headers.cookie;
+	return headers;
+}
+
+// Erreur d'upload média portant le statut HTTP à renvoyer au client.
+class MediaUploadError extends Error {
+	constructor(
+		public readonly status: number,
+		message: string,
+	) {
+		super(message);
+	}
+}
+
+// Relaie une image de profil au media-service (pattern proxy)
+async function uploadImageToMediaService(
+	file: Express.Multer.File,
+	headers: Record<string, string>,
+): Promise<string> {
+	const form = new FormData();
+	form.append("file", new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname);
+	const res = await fetch(`${env.mediaServiceUrl}/media`, {
+		method: "POST",
+		headers,
+		body: form,
+		signal: AbortSignal.timeout(15000),
+	});
+	if (!res.ok) {
+		const body = (await res.json().catch(() => ({}))) as { error?: string };
+		const status = res.status >= 400 && res.status < 500 ? res.status : 502;
+		throw new MediaUploadError(status, body.error ?? `media-service responded ${res.status}`);
+	}
+	const data = (await res.json()) as { url?: string };
+	if (!data.url) {
+		throw new MediaUploadError(502, "media-service returned an invalid payload");
+	}
+	return data.url;
+}
 
 // Échappe les jokers LIKE (\ % _) pour qu'un terme de recherche soit traité
 // littéralement et ne permette pas à l'utilisateur d'injecter des wildcards.
@@ -163,19 +207,49 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
+		const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
+		let avatarUrl: string | undefined;
+		let bannerUrl: string | undefined;
+		try {
+			if (files?.avatar?.[0])
+				avatarUrl = await uploadImageToMediaService(files.avatar[0], forwardAuth(req));
+			if (files?.banner?.[0])
+				bannerUrl = await uploadImageToMediaService(files.banner[0], forwardAuth(req));
+		} catch (err) {
+			const status = err instanceof MediaUploadError ? err.status : 502;
+			const message =
+				status === 502
+					? "Échec de l'upload du média."
+					: (err as MediaUploadError).message;
+			res.status(status).json({ error: message });
+			return;
+		}
+
 		// Champ absent = inchangé ; null = vidé ; valeur = mis à jour.
 		if (displayName !== undefined)
 			user.displayName = displayName;
-		if (profileImage !== undefined)
+		if (avatarUrl !== undefined)
+			user.profileImage = avatarUrl;
+		else if (profileImage !== undefined)
 			user.profileImage = profileImage;
-		if (profileBanner !== undefined)
+		if (bannerUrl !== undefined)
+			user.profileBanner = bannerUrl;
+		else if (profileBanner !== undefined)
 			user.profileBanner = profileBanner;
 		if (description !== undefined)
 			user.description = description;
 
 		await user.save();
 
-		res.json({ message: "Profil mis à jour avec succès.", data: { id: user.id, username: user.username } });
+		res.json({
+			message: "Profil mis à jour avec succès.",
+			data: {
+				id: user.id,
+				username: user.username,
+				profileImage: user.profileImage,
+				profileBanner: user.profileBanner,
+			},
+		});
 	} catch (error: any) {
 		if (error.name === 'SequelizeUniqueConstraintError') {
 			res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris." });

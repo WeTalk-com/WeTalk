@@ -33,6 +33,12 @@ export const env = {
   // Redis (allowlist des refresh tokens)
   redisUrl: required("REDIS_URL", "redis://localhost:6379"),
 
+  // media-service
+  mediaServiceUrl: required("MEDIA_SERVICE_URL", "http://media-service:4004"),
+
+  // Taille max d'une image de profil 5Mo
+  maxProfileImageBytes: Number(process.env.MAX_PROFILE_IMAGE_BYTES ?? 5 * 1024 * 1024),
+
   // CORS : liste blanche d'origines séparées par des virgules.
   // Vide => dev: reflète l'origine (permissif) / prod: bloque le cross-origin.
   corsOrigins: (process.env.CORS_ORIGIN ?? "")
@@ -53,8 +59,7 @@ if (
   );
 }
 
-// Convertit une durée jsonwebtoken ("15m"/"900s"/"1h"/"7d" ou un nombre = secondes)
-// en secondes. Renvoie null si le format n'est pas reconnu.
+// Convertit une durée jsonwebtoken ("15m"/"900s"/"1h"/"7d" ou un nombre = secondes) en secondes. Renvoie null si le format n'est pas reconnu.
 function durationToSeconds(value: string): number | null {
   const trimmed = value.trim();
   if (/^\d+$/.test(trimmed)) return Number(trimmed);
