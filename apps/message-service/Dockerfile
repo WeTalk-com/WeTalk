@@ -11,6 +11,7 @@ COPY apps/auth-service/package.json ./apps/auth-service/package.json
 COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
+COPY apps/message-service/package.json ./apps/message-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
@@ -30,6 +31,7 @@ COPY apps/auth-service/package.json ./apps/auth-service/package.json
 COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
+COPY apps/message-service/package.json ./apps/message-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
