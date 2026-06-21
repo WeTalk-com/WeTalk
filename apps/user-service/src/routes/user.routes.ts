@@ -47,7 +47,7 @@ DELETE /users/:id/suspend : Lever la suspension.
 userRouter.get("/", requireAuth, getUsers);
 userRouter.get("/me", requireAuth, me);
 userRouter.get("/:id", requireAuth, validateParams(userIdentifierParamSchema), getUser);
-userRouter.get("/:id/status", validateParams(userIdentifierParamSchema), isUserAvailable);
+userRouter.get("/:id/status", requireAuth, validateParams(userIdentifierParamSchema), isUserAvailable);
 userRouter.patch("/me", requireAuth, writeLimiter, validateBody(updateMeSchema), updateMe);
 userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 

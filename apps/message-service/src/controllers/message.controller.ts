@@ -55,9 +55,16 @@ export async function sendMessage(req: Request, res: Response){
 		}
 		
 		try {
+			
 			const results = await Promise.allSettled([
-				axios.get(`${env.userServiceUrl}/users/${senderId}/status`),
-				axios.get(`${env.userServiceUrl}/users/${receiverId}/status`)
+				axios.get(`${env.userServiceUrl}/users/${senderId}/status`, {
+					// @ts-expect-error Conflicting sources
+					headers: { Authorization: req.headers.authorization }
+				}),
+				axios.get(`${env.userServiceUrl}/users/${receiverId}/status`, {
+					// @ts-expect-error Conflicting sources
+					headers: { Authorization: req.headers.authorization }
+				})
 			]);
 			
 			// @ts-expect-error Unrecognized schema
