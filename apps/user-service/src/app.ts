@@ -1,12 +1,12 @@
-import express, { type Request, type Response, type NextFunction } from "express";
+import express, {type Request, type Response, type NextFunction, type Express} from "express";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
-import { userRouter } from "./routes/user.routes.js";
+import {userRouter} from "./routes/user.routes.js";
 import { logger } from "./utils/logger.js";
 import qs from "qs";
 
-export function createApp() {
+export function createApp(): Express {
   const app = express();
 
   // Service derrière la gateway Nginx : fait confiance au 1er proxy pour que

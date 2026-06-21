@@ -17,7 +17,7 @@ import {
 	unmute,
 } from "../controllers/user.controller.js";
 
-export const userRouter = Router();
+export const userRouter: Router = Router();
 
 /*
 Profils
