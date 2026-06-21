@@ -10,6 +10,7 @@ import {
 	followListQuerySchema,
 	suspendBodySchema,
 } from "../schemas/user.schemas.js";
+import {logger} from "../utils/logger.js";
 
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -442,8 +443,8 @@ export async function unsuspendUser(req: Request, res: Response): Promise<void> 
 		await targetUser.save();
 
 		res.json({ message: "Suspension levée." });
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (error) {
+	} catch (e) {
+		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la levée de suspension." });
 	}
 }
@@ -461,9 +462,9 @@ export async function isUserAvailable(req: Request, res: Response): Promise<void
 			return;
 		}
 		
-		res.json({ userID: identifier, isAvailable: !(isSuspended(targetUser) || targetUser.isBanned) });
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (error) {
+		res.json({ userID: targetUser.username, isAvailable: !(isSuspended(targetUser) || targetUser.isBanned) });
+	} catch (e) {
+		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la vérification du status." });
 	}
 }

@@ -125,6 +125,8 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       user-service:
         condition: service_healthy
     networks:

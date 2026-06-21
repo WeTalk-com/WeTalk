@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { Message } from "../models/Message.js";
 import { env } from "../config/env.js";
 import axios from "axios";
+import {logger} from "../utils/logger.js";
 
 export async function getConversation(req: Request, res: Response) {
 	try {
@@ -35,8 +36,8 @@ export async function getConversation(req: Request, res: Response) {
 				hasNextPage: messages.length === limit
 			}
 		});
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (_) {
+	} catch (e) {
+		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la récupération des messages." });
 	}
 }
@@ -67,18 +68,16 @@ export async function sendMessage(req: Request, res: Response){
 				})
 			]);
 			
-			// @ts-expect-error Unrecognized schema
-			if (!results[0].value.data.isAvailable) {
+			if (results[0].status !== "fulfilled" || !results[0].value.data.isAvailable) {
 				return res.status(403).json({ error: "Impossible d'envoyer ce message car vous avez été suspendu ou banni." });
 			}
 			
-			// @ts-expect-error Unrecognized schema
-			if (!results[1].value.data.isAvailable) {
+			if (results[1].status !== "fulfilled" || !results[1].value.data.isAvailable) {
 				return res.status(403).json({ error: "Impossible d'envoyer ce message car votre destinataire à été suspendu ou banni." });
 			}
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch (apiError) {
 			// TODO: À voir ce qu'on fait ici. Autoriser l'envoi de message malgré la panne du service/échec de la requête, ou bloquer tout.
+			logger.error((apiError as Error).message);
 		}
 		
 		const newMessage = await Message.create({
@@ -91,9 +90,8 @@ export async function sendMessage(req: Request, res: Response){
 			success: true,
 			data: newMessage
 		});
-		
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (error) {
+	} catch (e) {
+		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de l'envoi du message privé." });
 	}
 }

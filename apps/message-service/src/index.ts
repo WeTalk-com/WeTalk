@@ -13,7 +13,7 @@ async function main(): Promise<void> {
 	
 	const app = createApp();
 	const server = app.listen(env.port, () => {
-		logger.info("user-service listening", { port: env.port, env: env.nodeEnv });
+		logger.info("message-service listening", { port: env.port, env: env.nodeEnv });
 	});
 	
 	// Arrêt propre : ferme le serveur HTTP puis les connexions DB/Redis.
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
 		await new Promise<void>((resolve, reject) => {
 			server.close((err) => (err ? reject(err) : resolve()));
 		});
-		await Promise.allSettled([mongoose.disconnect(), redis.close()]);
+		await Promise.allSettled([mongoose.disconnect(), redis.quit()]);
 		process.exit(0);
 	}
 	
@@ -31,7 +31,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-	logger.error("failed to start user-service", {
+	logger.error("failed to start message-service", {
 		error: err instanceof Error ? err.message : String(err),
 		// error: JSON.stringify(err),
 	});

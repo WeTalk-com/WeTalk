@@ -19,8 +19,8 @@ RUN npm ci
 
 # Sources
 COPY packages/typescript-config ./packages/typescript-config
-COPY apps/user-service ./apps/user-service
-RUN npm run build --workspace=user-service
+COPY apps/message-service ./apps/message-service
+RUN npm run build --workspace=message-service
 
 # Runtime
 FROM base AS runner
@@ -34,10 +34,10 @@ COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
-RUN npm ci --omit=dev --workspace=user-service
-COPY --from=builder /app/apps/user-service/dist ./apps/user-service/dist
+RUN npm ci --omit=dev --workspace=message-service
+COPY --from=builder /app/apps/message-service/dist ./apps/message-service/dist
 
-EXPOSE 4001
-WORKDIR /app/apps/user-service
+EXPOSE 4004
+WORKDIR /app/apps/message-service
 USER node
 CMD ["node", "dist/index.js"]

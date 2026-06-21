@@ -39,10 +39,12 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 			return;
 		}
 	} catch (err) {
-		logger.warn("access ban check failed", {
+		logger.error("access ban check failed", {
 			userId: req.user.sub,
 			error: err instanceof Error ? err.message : String(err),
 		});
+		res.status(503).json({ error: "Authorization backend unavailable" });
+		return;
 	}
 	
 	next();

@@ -2,7 +2,7 @@
 // Remplaçable par pino plus tard sans toucher aux appelants.
 type Meta = Record<string, unknown>;
 
-const SERVICE = "user-service";
+const SERVICE = "message-service";
 
 function emit(level: "info" | "warn" | "error", msg: string, meta?: Meta): void {
 	const line = JSON.stringify({
