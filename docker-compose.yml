@@ -134,7 +134,7 @@ services:
     expose:
       - "4004"
     healthcheck:
-      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4004/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))" ]
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4004/',r=>process.exit(r.statusCode<300?0:1)).on('error',()=>process.exit(1))" ]
       interval: 10s
       timeout: 3s
       retries: 5

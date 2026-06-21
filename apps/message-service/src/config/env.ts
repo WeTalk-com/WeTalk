@@ -2,11 +2,21 @@ import "dotenv/config";
 import process from "process";
 
 function required(name: string, fallback?: string): string {
-	const value = process.env[name] ?? fallback;
-	if (value === undefined) {
+	const raw = process.env[name];
+	const value = raw !== undefined && raw.trim() !== "" ? raw : fallback;
+	if (value === undefined || value.trim() === "") {
 		throw new Error(`Missing required env var: ${name}`);
 	}
 	return value;
+}
+
+function positiveInt(name: string, fallback: number): number {
+	const raw = process.env[name];
+	const n = raw === undefined ? fallback : Number(raw);
+	if (!Number.isInteger(n) || n <= 0) {
+		throw new Error(`Invalid ${name}: expected positive integer`);
+	}
+	return n;
 }
 
 export const env = {
@@ -27,9 +37,11 @@ export const env = {
 	jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
 	// TTL (s) de la denylist de révocation d'access token dans Redis. Doit couvrir
 	// la durée de vie d'un access token (>= JWT_ACCESS_EXPIRES_IN). 15 min par défaut.
-	accessRevokeTtlSeconds: Number(process.env.ACCESS_REVOKE_TTL_SECONDS ?? 15 * 60),
+	// accessRevokeTtlSeconds: Number(process.env.ACCESS_REVOKE_TTL_SECONDS ?? 15 * 60),
+	accessRevokeTtlSeconds: positiveInt("ACCESS_REVOKE_TTL_SECONDS", 15 * 60),
 	// Durée de vie du refresh token, en secondes (sert au JWT ET au TTL Redis). 7j par défaut.
-	refreshTtlSeconds: Number(process.env.REFRESH_TTL_SECONDS ?? 60 * 60 * 24 * 7),
+	// refreshTtlSeconds: Number(process.env.REFRESH_TTL_SECONDS ?? 60 * 60 * 24 * 7),
+	refreshTtlSeconds: positiveInt("REFRESH_TTL_SECONDS", 60 * 60 * 24 * 7),
 	
 	// Redis (allowlist des refresh tokens)
 	redisUrl: required("REDIS_URL", "redis://localhost:6379"),
@@ -47,7 +59,9 @@ const DEFAULT_SECRETS = ["dev-access-secret-change-me", "dev-refresh-secret-chan
 if (
 	env.nodeEnv === "production" &&
 	(DEFAULT_SECRETS.includes(env.jwtAccessSecret) ||
-		DEFAULT_SECRETS.includes(env.jwtRefreshSecret))
+		DEFAULT_SECRETS.includes(env.jwtRefreshSecret) ||
+		env.jwtAccessSecret.trim() === "" ||
+		env.jwtRefreshSecret.trim() === "")
 ) {
 	throw new Error(
 		"Refusing to start in production with default JWT secrets. Set JWT_ACCESS_SECRET and JWT_REFRESH_SECRET.",
