@@ -1,5 +1,15 @@
 import { env } from "@/lib/env";
 
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly body: Record<string, unknown>,
+    path: string,
+  ) {
+    super(`API ${status} — ${path}`);
+  }
+}
+
 /**
  * Wrapper fetch de l'API — point d'integration UNIQUE du back-end.
  * Isomorphe :
@@ -32,7 +42,9 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`API ${res.status} ${res.statusText} — ${path}`);
+    let body: Record<string, unknown> = {};
+    try { body = await res.json(); } catch { /* réponse sans corps JSON */ }
+    throw new ApiError(res.status, body, path);
   }
 
   const text = await res.text();
