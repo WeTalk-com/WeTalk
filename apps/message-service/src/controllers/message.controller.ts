@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { Message } from "../models/Message.js";
+import { env } from "../config/env.js";
+import axios from "axios";
 
 export async function getConversation(req: Request, res: Response) {
 	try {
@@ -39,8 +41,6 @@ export async function getConversation(req: Request, res: Response) {
 	}
 }
 
-// const axios = require('axios'); // Permet de communiquer avec le microservice PostgreSQL
-
 export async function sendMessage(req: Request, res: Response){
 	try {
 		const { receiverId, content } = req.body;
@@ -54,37 +54,39 @@ export async function sendMessage(req: Request, res: Response){
 			return res.status(400).json({ error: "Vous ne pouvez pas vous envoyer un message à vous-même." });
 		}
 		
-		// 2. RÈGLE MÉTIER : Vérification des blocages (Appel inter-service)
-		// On imagine que votre microservice User (Postgres) a une route pour vérifier si une relation de blocage existe
 		try {
-			const checkBlockUrl = `${process.env.USER_SERVICE_URL}/api/users/check-block?userA=${senderId}&userB=${receiverId}`;
-			const blockCheck = await axios.get(checkBlockUrl, {
-				headers: { Authorization: req.headers.authorization } // On passe le token pour la sécurité
-			});
+			const results = await Promise.allSettled([
+				axios.get(`${env.userServiceUrl}/users/${senderId}/status`),
+				axios.get(`${env.userServiceUrl}/users/${receiverId}/status`)
+			]);
 			
-			if (blockCheck.data.isBlocked) {
-				return res.status(403).json({ error: "Impossible d'envoyer ce message. Vous avez bloqué cet utilisateur ou vous avez été bloqué par lui." });
+			// @ts-expect-error Unrecognized schema
+			if (!results[0].value.data.isAvailable) {
+				return res.status(403).json({ error: "Impossible d'envoyer ce message car vous avez été suspendu ou banni." });
 			}
+			
+			// @ts-expect-error Unrecognized schema
+			if (!results[1].value.data.isAvailable) {
+				return res.status(403).json({ error: "Impossible d'envoyer ce message car votre destinataire à été suspendu ou banni." });
+			}
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch (apiError) {
-			// Sécurité : Si le service externe est en panne, on trace l'erreur mais on peut décider de bloquer ou laisser passer selon la politique de tolérance aux pannes
-			console.error("Impossible de vérifier les blocages :", apiError.message);
+			// TODO: À voir ce qu'on fait ici. Autoriser l'envoi de message malgré la panne du service/échec de la requête, ou bloquer tout.
 		}
 		
-		// 3. Création et stockage du message dans MongoDB
 		const newMessage = await Message.create({
 			senderId,
 			receiverId,
 			content: content.trim()
 		});
 		
-		// 4. Réponse JSON
 		res.status(201).json({
 			success: true,
 			data: newMessage
 		});
 		
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
-		console.error("Erreur sendMessage:", error);
 		res.status(500).json({ error: "Erreur lors de l'envoi du message privé." });
 	}
 }

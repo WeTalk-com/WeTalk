@@ -11,8 +11,9 @@ function required(name: string, fallback?: string): string {
 
 export const env = {
 	nodeEnv: process.env.NODE_ENV ?? "development",
-	port: Number(process.env.PORT) || 4003,
+	port: Number(process.env.PORT) || 4004,
 	mongoUri: required("MONGO_URI", "mongodb://localhost:27017/message_db"),
+	userServiceUrl: required("USER_SERVICE_URL", "http://user-service:4001"),
 	// PostgreSQL (Sequelize) — datastore des utilisateurs
 	dbHost: required("DB_HOST", "localhost"),
 	dbPort: Number(process.env.DB_PORT) || 5432,
