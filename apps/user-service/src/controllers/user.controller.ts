@@ -396,3 +396,23 @@ export async function unsuspendUser(req: Request, res: Response): Promise<void> 
 		res.status(500).json({ error: "Erreur lors de la levée de suspension." });
 	}
 }
+
+export async function isUserAvailable(req: Request, res: Response): Promise<void> {
+	try {
+		const identifier = req.params.id as string;
+		
+		// Lookup par UUID si l'identifiant en est un, sinon par username.
+		const targetUser = UUID_RE.test(identifier)
+			? await User.findByPk(identifier)
+			: await User.findOne({ where: { username: identifier } });
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
+			return;
+		}
+		
+		res.json({ userID: identifier, isAvailable: !(isSuspended(targetUser) || targetUser.isBanned) });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la vérification du status." });
+	}
+}

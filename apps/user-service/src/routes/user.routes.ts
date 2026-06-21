@@ -4,7 +4,7 @@ import { writeLimiter } from "../middleware/rateLimit.js";
 import { validateBody, validateParams } from "../middleware/validate.js";
 import { idParamSchema, userIdentifierParamSchema, updateMeSchema } from "../schemas/user.schemas.js";
 import {
-    me,
+	me,
 	getUsers,
 	getUser,
 	updateMe,
@@ -17,6 +17,7 @@ import {
 	unbanUser,
 	suspendUser,
 	unsuspendUser,
+	isUserAvailable,
 } from "../controllers/user.controller.js";
 
 export const userRouter: Router = Router();
@@ -45,6 +46,7 @@ DELETE /users/:id/suspend : Lever la suspension.
 userRouter.get("/", getUsers);
 userRouter.get("/me", requireAuth, me);
 userRouter.get("/:id", validateParams(userIdentifierParamSchema), getUser);
+userRouter.get("/:id/status", validateParams(userIdentifierParamSchema), isUserAvailable);
 userRouter.put("/me", requireAuth, writeLimiter, validateBody(updateMeSchema), updateMe);
 userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 
