@@ -3,8 +3,10 @@ import { requireAuth } from "../middleware/auth.js";
 import { validateParams } from "../middleware/validate.js";
 import { idParamSchema } from "../schemas/message.schemas.js";
 import {
+	getConversationList,
 	getConversation,
-	sendMessage
+	sendMessage,
+	deleteConversation
 } from "../controllers/message.controller.js";
 
 export const messageRouter: Router = Router();
@@ -15,5 +17,7 @@ GET    /messages/:id : Récupérer une conversation entre l'utilisateur connect�
 POST   /messages/:id : Envoyer un message à un utilisateur.
 */
 
+messageRouter.get("/", requireAuth, getConversationList);
 messageRouter.get("/:id", requireAuth, validateParams(idParamSchema), getConversation);
 messageRouter.post("/:id", requireAuth, validateParams(idParamSchema), sendMessage);
+messageRouter.delete("/:id", requireAuth, validateParams(idParamSchema), deleteConversation);

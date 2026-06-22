@@ -4,13 +4,36 @@ import { env } from "../config/env.js";
 import axios from "axios";
 import {logger} from "../utils/logger.js";
 
+export async function getConversationList(req: Request, res: Response) {
+	try {
+		const myId = req.user!.sub as string;
+		const limit = parseInt(req.query.limit as string, 10) || 20;
+
+		const queryConditions: { senderId: string, createdAt?: object } = {
+			senderId: myId
+		};
+
+		// TODO: Pas complètement sûr de vouloir laisser la limite...
+		const conversations = await Message.find(queryConditions)
+			.sort({ createdAt: -1 })
+			.limit(limit);
+
+		res.json({
+			data: [...new Set(conversations.map(o => o.receiverId))],
+		});
+	} catch (e) {
+		logger.error((e as Error).message);
+		res.status(500).json({ error: "Erreur lors de la récupération de la liste des conversations." });
+	}
+}
+
 export async function getConversation(req: Request, res: Response) {
 	try {
 		const myId = req.user!.sub as string;
 		const targetId = req.params.id as string;
 		const cursor = req.query.cursor as string; // Le curseur sera un timestamp ISO string (createdAt)
 		const limit = parseInt(req.query.limit as string, 10) || 20;
-		
+
 		const queryConditions: { $or: Array<object>, createdAt?: object } = {
 			$or: [
 				{ senderId: myId, receiverId: targetId },
@@ -44,7 +67,8 @@ export async function getConversation(req: Request, res: Response) {
 
 export async function sendMessage(req: Request, res: Response){
 	try {
-		const { receiverId, content } = req.body;
+		const receiverId = req.params.id as string;
+		const { content } = req.body;
 		const senderId = req.user!.sub as string; // L'UUID de l'expéditeur extrait du token JWT
 		
 		if (!receiverId || !content || content.trim() === "") {
@@ -76,8 +100,8 @@ export async function sendMessage(req: Request, res: Response){
 				return res.status(403).json({ error: "Impossible d'envoyer ce message car votre destinataire à été suspendu ou banni." });
 			}
 		} catch (apiError) {
-			// TODO: À voir ce qu'on fait ici. Autoriser l'envoi de message malgré la panne du service/échec de la requête, ou bloquer tout.
 			logger.error((apiError as Error).message);
+			return res.status(504).json({ error: "Impossible de contacter le user-service." });
 		}
 		
 		const newMessage = await Message.create({
@@ -90,6 +114,27 @@ export async function sendMessage(req: Request, res: Response){
 			success: true,
 			data: newMessage
 		});
+	} catch (e) {
+		logger.error((e as Error).message);
+		res.status(500).json({ error: "Erreur lors de l'envoi du message privé." });
+	}
+}
+
+export async function deleteConversation(req: Request, res: Response) {
+	try {
+		const myId = req.user!.sub as string;
+		const targetId = req.params.id as string;
+
+		if (myId === targetId) {
+			return res.status(403).json({ error: "Vous ne pouvez pas supprimer une conversation qui n'existe pas." });
+		}
+
+		await Message.deleteMany({
+			senderId: myId,
+			receiverId: targetId,
+		});
+
+		res.json({ message: "Conversation supprimée." });
 	} catch (e) {
 		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de l'envoi du message privé." });
