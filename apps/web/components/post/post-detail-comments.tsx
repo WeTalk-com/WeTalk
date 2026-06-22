@@ -124,7 +124,7 @@ export function PostDetailComments({
     setPending(true);
     try {
       if (replyingTo) {
-        const reply = await createReply(replyingTo, text);
+        const reply = await createReply(postId, replyingTo, text);
         setComments((prev) =>
           prev.map((c) =>
             c.id === replyingTo ? { ...c, replies: [...c.replies, reply] } : c,

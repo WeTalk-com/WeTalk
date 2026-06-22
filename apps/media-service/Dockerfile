@@ -4,12 +4,12 @@ WORKDIR /app
 
 # Dependencies + build
 FROM base AS builder
-# npm ci valide le fichier de verrouillage par rapport à chaque package.json référencé dans package-lock.json. 
-# Tout fichier manquant = la ci échoue
-COPY package.json package-lock.json turbo.json ./
+COPY package.json package-lock.json ./
+COPY turbo.json ./
 COPY apps/auth-service/package.json ./apps/auth-service/package.json
 COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
+COPY apps/media-service/package.json ./apps/media-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
@@ -19,8 +19,8 @@ RUN npm ci
 
 # Sources
 COPY packages/typescript-config ./packages/typescript-config
-COPY apps/notification-service ./apps/notification-service
-RUN npm run build --workspace=notification-service
+COPY apps/media-service ./apps/media-service
+RUN npm run build --workspace=media-service
 
 # Runtime
 FROM base AS runner
@@ -29,15 +29,19 @@ COPY package.json package-lock.json ./
 COPY apps/auth-service/package.json ./apps/auth-service/package.json
 COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
+COPY apps/media-service/package.json ./apps/media-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
-RUN npm ci --omit=dev --workspace=notification-service
-COPY --from=builder /app/apps/notification-service/dist ./apps/notification-service/dist
+RUN npm ci --omit=dev --workspace=media-service
+COPY --from=builder /app/apps/media-service/dist ./apps/media-service/dist
 
-EXPOSE 4003
-WORKDIR /app/apps/notification-service
+# Dossier d'upload pré-créé et possédé par `node`
+RUN mkdir -p /data/uploads && chown -R node:node /data/uploads
+
+EXPOSE 4004
+WORKDIR /app/apps/media-service
 USER node
 CMD ["node", "dist/index.js"]
