@@ -16,7 +16,13 @@ export type BackendUser = {
   createdAt?: string;
 };
 
-// Post enrichi renvoye par post-service (likedBy n'est jamais expose au client).
+// media attaché à un post
+export type BackendMedia = {
+  url: string;
+  type: "image" | "video";
+};
+
+// Post enrichi renvoye par post-service.
 export type BackendPost = {
   _id: string;
   authorId: string;
@@ -27,6 +33,7 @@ export type BackendPost = {
   likeCount: number;
   likedByMe: boolean;
   commentCount: number;
+  media?: BackendMedia | null;
 };
 
 export function mapUser(u: BackendUser): User {
@@ -36,6 +43,7 @@ export function mapUser(u: BackendUser): User {
     name,
     handle: u.username,
     initial: name.charAt(0).toUpperCase(),
+    avatarUrl: u.profileImage ?? undefined,
     role: u.role,
   };
 }
@@ -44,6 +52,7 @@ export function mapPost(p: BackendPost): Post {
   const author: User = p.author
     ? mapUser(p.author)
     : { id: p.authorId, name: "?", handle: "unknown", initial: "?" };
+  const media = p.media ?? null;
   return {
     id: p._id,
     author,
@@ -53,6 +62,10 @@ export function mapPost(p: BackendPost): Post {
     likes: p.likeCount,
     likedByMe: p.likedByMe,
     comments: p.commentCount,
+    hasImage: media?.type === "image" || undefined,
+    imageUrl: media?.type === "image" ? media.url : undefined,
+    hasVideo: media?.type === "video" || undefined,
+    videoUrl: media?.type === "video" ? media.url : undefined,
     shares: 0,
   };
 }
@@ -120,6 +133,7 @@ export function mapProfile(u: BackendUser): Profile {
     ...mapUser(u),
     bio: u.description ?? "",
     location: "",
+    bannerUrl: u.profileBanner ?? undefined,
     joined: u.createdAt ? new Date(u.createdAt).getFullYear().toString() : "",
     stats: { posts: 0, followers: "0", following: 0 },
   };

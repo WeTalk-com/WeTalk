@@ -40,13 +40,20 @@ export default async function ProfilePage() {
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
       <TopBar />
 
-      {/* Banniere */}
-      <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
+      {/* Banniere (Fx10) — image si définie, sinon motif design */}
+      {p.bannerUrl ? (
+        <div className="h-40 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={p.bannerUrl} alt="" className="size-full object-cover" />
+        </div>
+      ) : (
+        <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
+      )}
 
       <div className="px-5">
         <div className="-mt-12 flex items-end justify-between">
           <span className="inline-block rounded-full ring-4 ring-canvas">
-            <Avatar initial={p.initial} solid size={96} />
+            <Avatar initial={p.initial} src={p.avatarUrl} solid size={96} />
           </span>
           <EditProfileButton profile={p} />
         </div>

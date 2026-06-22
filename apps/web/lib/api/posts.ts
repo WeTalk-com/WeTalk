@@ -37,9 +37,18 @@ export type CreatePostInput = {
   video?: File;
 };
 
-/** Création d'un post. Le backend ne gère que le texte (tags/médias = feature à venir). */
+/**
+ * Création d'un post (texte + image/video)
+ */
 export async function createPost(input: CreatePostInput): Promise<void> {
-  // TODO(feature médias): image/vidéo en multipart/form-data quand le media-service existera.
+  const file = input.image ?? input.video;
+  if (file) {
+    const form = new FormData();
+    form.append("content", input.text);
+    form.append("media", file);
+    await apiFetch("/posts", { method: "POST", body: form });
+    return;
+  }
   await apiFetch("/posts", {
     method: "POST",
     body: JSON.stringify({ content: input.text }),

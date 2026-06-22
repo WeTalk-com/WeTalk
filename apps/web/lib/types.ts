@@ -8,8 +8,9 @@ export type User = {
   id: string;
   name: string;
   handle: string;
-  /** Initiale affichee dans l'avatar (placeholder design) */
+  /** Initiale affichee dans l'avatar (fallback si pas de photo) */
   initial: string;
+  avatarUrl?: string;
   verified?: boolean;
   role?: "user" | "moderator" | "admin";
 };
@@ -24,7 +25,9 @@ export type Post = {
   tags: string[];
   hasImage?: boolean;
   imageRatio?: string; // ex. "1600x1000"
+  imageUrl?: string;
   hasVideo?: boolean;
+  videoUrl?: string;
   likes: number;
   /** Le lecteur courant a-t-il liké ce post (état initial du bouton). */
   likedByMe?: boolean;
@@ -60,6 +63,7 @@ export type TrendingTopic = {
 export type Profile = User & {
   bio: string;
   location: string;
+  bannerUrl?: string;
   joined: string;
   stats: { posts: number; followers: string; following: number };
 };

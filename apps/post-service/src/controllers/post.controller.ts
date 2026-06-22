@@ -43,6 +43,55 @@ export async function authorPostingBlock(
   }
 }
 
+// Erreur d'upload média
+class MediaUploadError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+async function uploadMediaToService(
+  file: Express.Multer.File,
+  headers: Record<string, string>,
+): Promise<{ id: string; url: string; type: "image" | "video" }> {
+  const form = new FormData();
+  form.append("file", new Blob([file.buffer], { type: file.mimetype }), file.originalname);
+  const res = await fetch(`${env.mediaServiceUrl}/media`, {
+    method: "POST",
+    headers,
+    body: form,
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    const status = res.status >= 400 && res.status < 500 ? res.status : 502;
+    throw new MediaUploadError(status, body.error ?? `media-service responded ${res.status}`);
+  }
+  const data = (await res.json()) as { id?: string; url?: string; type?: string };
+  if (!data.id || !data.url || (data.type !== "image" && data.type !== "video")) {
+    throw new MediaUploadError(502, "media-service returned an invalid payload");
+  }
+  return { id: data.id, url: data.url, type: data.type };
+}
+
+async function deleteMediaFromService(id: string, headers: Record<string, string>): Promise<void> {
+  try {
+    await fetch(`${env.mediaServiceUrl}/media/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (err) {
+    logger.warn("orphan media cleanup failed", {
+      id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 const createSchema = z.object({
   content: z.string().trim().min(1).max(280),
 });
@@ -192,10 +241,35 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const post = await PostModel.create({
-    authorId: req.user!.sub,
-    content: parsed.data.content,
-  });
+  // media optionnel
+  let media: { id: string; url: string; type: "image" | "video" } | undefined;
+  if (req.file) {
+    try {
+      media = await uploadMediaToService(req.file, forwardAuth(req));
+    } catch (err) {
+      const status = err instanceof MediaUploadError ? err.status : 502;
+      logger.error("media upload failed", {
+        status,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      res.status(status).json({
+        error: status === 502 ? "Media upload failed" : (err as MediaUploadError).message,
+      });
+      return;
+    }
+  }
+
+  let post;
+  try {
+    post = await PostModel.create({
+      authorId: req.user!.sub,
+      content: parsed.data.content,
+      ...(media ? { media: { url: media.url, type: media.type } } : {}),
+    });
+  } catch (err) {
+    if (media) await deleteMediaFromService(media.id, forwardAuth(req));
+    throw err;
+  }
   // likedBy (ids des likers) n'est jamais exposé au client.
   const { likedBy: _likedBy, ...postOut } = post.toObject();
   res.status(201).json({ post: postOut });

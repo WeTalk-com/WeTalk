@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Op, type WhereOptions } from "sequelize";
+import { env } from "../config/env.js";
 import { User, Follow } from "../models/index.js";
 import type { UserRole } from "../models/user.js";
 import { markAccessBanned, clearAccessBanned } from "../utils/banStore.js";
@@ -12,6 +13,63 @@ import {
 
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Headers d'auth à relayer vers le media-service (cookie front ou Bearer est-ouest).
+function forwardAuth(req: Request): Record<string, string> {
+	const headers: Record<string, string> = {};
+	if (req.headers.authorization) headers.authorization = req.headers.authorization;
+	if (req.headers.cookie) headers.cookie = req.headers.cookie;
+	return headers;
+}
+
+// Erreur d'upload média portant le statut HTTP à renvoyer au client.
+class MediaUploadError extends Error {
+	constructor(
+		public readonly status: number,
+		message: string,
+	) {
+		super(message);
+	}
+}
+
+// Relaie une image de profil au media-service (pattern proxy)
+async function uploadImageToMediaService(
+	file: Express.Multer.File,
+	headers: Record<string, string>,
+): Promise<{ id: string; url: string }> {
+	const form = new FormData();
+	form.append("file", new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname);
+	const res = await fetch(`${env.mediaServiceUrl}/media`, {
+		method: "POST",
+		headers,
+		body: form,
+		signal: AbortSignal.timeout(15000),
+	});
+	if (!res.ok) {
+		const body = (await res.json().catch(() => ({}))) as { error?: string };
+		const status = res.status >= 400 && res.status < 500 ? res.status : 502;
+		throw new MediaUploadError(status, body.error ?? `media-service responded ${res.status}`);
+	}
+	const data = (await res.json()) as { id?: string; url?: string };
+	if (!data.id || !data.url) {
+		throw new MediaUploadError(502, "media-service returned an invalid payload");
+	}
+	return { id: data.id, url: data.url };
+}
+
+// Suppression compensatoire best-effort : appelée si la sauvegarde du profil
+// échoue après l'upload, pour ne pas laisser de fichier orphelin.
+async function deleteMediaFromService(id: string, headers: Record<string, string>): Promise<void> {
+	try {
+		await fetch(`${env.mediaServiceUrl}/media/${encodeURIComponent(id)}`, {
+			method: "DELETE",
+			headers,
+			signal: AbortSignal.timeout(5000),
+		});
+	} catch {
+		// best-effort : on n'échoue pas la requête pour un nettoyage raté.
+	}
+}
 
 // Échappe les jokers LIKE (\ % _) pour qu'un terme de recherche soit traité
 // littéralement et ne permette pas à l'utilisateur d'injecter des wildcards.
@@ -163,19 +221,62 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
+		const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
+		let avatarUrl: string | undefined;
+		let bannerUrl: string | undefined;
+		const uploadedMediaIds: string[] = [];
+		try {
+			if (files?.avatar?.[0]) {
+				const m = await uploadImageToMediaService(files.avatar[0], forwardAuth(req));
+				avatarUrl = m.url;
+				uploadedMediaIds.push(m.id);
+			}
+			if (files?.banner?.[0]) {
+				const m = await uploadImageToMediaService(files.banner[0], forwardAuth(req));
+				bannerUrl = m.url;
+				uploadedMediaIds.push(m.id);
+			}
+		} catch (err) {
+			const status = err instanceof MediaUploadError ? err.status : 502;
+			const message =
+				status === 502
+					? "Échec de l'upload du média."
+					: (err as MediaUploadError).message;
+			await Promise.all(uploadedMediaIds.map((id) => deleteMediaFromService(id, forwardAuth(req))));
+			res.status(status).json({ error: message });
+			return;
+		}
+
 		// Champ absent = inchangé ; null = vidé ; valeur = mis à jour.
 		if (displayName !== undefined)
 			user.displayName = displayName;
-		if (profileImage !== undefined)
+		if (avatarUrl !== undefined)
+			user.profileImage = avatarUrl;
+		else if (profileImage !== undefined)
 			user.profileImage = profileImage;
-		if (profileBanner !== undefined)
+		if (bannerUrl !== undefined)
+			user.profileBanner = bannerUrl;
+		else if (profileBanner !== undefined)
 			user.profileBanner = profileBanner;
 		if (description !== undefined)
 			user.description = description;
 
-		await user.save();
+		try {
+			await user.save();
+		} catch (err) {
+			await Promise.all(uploadedMediaIds.map((id) => deleteMediaFromService(id, forwardAuth(req))));
+			throw err;
+		}
 
-		res.json({ message: "Profil mis à jour avec succès.", data: { id: user.id, username: user.username } });
+		res.json({
+			message: "Profil mis à jour avec succès.",
+			data: {
+				id: user.id,
+				username: user.username,
+				profileImage: user.profileImage,
+				profileBanner: user.profileBanner,
+			},
+		});
 	} catch (error: any) {
 		if (error.name === 'SequelizeUniqueConstraintError') {
 			res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris." });
