@@ -44,11 +44,17 @@ export async function createComment(req: Request, res: Response): Promise<void> 
 
   // Une réponse doit cibler un commentaire existant du même post.
   if (parsed.data.parentId) {
-    const parent = await CommentModel.findById(parsed.data.parentId).lean();
+    const parent = await CommentModel.findById(parsed.data.parentId)
+      .select({ postId: 1, parentId: 1 })
+      .lean();
     if (!parent || String(parent.postId) !== id) {
       res.status(404).json({ error: "Parent comment not found" });
       return;
     }
+    if (parent.parentId) {  
+      res.status(400).json({ error: "Replies can only target top-level comments" });  
+      return;  
+    } 
   }
 
   const comment = await CommentModel.create({
