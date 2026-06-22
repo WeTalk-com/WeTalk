@@ -16,6 +16,7 @@ const ACCESS_COOKIE = "wetalk_session";
 function extractToken(req: Request): string | undefined {
   const fromCookie = req.cookies?.[ACCESS_COOKIE];
   if (fromCookie) return fromCookie;
+  const header = req.headers.authorization;
   if (!header) return undefined;
   const [scheme, token] = header.trim().split(/\s+/, 2);
   return scheme?.toLowerCase() === "bearer" && token ? token : undefined;
