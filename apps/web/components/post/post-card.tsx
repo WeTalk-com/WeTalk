@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
-import { Card } from "../ui/card";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
 import { CommentThread } from "./comment-thread";
@@ -28,12 +27,12 @@ function PostText({ text, tags }: { text: string; tags: string[] }) {
 
 function PostMenu({
   postId,
-  authorHandle,
+  locale,
   onReport,
   onClose,
 }: {
   postId: string;
-  authorHandle: string;
+  locale: string;
   onReport: () => void;
   onClose: () => void;
 }) {
@@ -41,7 +40,7 @@ function PostMenu({
 
   function copyLink() {
     navigator.clipboard.writeText(
-      `${window.location.origin}/posts/${postId}`,
+      `${window.location.origin}/${locale}/posts/${postId}`,
     );
     onClose();
   }
@@ -80,8 +79,8 @@ function PostMenu({
 export function PostCard({ post }: { post: Post }) {
   const { author } = post;
   const t = useTranslations("app.post");
-  // Langue active, pour formater la date relative du post.
   const locale = useLocale();
+  const router = useRouter();
 
   const [showMenu, setShowMenu] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -108,9 +107,18 @@ export function PostCard({ post }: { post: Post }) {
     }
   }
 
+  function handleCardClick(e: React.MouseEvent<HTMLElement>) {
+    // Ne pas naviguer si le clic provient d'un bouton, d'un lien ou du menu contextuel.
+    if ((e.target as HTMLElement).closest("a, button, [role='menu']")) return;
+    router.push({ pathname: "/posts/[id]", params: { id: post.id } });
+  }
+
   return (
     <>
-      <Card as="article" className="p-4">
+      <article
+        onClick={handleCardClick}
+        className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-canvas/60"
+      >
         {/* En-tête */}
         <div className="flex items-center gap-3">
           <Link
@@ -133,7 +141,7 @@ export function PostCard({ post }: { post: Post }) {
             {showMenu && (
               <PostMenu
                 postId={post.id}
-                authorHandle={author.handle}
+                locale={locale}
                 onReport={() => setShowReport(true)}
                 onClose={() => setShowMenu(false)}
               />
@@ -171,11 +179,10 @@ export function PostCard({ post }: { post: Post }) {
           <PostActions
             likes={post.likes}
             comments={post.comments}
-            shares={post.shares}
             onComment={openComments}
           />
         </div>
-      </Card>
+      </article>
 
       {showComments && (
         <CommentThread

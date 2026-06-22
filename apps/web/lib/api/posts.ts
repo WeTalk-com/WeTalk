@@ -1,7 +1,8 @@
 import type { Post, Comment, Reply, ReportReason } from "@/lib/types";
-import { postComments, currentUser } from "@/lib/mock-data";
+import { postComments } from "@/lib/mock-data";
 import { apiFetch } from "./client";
 import { mapPost, type BackendPost } from "./map";
+import { getCurrentUser } from "./users";
 
 /** Fil global — tous les posts récents (page Explore). */
 export async function getPosts(): Promise<Post[]> {
@@ -42,6 +43,12 @@ export async function createPost(input: CreatePostInput): Promise<void> {
   });
 }
 
+/** Récupère un post par son identifiant. */
+export async function getPost(id: string): Promise<Post> {
+  const data = await apiFetch<{ post: BackendPost }>(`/posts/${encodeURIComponent(id)}`);
+  return mapPost(data.post);
+}
+
 /** Commentaires d'un post. */
 export async function getComments(postId: string): Promise<Comment[]> {
   // TODO(api): return apiFetch<Comment[]>(`/posts/${postId}/comments`);
@@ -51,12 +58,10 @@ export async function getComments(postId: string): Promise<Comment[]> {
 /** Ajoute un commentaire (optimiste côté client). */
 export async function createComment(postId: string, text: string): Promise<Comment> {
   // TODO(api): return apiFetch<Comment>(`/posts/${postId}/comments`, { method: "POST", body: JSON.stringify({ text }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("createComment (mock)", { postId, text });
-  }
+  const author = await getCurrentUser();
   return {
     id: `cm-${Date.now()}`,
-    author: structuredClone(currentUser),
+    author,
     text,
     createdAt: new Date().toISOString(),
     likes: 0,
@@ -67,12 +72,10 @@ export async function createComment(postId: string, text: string): Promise<Comme
 /** Ajoute une réponse à un commentaire. */
 export async function createReply(commentId: string, text: string): Promise<Reply> {
   // TODO(api): return apiFetch<Reply>(`/comments/${commentId}/replies`, { method: "POST", body: JSON.stringify({ text }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("createReply (mock)", { commentId, text });
-  }
+  const author = await getCurrentUser();
   return {
     id: `rp-${Date.now()}`,
-    author: structuredClone(currentUser),
+    author,
     text,
     createdAt: new Date().toISOString(),
     likes: 0,
@@ -81,12 +84,9 @@ export async function createReply(commentId: string, text: string): Promise<Repl
 
 /** Signale un post. */
 export async function reportPost(
-  postId: string,
-  reason: ReportReason,
-  details?: string,
+  _postId: string,
+  _reason: ReportReason,
+  _details?: string,
 ): Promise<void> {
-  // TODO(api): await apiFetch(`/posts/${postId}/report`, { method: "POST", body: JSON.stringify({ reason, details }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("reportPost (mock)", { postId, reason, details });
-  }
+  // TODO(api): await apiFetch(`/posts/${_postId}/report`, { method: "POST", body: JSON.stringify({ reason: _reason, details: _details }) });
 }

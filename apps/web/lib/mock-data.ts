@@ -1,99 +1,33 @@
 /**
- * Donnees factices pour la v1 design-only.
- * Les types de domaine vivent dans ./types (reutilisables apres branchement API).
+ * Données factices pour les fonctionnalités non encore câblées au back-end.
+ * Seuls les exports effectivement consommés par lib/api/* sont conservés ici.
+ * Les types de domaine vivent dans ./types.
  */
 
 import type {
   User,
   Post,
   TrendingTopic,
-  Profile,
   Notification,
   Conversation,
   Comment,
   ReportedPost,
 } from "./types";
 
-// Produit une date ISO situee dans le passe, relative a maintenant.
-// Remplace les anciens libelles figes ("2h") par de vraies dates formatables.
 function ago(value: number, unit: "m" | "h" | "d"): string {
   const ms = { m: 60_000, h: 3_600_000, d: 86_400_000 }[unit];
   return new Date(Date.now() - value * ms).toISOString();
 }
 
-export const currentUser: User = {
-  id: "me",
-  name: "Katty Abrahams",
-  handle: "kattyabra",
-  initial: "K",
-  role: "admin",
-};
-
-export const posts: Post[] = [
-  {
-    id: "p1",
-    author: {
-      id: "u1",
-      name: "Maya Rivera",
-      handle: "mayarivera",
-      initial: "M",
-      verified: true,
-    },
-    createdAt: ago(2, "h"),
-    text: "Chasing the golden hour across the dunes — slow mornings really do hit different.",
-    tags: ["#wetalk", "#goldenhour"],
-    hasImage: true,
-    imageRatio: "1600x1000",
-    likes: 1245,
-    comments: 173,
-    shares: 229,
-  },
-  {
-    id: "p2",
-    author: {
-      id: "u2",
-      name: "Theo Lang",
-      handle: "theolang",
-      initial: "T",
-      verified: true,
-    },
-    createdAt: ago(5, "h"),
-    text: "Studio light tests for the new series. Warm tones only, always.",
-    tags: ["#wetalk", "#process"],
-    hasImage: true,
-    imageRatio: "1600x1000",
-    likes: 842,
-    comments: 96,
-    shares: 51,
-  },
-  {
-    id: "p3",
-    author: { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" },
-    createdAt: ago(8, "h"),
-    text: "Anyone else editing at 2am because the colors finally clicked?",
-    tags: ["#latenight", "#design"],
-    likes: 318,
-    comments: 44,
-    shares: 12,
-  },
-  {
-    id: "p4",
-    author: { id: "u4", name: "Lara Moons", handle: "laramoons", initial: "L" },
-    createdAt: ago(1, "d"),
-    text: "Behind-the-scenes from yesterday's shoot — short reel dropping tonight 🎬",
-    tags: ["#film", "#bts"],
-    hasVideo: true,
-    likes: 567,
-    comments: 89,
-    shares: 34,
-  },
-];
+/* ----------------------------- Suggestions ----------------------------- */
 
 export const whoToFollow: User[] = [
   { id: "w1", name: "Jonas Beck", handle: "jonasbeck", initial: "J" },
   { id: "w2", name: "Elif Demir", handle: "elifd", initial: "E" },
   { id: "w3", name: "Remy Cole", handle: "remycole", initial: "R" },
 ];
+
+/* ----------------------------- Tendances ----------------------------- */
 
 export const trending: TrendingTopic[] = [
   { category: "Photography", tag: "#goldenhour", posts: "48.2K posts" },
@@ -102,44 +36,7 @@ export const trending: TrendingTopic[] = [
   { category: "Travel", tag: "#slowmornings", posts: "9.1K posts" },
 ];
 
-/* ----------------------------- Profil ----------------------------- */
-
-export const currentUserProfile: Profile = {
-  ...currentUser,
-  verified: true,
-  bio: "Slow mornings, warm light & the occasional film photo. Building cozy corners of the internet.",
-  location: "Lisbon, PT",
-  joined: "Joined March 2024",
-  stats: { posts: 128, followers: "4.8K", following: 312 },
-};
-
-/** Publications de l'utilisateur courant (page profil). */
-export const myPosts: Post[] = [
-  {
-    id: "me1",
-    author: currentUser,
-    createdAt: ago(1, "d"),
-    text: "Reorganised my desk for the third time this week. Productivity is a myth, vibes are real.",
-    tags: ["#slowmornings", "#wetalk"],
-    hasImage: true,
-    imageRatio: "1600x1000",
-    likes: 421,
-    comments: 38,
-    shares: 9,
-  },
-  {
-    id: "me2",
-    author: currentUser,
-    createdAt: ago(3, "d"),
-    text: "Tiny film roll, big feelings. Shot the whole street in golden light.",
-    tags: ["#goldenhour", "#film"],
-    likes: 196,
-    comments: 21,
-    shares: 4,
-  },
-];
-
-/* -------------------------- Comments -------------------------- */
+/* ----------------------------- Commentaires ----------------------------- */
 
 const _u1: User = { id: "u1", name: "Maya Rivera", handle: "mayarivera", initial: "M", verified: true };
 const _u2: User = { id: "u2", name: "Theo Lang", handle: "theolang", initial: "T", verified: true };
@@ -212,21 +109,22 @@ export const postComments: Record<string, Comment[]> = {
   ],
 };
 
-/* --------------------------- Signalements -------------------------- */
+/* ----------------------------- Signalements ----------------------------- */
+
+const _badPost = (id: string, text: string): Post => ({
+  id,
+  author: { id: `a-${id}`, name: "Bad Actor", handle: "badactor", initial: "B" },
+  createdAt: ago(3, "h"),
+  text,
+  tags: [],
+  likes: 0,
+  comments: 0,
+});
 
 export const reportedPosts: ReportedPost[] = [
   {
     id: "rep1",
-    post: {
-      id: "px1",
-      author: { id: "ux1", name: "Bad Actor", handle: "badactor", initial: "B" },
-      createdAt: ago(3, "h"),
-      text: "Buy followers now! Best prices guaranteed ✨✨✨",
-      tags: [],
-      likes: 2,
-      comments: 0,
-      shares: 0,
-    },
+    post: _badPost("px1", "Buy followers now! Best prices guaranteed ✨✨✨"),
     reason: "spam",
     reportedBy: { id: "w3", name: "Remy Cole", handle: "remycole", initial: "R" },
     reportedAt: ago(2, "h"),
@@ -242,7 +140,6 @@ export const reportedPosts: ReportedPost[] = [
       tags: [],
       likes: 14,
       comments: 3,
-      shares: 7,
     },
     reason: "misinformation",
     reportedBy: { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" },
@@ -251,7 +148,7 @@ export const reportedPosts: ReportedPost[] = [
   },
 ];
 
-/* ---------------------------- Messages ---------------------------- */
+/* ----------------------------- Messages ----------------------------- */
 
 export const conversations: Conversation[] = [
   {
@@ -297,15 +194,10 @@ export const conversations: Conversation[] = [
   },
 ];
 
-/* -------------------------- Notifications -------------------------- */
+/* ----------------------------- Notifications ----------------------------- */
 
-const u = (
-  id: string,
-  name: string,
-  handle: string,
-  initial: string,
-  verified = false,
-): User => ({ id, name, handle, initial, verified });
+const u = (id: string, name: string, handle: string, initial: string, verified = false): User =>
+  ({ id, name, handle, initial, verified });
 
 export const notifications: Notification[] = [
   {
@@ -328,7 +220,7 @@ export const notifications: Notification[] = [
     type: "mention",
     actor: u("u3", "Nina Vale", "ninavale", "N"),
     text: "mentioned you in a post",
-    preview: "shooting the rooftop with @kattyabra tonight 🎞️",
+    preview: "shooting the rooftop with @wetalkuser tonight 🎞️",
     createdAt: ago(2, "h"),
   },
   {

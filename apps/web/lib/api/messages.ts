@@ -1,8 +1,9 @@
 import type { Conversation, Message } from "@/lib/types";
 import { conversations } from "@/lib/mock-data";
 
-// TODO(api): replace with apiFetch<Conversation[]>("/conversations")
+/** Liste des conversations de l'utilisateur courant. */
 export async function getConversations(): Promise<Conversation[]> {
+  // TODO(api): return apiFetch<Conversation[]>("/conversations");
   return structuredClone(conversations);
 }
 
@@ -12,8 +13,6 @@ export async function sendMessage(
   text: string,
 ): Promise<Message> {
   // TODO(api): return apiFetch<Message>(`/conversations/${conversationId}/messages`, { method: "POST", body: JSON.stringify({ text }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("sendMessage (mock)", { conversationId, text });
-  }
+  void conversationId;
   return { id: `msg-${Date.now()}`, text, createdAt: new Date().toISOString(), mine: true };
 }

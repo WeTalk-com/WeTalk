@@ -48,8 +48,9 @@ function SearchInput({ placeholder }: { placeholder: string }) {
       placeholder={placeholder}
       aria-label={placeholder}
       defaultValue={query}
+      autoFocus
       onChange={(e) => handleChange(e.target.value)}
-      className="min-w-0 flex-1 bg-transparent text-brown outline-none placeholder:text-placeholder"
+      className="min-w-0 flex-1 bg-transparent text-sm text-brown outline-none placeholder:text-placeholder"
     />
   );
 }
@@ -69,7 +70,7 @@ export function TopBar({ searchPlaceholder, searchable = false }: Props) {
               type="search"
               placeholder={placeholder}
               aria-label={placeholder}
-              className="min-w-0 flex-1 bg-transparent text-brown outline-none placeholder:text-placeholder"
+              className="min-w-0 flex-1 bg-transparent text-sm text-brown outline-none placeholder:text-placeholder"
             />
           }
         >

@@ -41,15 +41,16 @@ export function mapPost(p: BackendPost): Post {
   const author: User = p.author
     ? mapUser(p.author)
     : { id: p.authorId, name: "?", handle: "unknown", initial: "?" };
+  // Garantit que createdAt est en UTC — MongoDB peut omettre le suffixe Z.
+  const createdAt = p.createdAt.endsWith("Z") ? p.createdAt : `${p.createdAt}Z`;
   return {
     id: p._id,
     author,
-    createdAt: p.createdAt,
+    createdAt,
     text: p.content ?? "",
     tags: [],
     likes: 0,
     comments: 0,
-    shares: 0,
   };
 }
 

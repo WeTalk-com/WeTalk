@@ -2,62 +2,45 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Heart, MessageCircle, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
+
+function formatCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  return String(n);
+}
 
 type Props = {
   likes: number;
   comments: number;
-  shares: number;
   onComment?: () => void;
 };
 
-export function PostActions({ likes, comments, shares, onComment }: Props) {
+export function PostActions({ likes, comments, onComment }: Props) {
   const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
   const t = useTranslations("app.post");
 
   return (
-    <div className="flex items-center gap-6 text-ink-soft text-sm">
+    <div className="flex items-center gap-5 text-brown-sec">
+      <button
+        type="button"
+        aria-label={t("comment")}
+        onClick={onComment}
+        className="flex items-center gap-1.5 text-sm transition-colors hover:text-gold"
+      >
+        <MessageCircle className="size-4.5" />
+        <span className="tabular-nums">{formatCount(comments)}</span>
+      </button>
+
       <button
         type="button"
         onClick={() => setLiked((v) => !v)}
         aria-pressed={liked}
         aria-label={t("like")}
-        className="flex items-center gap-2 hover:text-live transition-colors"
+        className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? "text-live" : "hover:text-live"}`}
       >
-        <Heart
-          className={`size-5 ${liked ? "fill-live text-live" : ""}`}
-        />
-        {likes + (liked ? 1 : 0)}
-      </button>
-
-      <button
-        type="button"
-        aria-label={t("comment")}
-        onClick={onComment}
-        className="flex items-center gap-2 hover:text-ink transition-colors"
-      >
-        <MessageCircle className="size-5" />
-        {comments}
-      </button>
-
-      <button
-        type="button"
-        aria-label={t("share")}
-        className="flex items-center gap-2 hover:text-ink transition-colors"
-      >
-        <Send className="size-5" />
-        {shares}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setSaved((v) => !v)}
-        aria-pressed={saved}
-        aria-label={t("save")}
-        className="ml-auto hover:text-gold transition-colors"
-      >
-        <Bookmark className={`size-5 ${saved ? "fill-gold text-gold" : ""}`} />
+        <Heart className={`size-4.5 transition-colors ${liked ? "fill-live" : ""}`} />
+        <span className="tabular-nums">{formatCount(likes + (liked ? 1 : 0))}</span>
       </button>
     </div>
   );

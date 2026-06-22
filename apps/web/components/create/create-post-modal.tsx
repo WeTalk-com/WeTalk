@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { X, ImageIcon, Film, Smile, MapPin, Sparkles } from "lucide-react";
 import type { User } from "@/lib/types";
 import { createPost } from "@/lib/api";
@@ -33,6 +34,7 @@ export function CreatePostModal({
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("app.create");
+  const router = useRouter();
 
   const remaining = MAX_CHARS - text.length;
   const tags = parseTags(text);
@@ -103,6 +105,7 @@ export function CreatePostModal({
         video: video ?? undefined,
       });
       onClose();
+      router.refresh();
     } finally {
       setPending(false);
     }

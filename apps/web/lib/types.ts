@@ -27,7 +27,6 @@ export type Post = {
   hasVideo?: boolean;
   likes: number;
   comments: number;
-  shares: number;
 };
 
 export type Reply = {
