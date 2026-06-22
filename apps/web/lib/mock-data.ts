@@ -10,7 +10,6 @@ import type {
   TrendingTopic,
   Notification,
   Conversation,
-  Comment,
   ReportedPost,
 } from "./types";
 
@@ -35,79 +34,6 @@ export const trending: TrendingTopic[] = [
   { category: "Design", tag: "#warmtones", posts: "12.4K posts" },
   { category: "Travel", tag: "#slowmornings", posts: "9.1K posts" },
 ];
-
-/* ----------------------------- Commentaires ----------------------------- */
-
-const _u1: User = { id: "u1", name: "Maya Rivera", handle: "mayarivera", initial: "M", verified: true };
-const _u2: User = { id: "u2", name: "Theo Lang", handle: "theolang", initial: "T", verified: true };
-const _u3: User = { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" };
-const _u4: User = { id: "u4", name: "Lara Moons", handle: "laramoons", initial: "L" };
-
-export const postComments: Record<string, Comment[]> = {
-  p1: [
-    {
-      id: "cm1",
-      author: _u2,
-      text: "This golden hour lighting is unreal! What time did you shoot this?",
-      createdAt: ago(1, "h"),
-      likes: 24,
-      replies: [
-        {
-          id: "rp1",
-          author: _u1,
-          text: "Around 7pm! The dunes catch the light perfectly at that hour.",
-          createdAt: ago(55, "m"),
-          likes: 8,
-        },
-      ],
-    },
-    {
-      id: "cm2",
-      author: _u3,
-      text: "Golden hours and slow mornings — my whole aesthetic 🌅",
-      createdAt: ago(45, "m"),
-      likes: 12,
-      replies: [],
-    },
-  ],
-  p2: [
-    {
-      id: "cm3",
-      author: _u3,
-      text: "Those warm studio tones are everything. Presets available? 🙏",
-      createdAt: ago(3, "h"),
-      likes: 41,
-      replies: [
-        {
-          id: "rp2",
-          author: _u2,
-          text: "Dropping them next week on the newsletter! Stay tuned 🎞️",
-          createdAt: ago(2, "h"),
-          likes: 18,
-        },
-      ],
-    },
-  ],
-  p3: [],
-  p4: [
-    {
-      id: "cm4",
-      author: _u1,
-      text: "Can't wait for this reel 🔥 your BTS content is always chef's kiss",
-      createdAt: ago(20, "h"),
-      likes: 57,
-      replies: [
-        {
-          id: "rp3",
-          author: _u4,
-          text: "Thank you! Dropping midnight tonight 🌙",
-          createdAt: ago(19, "h"),
-          likes: 21,
-        },
-      ],
-    },
-  ],
-};
 
 /* ----------------------------- Signalements ----------------------------- */
 

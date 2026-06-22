@@ -88,8 +88,6 @@
     "emailPlaceholder": "you@example.com",
     "emailErrorInvalid": "Invalid email address",
     "emailErrorTaken": "This email is already in use",
-    "phoneLabel": "Phone",
-    "phonePlaceholder": "+33 6 12 34 56 78",
     "passwordLabel": "Password",
     "passwordHint": "Minimum 8 characters",
     "passwordErrorMin": "Password must be at least 8 characters",

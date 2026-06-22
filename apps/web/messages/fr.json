@@ -88,8 +88,6 @@
     "emailPlaceholder": "vous@exemple.com",
     "emailErrorInvalid": "Adresse e-mail invalide",
     "emailErrorTaken": "Cet e-mail est déjà utilisé",
-    "phoneLabel": "Téléphone",
-    "phonePlaceholder": "+33 6 12 34 56 78",
     "passwordLabel": "Mot de passe",
     "passwordHint": "8 caractères minimum",
     "passwordErrorMin": "Le mot de passe doit contenir au moins 8 caractères",
