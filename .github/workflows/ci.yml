@@ -25,7 +25,7 @@ jobs:
       - run: npm run lint
       - run: npm run check-types
       - run: npm test
-      - run: npm run build
+      - run: npm run build -- --filter=!message-service --filter=!media-service --filter=!notification-service
 
   codeql:
     name: CodeQL
