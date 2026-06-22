@@ -39,19 +39,6 @@
       "goldenHours": "golden hours",
       "comeBackDaily": "come back daily"
     },
-    "marquee": {
-      "heading": "Loved by warm-light people everywhere"
-    },
-    "features": {
-      "visualTitle": "Made for visual stories",
-      "visualText": "Full-bleed photo posts with warm-tone presets built in.",
-      "discoveryTitle": "A calmer discovery",
-      "discoveryText": "No doomscroll. Curated by people, sorted by warmth.",
-      "connectionTitle": "Real connection",
-      "connectionText": "Follow fewer, talk more. Comments that feel like a coffee.",
-      "ctaHeading": "Come for the light. Stay for the people.",
-      "getStarted": "Get started"
-    },
     "phone": {
       "sceneHome": "Home feed",
       "sceneExplore": "Explore",

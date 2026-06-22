@@ -39,19 +39,6 @@
       "goldenHours": "golden hours",
       "comeBackDaily": "reviennent chaque jour"
     },
-    "marquee": {
-      "heading": "Adoré par les amoureux de la lumière chaude, partout"
-    },
-    "features": {
-      "visualTitle": "Pensé pour les histoires visuelles",
-      "visualText": "Des posts photo plein cadre avec des presets aux tons chauds intégrés.",
-      "discoveryTitle": "Une découverte plus calme",
-      "discoveryText": "Pas de scroll infini. Une curation humaine, triée par chaleur.",
-      "connectionTitle": "De vraies connexions",
-      "connectionText": "Suivez moins, parlez plus. Des commentaires qui ont le goût d'un café.",
-      "ctaHeading": "Venez pour la lumière. Restez pour les gens.",
-      "getStarted": "Commencer"
-    },
     "phone": {
       "sceneHome": "Fil d'accueil",
       "sceneExplore": "Explorer",
