@@ -6,6 +6,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card } from "@/components/ui/card";
 import { LanguageSwitcher } from "@/components/settings/language-switcher";
 import { ThemeSwitcher } from "@/components/settings/theme-switcher";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 export async function generateMetadata({
   params,
@@ -58,6 +59,10 @@ export default function SettingsPage() {
 
         <Section title={t("themeLabel")} description={t("themeDescription")}>
           <ThemeSwitcher />
+        </Section>
+
+        <Section title={t("accountLabel")} description={t("accountDescription")}>
+          <LogoutButton />
         </Section>
       </div>
     </main>

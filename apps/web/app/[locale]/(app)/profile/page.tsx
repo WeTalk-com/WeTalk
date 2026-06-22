@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getProfile, getMyPosts } from "@/lib/api";
+import { getProfile, getPostsByAuthor } from "@/lib/api";
 import { MapPin, CalendarDays } from "lucide-react";
 import { TopBar } from "@/components/layout/top-bar";
 import { Avatar } from "@/components/ui/avatar";
@@ -32,7 +32,9 @@ function Stat({ value, label }: { value: string | number; label: string }) {
 
 export default async function ProfilePage() {
   const t = await getTranslations("app.profile");
-  const [p, myPosts] = await Promise.all([getProfile(), getMyPosts()]);
+  const p = await getProfile();
+  const myPosts = await getPostsByAuthor(p.id);
+  p.stats.posts = myPosts.length;
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
