@@ -29,6 +29,8 @@ export type Post = {
   hasVideo?: boolean;
   videoUrl?: string;
   likes: number;
+  /** Le lecteur courant a-t-il liké ce post (état initial du bouton). */
+  likedByMe?: boolean;
   comments: number;
   shares: number;
 };
@@ -39,6 +41,7 @@ export type Reply = {
   text: string;
   createdAt: string;
   likes: number;
+  likedByMe?: boolean;
 };
 
 export type Comment = {
@@ -47,6 +50,7 @@ export type Comment = {
   text: string;
   createdAt: string;
   likes: number;
+  likedByMe?: boolean;
   replies: Reply[];
 };
 

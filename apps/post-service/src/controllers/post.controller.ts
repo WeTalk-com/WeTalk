@@ -1,12 +1,13 @@
 import type { Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, Types } from "mongoose";
 import { z } from "zod";
 import { PostModel } from "../models/post.js";
+import { CommentModel } from "../models/comment.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 
 // Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
-function forwardAuth(req: Request): Record<string, string> {
+export function forwardAuth(req: Request): Record<string, string> {
   const headers: Record<string, string> = {};
   if (req.headers.authorization) headers.authorization = req.headers.authorization;
   if (req.headers.cookie) headers.cookie = req.headers.cookie;
@@ -14,7 +15,7 @@ function forwardAuth(req: Request): Record<string, string> {
 }
 
 // Vérifie auprès du user-service si l'auteur peut publier
-async function authorPostingBlock(
+export async function authorPostingBlock(
   userId: string,
   headers: Record<string, string>,
 ): Promise<{ blocked: boolean; reason: string; status: number }> {
@@ -175,7 +176,7 @@ async function fetchAuthors(
 // read-time : contenu non servi + author anonymisé + flag authorBanned. Rien
 // n'est muté en base, donc c'est réversible automatiquement à l'unban. Le front
 // affiche un message dédié quand authorBanned est vrai.
-async function withAuthors<T extends { authorId: string }>(
+export async function withAuthors<T extends { authorId: string }>(
   posts: T[],
   headers: Record<string, string>,
 ) {
@@ -191,6 +192,38 @@ async function withAuthors<T extends { authorId: string }>(
       };
     }
     return { ...p, authorBanned: false, author };
+  });
+}
+
+// Nombre de commentaires par post, en une seule passe d'agrégation.
+async function commentCounts(postIds: string[]): Promise<Map<string, number>> {
+  if (postIds.length === 0) return new Map();
+  const rows = await CommentModel.aggregate<{ _id: Types.ObjectId; count: number }>([
+    { $match: { postId: { $in: postIds.map((id) => new Types.ObjectId(id)) } } },
+    { $group: { _id: "$postId", count: { $sum: 1 } } },
+  ]);
+  return new Map(rows.map((r) => [String(r._id), r.count]));
+}
+
+// Enrichit pour le lecteur courant : auteur (+ masquage banni) puis likeCount /
+// likedByMe / commentCount. likedBy (ids des likers) n'est jamais renvoyé au client.
+async function enrichForViewer<T extends { _id: unknown; authorId: string; likedBy: string[] }>(
+  posts: T[],
+  req: Request,
+) {
+  const authored = await withAuthors(posts, forwardAuth(req));
+  const counts = await commentCounts(posts.map((p) => String(p._id)));
+  const me = req.user!.sub;
+  return authored.map((p) => {
+    // likedBy peut manquer sur d'anciens documents (champ ajouté après coup) :
+    // le default Mongoose ne s'applique qu'à la création, pas à la lecture.
+    const { likedBy = [], ...rest } = p;
+    return {
+      ...rest,
+      likeCount: likedBy.length,
+      likedByMe: likedBy.includes(me),
+      commentCount: counts.get(String(p._id)) ?? 0,
+    };
   });
 }
 
@@ -237,7 +270,9 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     if (media) await deleteMediaFromService(media.id, forwardAuth(req));
     throw err;
   }
-  res.status(201).json({ post });
+  // likedBy (ids des likers) n'est jamais exposé au client.
+  const { likedBy: _likedBy, ...postOut } = post.toObject();
+  res.status(201).json({ post: postOut });
 }
 
 export async function listPosts(req: Request, res: Response): Promise<void> {
@@ -257,7 +292,7 @@ export async function listPosts(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, forwardAuth(req));
+  const enriched = await enrichForViewer(posts, req);
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -280,7 +315,7 @@ export async function feed(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, forwardAuth(req));
+  const enriched = await enrichForViewer(posts, req);
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -295,7 +330,7 @@ export async function getPost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  const [enriched] = await withAuthors([post], forwardAuth(req));
+  const [enriched] = await enrichForViewer([post], req);
   res.json({ post: enriched });
 }
 
@@ -341,4 +376,42 @@ export async function deletePost(req: Request, res: Response): Promise<void> {
   }
   await post.deleteOne();
   res.status(204).send();
+}
+
+// Like idempotent : $addToSet évite les doublons, re-liker = no-op.
+export async function likePost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const post = await PostModel.findByIdAndUpdate(
+    id,
+    { $addToSet: { likedBy: req.user!.sub } },
+    { new: true },
+  ).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: true });
+}
+
+// Unlike idempotent : $pull, retirer un like absent = no-op.
+export async function unlikePost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const post = await PostModel.findByIdAndUpdate(
+    id,
+    { $pull: { likedBy: req.user!.sub } },
+    { new: true },
+  ).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: false });
 }

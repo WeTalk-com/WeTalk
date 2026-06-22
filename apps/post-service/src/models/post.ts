@@ -13,6 +13,7 @@ const postSchema = new Schema(
   {
     authorId: { type: String, required: true, index: true },
     content: { type: String, required: true, trim: true, maxlength: 280 },
+    likedBy: { type: [String], default: [] }, // userIds ayant liké — count = longueur, likedByMe = includes(me)
     media: { type: mediaSchema, required: false, default: undefined },
   },
   { timestamps: true },

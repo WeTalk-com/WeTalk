@@ -87,6 +87,8 @@ export function PostCard({ post }: { post: Post }) {
   const [showReport, setShowReport] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,8 +105,13 @@ export function PostCard({ post }: { post: Post }) {
   async function openComments() {
     setShowComments(true);
     if (comments === null) {
-      const data = await getComments(post.id);
-      setComments(data);
+      setCommentsLoading(true);
+      try {
+        const data = await getComments(post.id);
+        setComments(data);
+      } finally {
+        setCommentsLoading(false);
+      }
     }
   }
 
@@ -190,8 +197,10 @@ export function PostCard({ post }: { post: Post }) {
         {/* Actions */}
         <div className="mt-4">
           <PostActions
+            postId={post.id}
             likes={post.likes}
-            comments={post.comments}
+            likedByMe={post.likedByMe}
+            comments={commentCount}
             shares={post.shares}
             onComment={openComments}
           />
@@ -202,7 +211,9 @@ export function PostCard({ post }: { post: Post }) {
         <CommentThread
           postId={post.id}
           initialComments={comments ?? []}
+          loading={commentsLoading}
           onClose={() => setShowComments(false)}
+          onCommentAdded={() => setCommentCount((c) => c + 1)}
         />
       )}
 
