@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 type FieldProps = {
   id: string;
@@ -35,15 +35,21 @@ export function Field({
   error,
   valid,
 }: FieldProps) {
-  const borderClass = error
+  const [focused, setFocused] = useState(false);
+
+  // Pas de feedback couleur tant que le champ est actif (édition en cours).
+  const showError = !focused && !!error;
+  const showValid = !focused && !!valid;
+
+  const borderClass = showError
     ? "border-live focus-within:border-live focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.12)]"
-    : valid
+    : showValid
       ? "border-green-500 focus-within:border-green-500 focus-within:shadow-[0_0_0_3px_rgba(34,197,94,0.12)]"
       : "border-border focus-within:border-gold focus-within:shadow-[0_0_0_3px_rgba(186,117,23,0.14)]";
 
-  const iconClass = error
+  const iconClass = showError
     ? "text-live"
-    : valid
+    : showValid
       ? "text-green-500"
       : "text-placeholder group-focus-within:text-gold";
 
@@ -64,7 +70,8 @@ export function Field({
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onBlur={onBlur}
+          onFocus={() => setFocused(true)}
+          onBlur={() => { setFocused(false); onBlur?.(); }}
           placeholder={placeholder}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
@@ -72,9 +79,9 @@ export function Field({
         />
         {trailing}
       </div>
-      {(error ?? hint) && (
-        <p className={`mt-1 text-xs ${error ? "text-live" : "text-brown-sec"}`}>
-          {error ?? hint}
+      {(showError ? error : hint) && (
+        <p className={`mt-1 text-xs ${showError ? "text-live" : "text-brown-sec"}`}>
+          {showError ? error : hint}
         </p>
       )}
     </div>

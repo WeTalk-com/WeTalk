@@ -26,7 +26,7 @@ export default function middleware(req: NextRequest) {
       const matchedLocale = req.nextUrl.pathname.match(localePrefix)?.[1] ?? routing.defaultLocale;
       const loginUrl = new URL(`/${matchedLocale}/login`, req.url);
       // Mémoriser l'URL d'origine pour rediriger après connexion
-      loginUrl.searchParams.set("redirect", req.nextUrl.pathname);
+      loginUrl.searchParams.set("redirect", pathWithoutLocale);
       return NextResponse.redirect(loginUrl);
     }
   }

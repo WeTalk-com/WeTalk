@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Field } from "@/components/auth/field";
 import {
   MailIcon,
@@ -9,13 +10,35 @@ import {
   UserIcon,
   EyeIcon,
   EyeOffIcon,
-  CheckIcon,
-  ArrowLeftIcon,
 } from "@/components/icons/form";
 import { useRouter } from "@/i18n/navigation";
 import { login as apiLogin, register as apiRegister, AuthError } from "@/lib/api/auth";
 
-type Mode = "login" | "signup" | "forgot";
+type Mode = "login" | "signup";
+
+type SafeRedirectPath =
+  | "/home"
+  | "/explore"
+  | "/messages"
+  | "/notifications"
+  | "/profile"
+  | "/settings";
+
+const REDIRECT_ALLOWLIST: readonly SafeRedirectPath[] = [
+  "/home",
+  "/explore",
+  "/messages",
+  "/notifications",
+  "/profile",
+  "/settings",
+];
+
+function safeRedirect(raw: string | null): SafeRedirectPath {
+  const path = (raw ?? "").replace(/^\/(fr|en)/, "") || "/home";
+  return REDIRECT_ALLOWLIST.includes(path as SafeRedirectPath)
+    ? (path as SafeRedirectPath)
+    : "/home";
+}
 
 function getPasswordStrength(password: string): 0 | 1 | 2 | 3 {
   if (password.length < 8) return 0;
@@ -57,12 +80,16 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-export default function LoginPage() {
+// Séparé dans un composant interne pour pouvoir wrapper dans Suspense
+// (requis par useSearchParams en App Router).
+function LoginPageContent() {
   const t = useTranslations("auth");
+  const searchParams = useSearchParams();
+  const redirectTo = safeRedirect(searchParams.get("redirect"));
+
   const [mode, setMode] = useState<Mode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [remember, setRemember] = useState(true);
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -77,7 +104,6 @@ export default function LoginPage() {
 
   const setField = (key: keyof typeof form) => (value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
-    // Efface l'erreur de champ dès que l'utilisateur retape
     if (fieldErrors[key]) setFieldErrors((e) => ({ ...e, [key]: undefined }));
     if (globalError) setGlobalError(null);
   };
@@ -125,6 +151,7 @@ export default function LoginPage() {
   }
 
   function isFieldValid(key: keyof typeof form): boolean {
+    if (globalError) return false;
     return !!touched[key] && !fieldErrors[key] && form[key].length > 0;
   }
 
@@ -135,7 +162,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pending || mode === "forgot") return;
+    if (pending) return;
     if (!validateAll()) return;
 
     setGlobalError(null);
@@ -145,7 +172,7 @@ export default function LoginPage() {
         await apiRegister(form.username, form.email, form.password);
       }
       await apiLogin(form.email, form.password);
-      router.push("/home");
+      router.replace(redirectTo);
     } catch (err) {
       if (err instanceof AuthError) {
         switch (err.code) {
@@ -159,9 +186,11 @@ export default function LoginPage() {
             setFieldErrors((e) => ({ ...e, password: t("passwordErrorMin") }));
             break;
           default:
+            setTouched({});
             setGlobalError(t("invalidCredentials"));
         }
       } else {
+        setTouched({});
         setGlobalError(t("invalidCredentials"));
       }
       setPending(false);
@@ -178,7 +207,6 @@ export default function LoginPage() {
   const copy = {
     login: { title: t("loginTitle"), subtitle: t("loginSubtitle"), cta: t("loginCta") },
     signup: { title: t("signupTitle"), subtitle: t("signupSubtitle"), cta: t("signupCta") },
-    forgot: { title: t("forgotTitle"), subtitle: t("forgotSubtitle"), cta: t("forgotCta") },
   }[mode];
 
   return (
@@ -198,39 +226,27 @@ export default function LoginPage() {
       </header>
 
       <div className="relative z-10 w-full max-w-104 rounded-card border border-border bg-card p-7.5 shadow-card">
-        {mode === "forgot" ? (
-          <button
-            type="button"
-            onClick={() => switchMode("login")}
-            className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-brown-sec transition-colors hover:text-brown"
-          >
-            <ArrowLeftIcon className="size-4" />
-            {t("backToLogin")}
-          </button>
-        ) : (
-          <div className="mb-6 flex rounded-field bg-cream p-1">
-            {(["login", "signup"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => switchMode(m)}
-                className={`flex-1 rounded-[10px] py-2.5 text-sm font-semibold transition-all ${
-                  mode === m
-                    ? "bg-card text-brown shadow-[0_2px_6px_rgba(65,36,2,0.08)]"
-                    : "text-brown-sec"
-                }`}
-              >
-                {m === "login" ? t("toggleLogin") : t("toggleSignup")}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="mb-6 flex rounded-field bg-cream p-1">
+          {(["login", "signup"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => switchMode(m)}
+              className={`flex-1 rounded-[10px] py-2.5 text-sm font-semibold transition-all ${
+                mode === m
+                  ? "bg-card text-brown shadow-[0_2px_6px_rgba(65,36,2,0.08)]"
+                  : "text-brown-sec"
+              }`}
+            >
+              {m === "login" ? t("toggleLogin") : t("toggleSignup")}
+            </button>
+          ))}
+        </div>
 
         <h2 className="font-head text-[26px] font-extrabold text-brown">{copy.title}</h2>
         <p className="mt-1 text-brown-sec">{copy.subtitle}</p>
 
         <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-4">
-          {/* Nom d'utilisateur (signup uniquement) */}
           {mode === "signup" && (
             <Field
               id="username"
@@ -249,7 +265,6 @@ export default function LoginPage() {
             />
           )}
 
-          {/* Email */}
           <Field
             id="email"
             name="email"
@@ -266,44 +281,40 @@ export default function LoginPage() {
             valid={isFieldValid("email")}
           />
 
-          {/* Mot de passe */}
-          {mode !== "forgot" && (
-            <div>
-              <Field
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                label={t("passwordLabel")}
-                value={form.password}
-                onChange={setField("password")}
-                onBlur={touch("password")}
-                placeholder="••••••••"
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                icon={<LockIcon />}
-                hint={mode === "signup" ? t("passwordHint") : undefined}
-                error={touched.password ? fieldErrors.password : undefined}
-                valid={isFieldValid("password")}
-                trailing={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? t("hidePassword") : t("showPassword")}
-                    className="shrink-0 text-placeholder transition-colors hover:text-gold"
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                }
+          <div>
+            <Field
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              label={t("passwordLabel")}
+              value={form.password}
+              onChange={setField("password")}
+              onBlur={touch("password")}
+              placeholder="••••••••"
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              icon={<LockIcon />}
+              hint={mode === "signup" ? t("passwordHint") : undefined}
+              error={touched.password ? fieldErrors.password : undefined}
+              valid={isFieldValid("password")}
+              trailing={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                  className="shrink-0 text-placeholder transition-colors hover:text-gold"
+                >
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              }
+            />
+            {mode === "signup" && (
+              <PasswordStrengthBar
+                password={form.password}
+                labels={[t("passwordStrengthWeak"), t("passwordStrengthFair"), t("passwordStrengthStrong")]}
               />
-              {mode === "signup" && (
-                <PasswordStrengthBar
-                  password={form.password}
-                  labels={[t("passwordStrengthWeak"), t("passwordStrengthFair"), t("passwordStrengthStrong")]}
-                />
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Confirmer le mot de passe (signup uniquement) */}
           {mode === "signup" && (
             <Field
               id="confirmPassword"
@@ -331,40 +342,10 @@ export default function LoginPage() {
             />
           )}
 
-          {/* Se souvenir + Mot de passe oublié (login uniquement) */}
-          {mode === "login" && (
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setRemember((v) => !v)}
-                aria-pressed={remember}
-                className="flex items-center gap-2 text-sm text-brown-sec"
-              >
-                <span
-                  className={`grid size-4.5 place-items-center rounded-[5px] border-[1.5px] transition-colors ${
-                    remember ? "border-gold bg-gold text-white" : "border-border bg-card"
-                  }`}
-                >
-                  {remember && <CheckIcon className="size-3" />}
-                </span>
-                {t("rememberMe")}
-              </button>
-              <button
-                type="button"
-                onClick={() => switchMode("forgot")}
-                className="text-sm font-medium text-gold hover:underline"
-              >
-                {t("forgotPassword")}
-              </button>
-            </div>
-          )}
-
-          {/* Erreur globale */}
           {globalError && (
             <p className="text-sm font-medium text-live">{globalError}</p>
           )}
 
-          {/* Bouton submit */}
           <button
             type="submit"
             disabled={pending || !canSubmit}
@@ -375,7 +356,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-brown-sec">
-          {mode === "login" && (
+          {mode === "login" ? (
             <>
               {t("footerLoginPrompt")}{" "}
               <button
@@ -386,8 +367,7 @@ export default function LoginPage() {
                 {t("footerCreateAccount")}
               </button>
             </>
-          )}
-          {mode === "signup" && (
+          ) : (
             <>
               {t("footerSignupPrompt")}{" "}
               <button
@@ -396,18 +376,6 @@ export default function LoginPage() {
                 className="font-semibold text-gold hover:underline"
               >
                 {t("footerLoginLink")}
-              </button>
-            </>
-          )}
-          {mode === "forgot" && (
-            <>
-              {t("footerForgotPrompt")}{" "}
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                className="font-semibold text-gold hover:underline"
-              >
-                {t("footerBackLink")}
               </button>
             </>
           )}
@@ -425,5 +393,13 @@ export default function LoginPage() {
         })}
       </p>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageContent />
+    </Suspense>
   );
 }
