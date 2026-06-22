@@ -5,6 +5,7 @@ type ChipUser = {
   name: string;
   handle: string;
   initial: string;
+  avatarUrl?: string;
   verified?: boolean;
 };
 
@@ -22,7 +23,7 @@ export function UserChip({
 }) {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <Avatar initial={user.initial} solid={solid} />
+      <Avatar initial={user.initial} src={user.avatarUrl} solid={solid} alt={user.name} />
       <div className="min-w-0 leading-tight">
         <div className="flex items-center gap-1 font-semibold text-brown">
           <span className="truncate">{user.name}</span>

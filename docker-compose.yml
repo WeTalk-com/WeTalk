@@ -26,10 +26,11 @@ services:
     networks:
       - wetalk-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
   mongo:
     image: mongo:7
@@ -72,7 +73,7 @@ services:
     expose:
       - "4000"
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -94,17 +95,20 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_URL: redis://redis:6379
+      MEDIA_SERVICE_URL: http://media-service:4004
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      media-service:
         condition: service_healthy
     networks:
       - wetalk-net
     expose:
       - "4001"
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4001/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4001/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -121,10 +125,13 @@ services:
     environment:
       MONGO_URI: ${MONGO_URI_POST}
       USER_SERVICE_URL: http://user-service:4001
+      MEDIA_SERVICE_URL: http://media-service:4004
     depends_on:
       mongo:
         condition: service_healthy
       user-service:
+        condition: service_healthy
+      media-service:
         condition: service_healthy
     networks:
       - wetalk-net
@@ -132,6 +139,30 @@ services:
       - "4002"
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:4002/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  media-service:
+    build:
+      context: .
+      dockerfile: apps/media-service/Dockerfile
+    container_name: wetalk-media-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: 4004
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - media_data:/data/uploads
+    networks:
+      - wetalk-net
+    expose:
+      - "4004"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4004/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -191,6 +222,8 @@ services:
         condition: service_healthy
       post-service:
         condition: service_healthy
+      media-service:
+        condition: service_healthy
       # Desactive tant que notification-service n'est pas implemente (feature notifications).
       # notification-service:
       #   condition: service_healthy
@@ -206,3 +239,4 @@ networks:
 volumes:
   postgres_data:
   mongo_data:
+  media_data:

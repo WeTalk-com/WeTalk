@@ -1,37 +1,22 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# npm
+node_modules
+package-lock.json
+npm-shrinkwrap.json
+*.log
+*.gz
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
+# Yarn
+yarn-error.log
+yarn.lock
 
-# testing
-/coverage
+# Coveralls
+.nyc_output
+coverage
 
-# next.js
-/.next/
-/out/
+# Benchmarking
+benchmarks/graphs
 
-# production
-/build
-/dist
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# env files (can opt-in for commiting if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Environment & Secrets
+.env
+.env.*
+!.env.example
