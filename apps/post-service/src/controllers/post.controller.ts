@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import { isValidObjectId } from "mongoose";
-import { z } from "zod";
 import { PostModel } from "../models/post.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
+import { createSchema, updateSchema, listQuerySchema, feedQuerySchema } from "../schemas/post.schemas.js";
 
 // Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
 function forwardAuth(req: Request): Record<string, string> {
@@ -41,23 +41,6 @@ async function authorPostingBlock(
     return { blocked: true, reason: "Unable to verify account status", status: 503 };
   }
 }
-
-const createSchema = z.object({
-  content: z.string().trim().min(1).max(280),
-});
-
-const updateSchema = createSchema;
-
-const listQuerySchema = z.object({
-  authorId: z.string().trim().min(1).optional(),
-  cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
-
-const feedQuerySchema = z.object({
-  cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
 
 type AuthorLite = {
   id: string;

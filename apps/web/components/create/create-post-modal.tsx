@@ -60,7 +60,6 @@ export function CreatePostModal({
       if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
       if (videoPreviewRef.current) URL.revokeObjectURL(videoPreviewRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {

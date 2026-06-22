@@ -28,12 +28,10 @@ function PostText({ text, tags }: { text: string; tags: string[] }) {
 
 function PostMenu({
   postId,
-  authorHandle,
   onReport,
   onClose,
 }: {
   postId: string;
-  authorHandle: string;
   onReport: () => void;
   onClose: () => void;
 }) {
@@ -133,7 +131,6 @@ export function PostCard({ post }: { post: Post }) {
             {showMenu && (
               <PostMenu
                 postId={post.id}
-                authorHandle={author.handle}
                 onReport={() => setShowReport(true)}
                 onClose={() => setShowMenu(false)}
               />

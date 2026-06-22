@@ -1,6 +1,7 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": ["PORT", "NODE_ENV", "API_INTERNAL_URL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -12,6 +13,10 @@
     },
     "check-types": {
       "dependsOn": ["^check-types"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**/*.test.ts"]
     },
     "dev": {
       "cache": false,

@@ -1,7 +1,10 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { env } from "./config/env.js";
+import { registry } from "./config/openapi.js";
 import { userRouter } from "./routes/user.routes.js";
 import { apiLimiter } from "./middleware/rateLimit.js";
 import { logger } from "./utils/logger.js";
@@ -49,6 +52,14 @@ export function createApp() {
 		});
 		next();
 	});
+
+	const generator = new OpenApiGeneratorV3(registry.definitions);
+	const openApiDoc = generator.generateDocument({
+		openapi: "3.0.3",
+		info: { title: "User Service", version: "1.0.0" },
+		servers: [{ url: "http://localhost:4001" }],
+	});
+	app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
 	app.get("/health", (_req: Request, res: Response) => {
 		res.json({ status: "ok", service: "user-service" });
