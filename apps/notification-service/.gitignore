@@ -15,3 +15,8 @@ coverage
 
 # Benchmarking
 benchmarks/graphs
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example

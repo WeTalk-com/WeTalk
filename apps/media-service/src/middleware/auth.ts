@@ -16,8 +16,9 @@ const ACCESS_COOKIE = "wetalk_session";
 function extractToken(req: Request): string | undefined {
   const fromCookie = req.cookies?.[ACCESS_COOKIE];
   if (fromCookie) return fromCookie;
-  const header = req.headers.authorization;
-  return header?.startsWith("Bearer ") ? header.slice("Bearer ".length) : undefined;
+  if (!header) return undefined;
+  const [scheme, token] = header.trim().split(/\s+/, 2);
+  return scheme?.toLowerCase() === "bearer" && token ? token : undefined;
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {

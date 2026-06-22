@@ -36,7 +36,7 @@ class MediaUploadError extends Error {
 async function uploadImageToMediaService(
 	file: Express.Multer.File,
 	headers: Record<string, string>,
-): Promise<string> {
+): Promise<{ id: string; url: string }> {
 	const form = new FormData();
 	form.append("file", new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname);
 	const res = await fetch(`${env.mediaServiceUrl}/media`, {
@@ -50,11 +50,25 @@ async function uploadImageToMediaService(
 		const status = res.status >= 400 && res.status < 500 ? res.status : 502;
 		throw new MediaUploadError(status, body.error ?? `media-service responded ${res.status}`);
 	}
-	const data = (await res.json()) as { url?: string };
-	if (!data.url) {
+	const data = (await res.json()) as { id?: string; url?: string };
+	if (!data.id || !data.url) {
 		throw new MediaUploadError(502, "media-service returned an invalid payload");
 	}
-	return data.url;
+	return { id: data.id, url: data.url };
+}
+
+// Suppression compensatoire best-effort : appelée si la sauvegarde du profil
+// échoue après l'upload, pour ne pas laisser de fichier orphelin.
+async function deleteMediaFromService(id: string, headers: Record<string, string>): Promise<void> {
+	try {
+		await fetch(`${env.mediaServiceUrl}/media/${encodeURIComponent(id)}`, {
+			method: "DELETE",
+			headers,
+			signal: AbortSignal.timeout(5000),
+		});
+	} catch {
+		// best-effort : on n'échoue pas la requête pour un nettoyage raté.
+	}
 }
 
 // Échappe les jokers LIKE (\ % _) pour qu'un terme de recherche soit traité
@@ -210,17 +224,25 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 		const files = req.files as { [field: string]: Express.Multer.File[] } | undefined;
 		let avatarUrl: string | undefined;
 		let bannerUrl: string | undefined;
+		const uploadedMediaIds: string[] = [];
 		try {
-			if (files?.avatar?.[0])
-				avatarUrl = await uploadImageToMediaService(files.avatar[0], forwardAuth(req));
-			if (files?.banner?.[0])
-				bannerUrl = await uploadImageToMediaService(files.banner[0], forwardAuth(req));
+			if (files?.avatar?.[0]) {
+				const m = await uploadImageToMediaService(files.avatar[0], forwardAuth(req));
+				avatarUrl = m.url;
+				uploadedMediaIds.push(m.id);
+			}
+			if (files?.banner?.[0]) {
+				const m = await uploadImageToMediaService(files.banner[0], forwardAuth(req));
+				bannerUrl = m.url;
+				uploadedMediaIds.push(m.id);
+			}
 		} catch (err) {
 			const status = err instanceof MediaUploadError ? err.status : 502;
 			const message =
 				status === 502
 					? "Échec de l'upload du média."
 					: (err as MediaUploadError).message;
+			await Promise.all(uploadedMediaIds.map((id) => deleteMediaFromService(id, forwardAuth(req))));
 			res.status(status).json({ error: message });
 			return;
 		}
@@ -239,7 +261,12 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 		if (description !== undefined)
 			user.description = description;
 
-		await user.save();
+		try {
+			await user.save();
+		} catch (err) {
+			await Promise.all(uploadedMediaIds.map((id) => deleteMediaFromService(id, forwardAuth(req))));
+			throw err;
+		}
 
 		res.json({
 			message: "Profil mis à jour avec succès.",

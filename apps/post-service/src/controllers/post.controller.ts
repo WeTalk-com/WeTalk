@@ -55,7 +55,7 @@ class MediaUploadError extends Error {
 async function uploadMediaToService(
   file: Express.Multer.File,
   headers: Record<string, string>,
-): Promise<{ url: string; type: "image" | "video" }> {
+): Promise<{ id: string; url: string; type: "image" | "video" }> {
   const form = new FormData();
   form.append("file", new Blob([file.buffer], { type: file.mimetype }), file.originalname);
   const res = await fetch(`${env.mediaServiceUrl}/media`, {
@@ -69,11 +69,26 @@ async function uploadMediaToService(
     const status = res.status >= 400 && res.status < 500 ? res.status : 502;
     throw new MediaUploadError(status, body.error ?? `media-service responded ${res.status}`);
   }
-  const data = (await res.json()) as { url?: string; type?: string };
-  if (!data.url || (data.type !== "image" && data.type !== "video")) {
+  const data = (await res.json()) as { id?: string; url?: string; type?: string };
+  if (!data.id || !data.url || (data.type !== "image" && data.type !== "video")) {
     throw new MediaUploadError(502, "media-service returned an invalid payload");
   }
-  return { url: data.url, type: data.type };
+  return { id: data.id, url: data.url, type: data.type };
+}
+
+async function deleteMediaFromService(id: string, headers: Record<string, string>): Promise<void> {
+  try {
+    await fetch(`${env.mediaServiceUrl}/media/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (err) {
+    logger.warn("orphan media cleanup failed", {
+      id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 const createSchema = z.object({
@@ -194,7 +209,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
   }
 
   // media optionnel
-  let media: { url: string; type: "image" | "video" } | undefined;
+  let media: { id: string; url: string; type: "image" | "video" } | undefined;
   if (req.file) {
     try {
       media = await uploadMediaToService(req.file, forwardAuth(req));
@@ -211,11 +226,17 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     }
   }
 
-  const post = await PostModel.create({
-    authorId: req.user!.sub,
-    content: parsed.data.content,
-    ...(media ? { media } : {}),
-  });
+  let post;
+  try {
+    post = await PostModel.create({
+      authorId: req.user!.sub,
+      content: parsed.data.content,
+      ...(media ? { media: { url: media.url, type: media.type } } : {}),
+    });
+  } catch (err) {
+    if (media) await deleteMediaFromService(media.id, forwardAuth(req));
+    throw err;
+  }
   res.status(201).json({ post });
 }
 
