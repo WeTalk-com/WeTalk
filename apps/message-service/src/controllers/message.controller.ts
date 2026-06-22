@@ -7,16 +7,18 @@ import {logger} from "../utils/logger.js";
 export async function getConversationList(req: Request, res: Response) {
 	try {
 		const myId = req.user!.sub as string;
-		const limit = parseInt(req.query.limit as string, 10) || 20;
+		// const limit = parseInt(req.query.limit as string, 10);
 
-		const queryConditions: { senderId: string, createdAt?: object } = {
-			senderId: myId
+		const queryConditions: { $or: Array<object> } = {
+			$or: [
+				{ senderId: myId },
+				{ receiverId: myId }
+			]
 		};
 
-		// TODO: Pas complètement sûr de vouloir laisser la limite...
 		const conversations = await Message.find(queryConditions)
-			.sort({ createdAt: -1 })
-			.limit(limit);
+			.sort({ createdAt: -1 });
+			// .limit(limit);
 
 		res.json({
 			data: [...new Set(conversations.map(o => o.receiverId))],
@@ -32,7 +34,14 @@ export async function getConversation(req: Request, res: Response) {
 		const myId = req.user!.sub as string;
 		const targetId = req.params.id as string;
 		const cursor = req.query.cursor as string; // Le curseur sera un timestamp ISO string (createdAt)
-		const limit = parseInt(req.query.limit as string, 10) || 20;
+		let limit = parseInt(req.query.limit as string, 10) || 20;
+
+		if (limit < 1) {
+			limit = 1;
+		}
+		if (limit > 50) {
+			limit = 50;
+		}
 
 		const queryConditions: { $or: Array<object>, createdAt?: object } = {
 			$or: [
@@ -137,6 +146,6 @@ export async function deleteConversation(req: Request, res: Response) {
 		res.json({ message: "Conversation supprimée." });
 	} catch (e) {
 		logger.error((e as Error).message);
-		res.status(500).json({ error: "Erreur lors de l'envoi du message privé." });
+		res.status(500).json({ error: "Erreur lors de suppression de la conversation." });
 	}
 }
