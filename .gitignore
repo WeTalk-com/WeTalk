@@ -65,4 +65,5 @@ TEST-results.xml
 *v8.log
 /lib/
 .turbo
+dist/
 .env

@@ -59,7 +59,7 @@ export function createApp() {
 		info: { title: "User Service", version: "1.0.0" },
 		servers: [{ url: "http://localhost:4001" }],
 	});
-	app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
+	app.use("/api-docs", ...(swaggerUi.serve as any), swaggerUi.setup(openApiDoc) as any);
 
 	app.get("/health", (_req: Request, res: Response) => {
 		res.json({ status: "ok", service: "user-service" });
