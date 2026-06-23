@@ -2,7 +2,35 @@ import type { Request, Response } from "express";
 import { Message } from "../models/Message.js";
 import { env } from "../config/env.js";
 import axios from "axios";
-import {logger} from "../utils/logger.js";
+import { logger } from "../utils/logger.js";
+import type { Conversation, User } from "../schemas/types.js";
+
+function publicUser(user: User): { id: string; name: string; handle: string; initial: string; verified: boolean; } {
+	return  {
+		id: "u1",
+		name: user.displayName || user.username,
+		handle: user.username,
+		initial: (user.displayName || user.username).substring(0, 1).toUpperCase(),
+		verified: false
+	};
+}
+
+function msgDateDiff(msgDate: Date) {
+	const diff = Math.abs(Date.now() - msgDate.getTime());
+	const seconds = Math.floor(diff / 1000);
+	const minutes = Math.floor(seconds / 60);
+	const hours = Math.floor(minutes / 60);
+	const days = Math.floor(hours / 24);
+	const years = Math.floor(days / 365);
+	
+	return {
+		seconds,
+		minutes,
+		hours,
+		days,
+		years,
+	};
+}
 
 export async function getConversationList(req: Request, res: Response) {
 	try {
@@ -49,11 +77,26 @@ export async function getConversation(req: Request, res: Response) {
 			.sort({ createdAt: -1 }) // Du plus récent au plus ancien
 			.limit(limit);
 		
+		if (!messages) {
+			return res.status(404).json({ error: "No conversation found." });
+		}
+		
 		// @ts-expect-error Object messages possibly undefined
 		const nextCursor = messages.length > 0 ? messages[messages.length - 1].createdAt : null;
 		
+		const conversation: Conversation = {
+			user: publicUser(await axios.get(`${env.userServiceUrl}/users/${targetId}`)),
+			// @ts-expect-error Object messages possibly undefined
+			lastMessage: messages[0].content,
+			// @ts-expect-error Object messages possibly undefined
+			lastMessageAt: messages[0].createdAt,
+			unread: messages.filter(o => !o.isRead).length,
+			// @ts-expect-error Fuck typescript typing
+			messages: messages.map(o => ({text: o.content, createdAt: o.createdAt, mine: o.senderId === myId})),
+		};
+		
 		res.json({
-			data: messages,
+			data: conversation,
 			pagination: {
 				nextCursor,
 				hasNextPage: messages.length === limit
