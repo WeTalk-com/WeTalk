@@ -29,7 +29,7 @@ export async function getFollowingIds(userId: string): Promise<string[]> {
 /** Nombre réel d'abonnés d'un utilisateur (GET /users/:id/followers). */
 export async function getFollowerCount(userId: string): Promise<number> {
   const data = await apiFetch<{ data: unknown[] }>(
-    `/users/${encodeURIComponent(userId)}/followers?limit=5000`,
+    `/users/${encodeURIComponent(userId)}/followers?limit=100`,
   );
   return data.data?.length ?? 0;
 }
