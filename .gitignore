@@ -67,3 +67,5 @@ TEST-results.xml
 .turbo
 dist/
 .env
+# Rapport JUnit généré en CI (dorny/test-reporter)
+junit.xml
