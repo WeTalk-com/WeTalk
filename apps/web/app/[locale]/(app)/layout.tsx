@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
 import { CreateModalProvider } from "@/components/create/create-modal-provider";
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -9,7 +11,15 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
+  let user;
+  try {
+    user = await getCurrentUser();
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 401 || err.status === 404)) {
+      redirect("/login");
+    }
+    throw err;
+  }
 
   return (
     <CreateModalProvider user={user}>
