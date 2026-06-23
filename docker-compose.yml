@@ -229,6 +229,8 @@ services:
       #   condition: service_healthy
       web:
         condition: service_healthy
+      agent:
+        condition: service_started
     networks:
       - wetalk-net
 
@@ -279,8 +281,8 @@ services:
         condition: service_started
     networks:
       - wetalk-net
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s

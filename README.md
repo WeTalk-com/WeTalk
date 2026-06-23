@@ -205,11 +205,6 @@ Services IA : `agent` (FastAPI, `POST /chat` sur le port 8000) → `ollama` + `c
 # Telecharger le modele Ollama (une seule fois)
 docker compose exec ollama ollama pull qwen3:4b
 
-# Appeler l'agent
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "vérifie le health du mcp"}'
-
 # REPL interactif (optionnel)
 docker compose exec -it agent python -m agent.agent
 
