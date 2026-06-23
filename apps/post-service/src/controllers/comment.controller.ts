@@ -3,7 +3,7 @@ import { isValidObjectId } from "mongoose";
 import { z } from "zod";
 import { CommentModel } from "../models/comment.js";
 import { PostModel } from "../models/post.js";
-import { forwardAuth, withAuthors, authorPostingBlock } from "./post.controller.js";
+import { forwardAuth, withAuthors, authorPostingBlock, notifyNotificationService } from "./post.controller.js";
 
 const createSchema = z.object({
   content: z.string().trim().min(1).max(280),
@@ -63,6 +63,18 @@ export async function createComment(req: Request, res: Response): Promise<void> 
     content: parsed.data.content,
     parentId: parsed.data.parentId ?? null,
   });
+
+  if (post.authorId !== req.user!.sub) {
+    notifyNotificationService({
+      type: "comment",
+      recipientId: post.authorId,
+      actorId: req.user!.sub,
+      postId: id!,
+      commentId: String(comment._id),
+      preview: parsed.data.content.slice(0, 100),
+    });
+  }
+
   // likedBy (ids des likers) n'est jamais exposé au client.
   const { likedBy: _likedBy, ...commentOut } = comment.toObject();
   res.status(201).json({ comment: commentOut });
