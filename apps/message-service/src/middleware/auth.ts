@@ -1,8 +1,9 @@
-import type { Request, Response, NextFunction } from "express";
-import { verifyAccessToken, type JwtPayload } from "../utils/jwt.js";
+import type { NextFunction, Request, Response } from "express";
+import { type JwtPayload, verifyAccessToken } from "../utils/jwt.js";
 import { logger } from "../utils/logger.js";
 import type { UserRole } from "../models/user.js";
 import { isAccessBanned } from "../utils/banStore.js";
+import type { DefaultEventsMap, ExtendedError, Socket } from "socket.io";
 
 declare global {
 	// eslint-disable-next-line @typescript-eslint/no-namespace
@@ -62,5 +63,24 @@ export function requireRole(...roles: UserRole[]) {
 			return;
 		}
 		next();
+	};
+}
+
+export function socketRequireAuth() {
+	return (socket: Socket<DefaultEventsMap, DefaultEventsMap>, next: (err?: ExtendedError | undefined) => void) => {
+		const token = socket.handshake.auth?.token;
+		
+		if (!token) {
+			return next(new Error("Authentication error: token missing"));
+		}
+		
+		try {
+			// @ts-expect-error Simple ajout de propriété par un middleware
+			socket.user = verifyAccessToken(token);
+			return next();
+		} catch (err) {
+			logger.error((err as Error).message);
+			return next(new Error("Authentication error: invalid token"));
+		}
 	};
 }

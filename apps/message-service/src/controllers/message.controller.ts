@@ -86,31 +86,40 @@ export async function getConversation(req: Request, res: Response) {
 			.sort({ createdAt: -1 }) // Du plus récent au plus ancien
 			.limit(limit);
 		
-		if (!messages) {
+		if (!messages || !messages.length) {
 			return res.status(404).json({ error: "No conversation found." });
 		}
 		
 		// @ts-expect-error Object messages possibly undefined
 		const nextCursor = messages.length > 0 ? messages[messages.length - 1].createdAt : null;
 		
-		const conversation: Conversation = {
-			user: publicUser(await axios.get(`${env.userServiceUrl}/users/${targetId}`)),
-			// @ts-expect-error Object messages possibly undefined
-			lastMessage: messages[0].content,
-			// @ts-expect-error Object messages possibly undefined
-			lastMessageAt: messages[0].createdAt,
-			unread: messages.filter(o => !o.isRead).length,
-			// @ts-expect-error Fuck typescript typing
-			messages: messages.map(o => ({text: o.content, createdAt: o.createdAt, mine: o.senderId === myId})),
-		};
-		
-		res.json({
-			data: conversation,
-			pagination: {
-				nextCursor,
-				hasNextPage: messages.length === limit
-			}
-		});
+		try {
+			const conversation: Conversation = {
+				// user: publicUser(await axios.get(`${env.userServiceUrl}/users/${targetId}`)),
+				user: publicUser((await axios.get(`${env.userServiceUrl}/users/${targetId}`, {
+					// @ts-expect-error "Pas le bon type de headers" typescript doin' it again...
+					headers: { Authorization: req.headers.authorization }
+				})).data),
+				// @ts-expect-error Object messages possibly undefined
+				lastMessage: messages[0].content,
+				// @ts-expect-error Object messages possibly undefined
+				lastMessageAt: messages[0].createdAt,
+				unread: messages.filter(o => !o.isRead).length,
+				// @ts-expect-error Fuck typescript typing
+				messages: messages.map(o => ({text: o.content, createdAt: o.createdAt, mine: o.senderId === myId})),
+			};
+			
+			res.json({
+				data: conversation,
+				pagination: {
+					nextCursor,
+					hasNextPage: messages.length === limit
+				}
+			});
+		} catch (apiError) {
+			logger.error((apiError as Error).message);
+			res.status(500).json({ error: "Erreur lors de la requête au user-service." });
+		}
 	} catch (e) {
 		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la récupération des messages." });

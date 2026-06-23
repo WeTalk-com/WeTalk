@@ -4,8 +4,9 @@ import { connectRedis, redis } from "./config/redis.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 import http from "http";
-import { Server } from "socket.io";
+import { Server, type Socket } from "socket.io";
 import { Message } from "./models/Message.js";
+import { socketRequireAuth } from "./middleware/auth.js";
 
 async function main(): Promise<void> {
 	await connectDb();
@@ -31,7 +32,9 @@ async function main(): Promise<void> {
 			credentials: true
 		}
 	});
-
+	
+	io.use(socketRequireAuth());
+	
 	// 3. Gestion des connexions WebSockets
 	io.on("connection", (socket) => {
 		logger.info(`Un utilisateur s'est connecté : ${socket.id}`);
