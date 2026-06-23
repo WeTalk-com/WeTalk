@@ -59,7 +59,7 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [input, setInput] = useState("");
   const [mobileShowChat, setMobileShowChat] = useState(false);
-
+  
   function selectConv(conv: Conversation) {
     setSelected(conv);
     setMobileShowChat(true);

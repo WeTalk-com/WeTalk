@@ -24,6 +24,7 @@ async function main(): Promise<void> {
 
 	// 2. Initialisation de Socket.io sur ce serveur
 	const io = new Server(server, {
+		path: "/socket.io",
 		cors: {
 			origin: env.corsOrigins.length > 0 ? env.corsOrigins : false,
 			methods: ["GET", "POST", "DELETE"],
@@ -39,6 +40,14 @@ async function main(): Promise<void> {
 		socket.on("join_private_room", (userId) => {
 			socket.join(userId);
 			logger.info(`Utilisateur ${userId} a rejoint sa room privée.`);
+		});
+		
+		// Test connexion
+		socket.emit("server-ready", { ok: true });
+		socket.on("ping", (payload, ack) => {
+			console.log("ping reçu:", payload);
+			if (ack)
+				ack({ ok: true, received: payload });
 		});
 
 		// Étape B : Écouter quand un utilisateur envoie un message privé
