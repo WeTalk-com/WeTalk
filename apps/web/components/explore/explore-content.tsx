@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TrendingUp, MoreHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -14,7 +14,7 @@ type Tab = "trending" | "foryou" | "people";
 export function ExploreContent({
   posts,
   trending,
-  users,
+  users: initialUsers,
   query = "",
 }: {
   posts: Post[];
@@ -24,8 +24,12 @@ export function ExploreContent({
 }) {
   const t = useTranslations("app.explore");
   const [tab, setTab] = useState<Tab>("trending");
+  const [users, setUsers] = useState(initialUsers);
 
-  const q = query.toLowerCase().trim();
+  // Sync avec le serveur quand la prop change (nouveau résultat de recherche)
+  useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
+
+  const q = query.toLowerCase().trim().replace(/^@/, "");
   const filteredPosts = q
     ? posts.filter(
         (p) =>
@@ -41,14 +45,6 @@ export function ExploreContent({
           tp.category.toLowerCase().includes(q),
       )
     : trending;
-  const filteredUsers = q
-    ? users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(q) ||
-          u.handle.toLowerCase().includes(q),
-      )
-    : users;
-
   const tabs: { key: Tab; label: string }[] = [
     { key: "trending", label: t("tabTrending") },
     { key: "foryou", label: t("tabForYou") },
@@ -125,8 +121,8 @@ export function ExploreContent({
       {/* Personnes */}
       {tab === "people" && (
         <ul>
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((u) => (
+          {users.length > 0 ? (
+            users.map((u) => (
               <li
                 key={u.id}
                 className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0"
@@ -137,7 +133,10 @@ export function ExploreContent({
                 >
                   <UserChip user={u} />
                 </Link>
-                <FollowButton userId={u.id} />
+                <FollowButton
+                  userId={u.id}
+                  onFollow={() => setUsers((prev) => prev.filter((x) => x.id !== u.id))}
+                />
               </li>
             ))
           ) : (

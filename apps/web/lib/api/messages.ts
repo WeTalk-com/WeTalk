@@ -9,10 +9,9 @@ export async function getConversations(): Promise<Conversation[]> {
 
 /** Envoie un message dans une conversation. */
 export async function sendMessage(
-  conversationId: string,
+  _conversationId: string,
   text: string,
 ): Promise<Message> {
-  // TODO(api): return apiFetch<Message>(`/conversations/${conversationId}/messages`, { method: "POST", body: JSON.stringify({ text }) });
-  void conversationId;
+  // TODO(api): return apiFetch<Message>(`/conversations/${_conversationId}/messages`, { method: "POST", body: JSON.stringify({ text }) });
   return { id: `msg-${Date.now()}`, text, createdAt: new Date().toISOString(), mine: true };
 }

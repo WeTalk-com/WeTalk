@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getTrending, getWhoToFollow, getPosts } from "@/lib/api";
+import { getCurrentUser, getFollowingIds, getTrending, searchUsers, getPosts } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { ExploreContent } from "@/components/explore/explore-content";
 
@@ -25,16 +25,20 @@ export default async function ExplorePage({
 }) {
   const t = await getTranslations("app.explore");
   const { q } = await searchParams;
-  const [trending, users, posts] = await Promise.all([
+  const [trending, users, posts, me] = await Promise.all([
     getTrending(),
-    getWhoToFollow(),
+    searchUsers(q),
     getPosts(),
+    getCurrentUser(),
   ]);
+  const followingIds = await getFollowingIds(me.id);
+  // Exclude self and already-followed users from the people list
+  const visibleUsers = users.filter((u) => u.id !== me.id && !followingIds.includes(u.id));
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
       <TopBar searchPlaceholder={t("searchPlaceholder")} searchable />
-      <ExploreContent trending={trending} users={users} posts={posts} query={q ?? ""} />
+      <ExploreContent trending={trending} users={visibleUsers} posts={posts} query={q ?? ""} />
     </main>
   );
 }

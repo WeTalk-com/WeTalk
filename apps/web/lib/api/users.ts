@@ -1,12 +1,12 @@
+import { cache } from "react";
 import type { User, Profile } from "@/lib/types";
-import { whoToFollow } from "@/lib/mock-data";
 import { apiFetch } from "./client";
 import { mapUser, mapProfile, type BackendUser } from "./map";
 
-/** Utilisateur connecté (depuis le cookie de session). */
-export async function getCurrentUser(): Promise<User> {
+/** Utilisateur connecté (depuis le cookie de session). Dédupliqué par requête via cache(). */
+export const getCurrentUser = cache(async (): Promise<User> => {
   return mapUser(await apiFetch<BackendUser>("/users/me"));
-}
+});
 
 /** Profil affiché — ici le profil de l'utilisateur courant. */
 export async function getProfile(): Promise<Profile> {
@@ -26,12 +26,29 @@ export async function getFollowingIds(userId: string): Promise<string[]> {
   return data.ids;
 }
 
-/** Nombre réel d'abonnés d'un utilisateur (GET /users/:id/followers). */
-export async function getFollowerCount(userId: string): Promise<number> {
-  const data = await apiFetch<{ data: unknown[] }>(
+// Le backend retourne seulement { id, username } dans les listes de follow.
+// mapUser gère les champs manquants (displayName → username, profileImage → undefined).
+type FollowEntry = Pick<BackendUser, "id" | "username">;
+
+/** Liste des abonnés d'un utilisateur. */
+export async function getFollowers(userId: string): Promise<User[]> {
+  const data = await apiFetch<{ data: FollowEntry[] }>(
     `/users/${encodeURIComponent(userId)}/followers?limit=100`,
   );
-  return data.data?.length ?? 0;
+  return (data.data ?? []).map((u) => mapUser(u as BackendUser));
+}
+
+/** Liste des comptes suivis par un utilisateur. */
+export async function getFollowingList(userId: string): Promise<User[]> {
+  const data = await apiFetch<{ data: FollowEntry[] }>(
+    `/users/${encodeURIComponent(userId)}/following?limit=100`,
+  );
+  return (data.data ?? []).map((u) => mapUser(u as BackendUser));
+}
+
+/** Nombre d'abonnés — délègue à getFollowers pour éviter un double appel réseau. */
+export async function getFollowerCount(userId: string): Promise<number> {
+  return (await getFollowers(userId)).length;
 }
 
 export type UpdateProfileInput = {
@@ -70,7 +87,3 @@ export async function searchUsers(query?: string): Promise<User[]> {
   return data.map(mapUser);
 }
 
-/** @deprecated utilisé uniquement si le backend est indisponible. */
-export async function getWhoToFollow(): Promise<User[]> {
-  return structuredClone(whoToFollow);
-}

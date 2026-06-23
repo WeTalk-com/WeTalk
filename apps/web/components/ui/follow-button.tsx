@@ -13,10 +13,6 @@ type Props = {
   onUnfollow?: () => void;
 };
 
-/**
- * Bouton Suivre / Suivi avec toggle optimiste.
- * En mode mock, l'état est local. Le back-end n'a qu'à brancher onFollow/onUnfollow.
- */
 export function FollowButton({ userId, initialFollowing = false, size = "sm", onFollow, onUnfollow }: Props) {
   const t = useTranslations("app.rightRail");
   const [following, setFollowing] = useState(initialFollowing);
