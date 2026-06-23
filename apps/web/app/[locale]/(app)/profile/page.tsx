@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getProfile, getPostsByAuthor } from "@/lib/api";
+import { getProfile, getPostsByAuthor, getFollowerCount, getFollowingIds } from "@/lib/api";
 import { MapPin, CalendarDays } from "lucide-react";
 import { TopBar } from "@/components/layout/top-bar";
 import { Avatar } from "@/components/ui/avatar";
@@ -33,8 +33,14 @@ function Stat({ value, label }: { value: string | number; label: string }) {
 export default async function ProfilePage() {
   const t = await getTranslations("app.profile");
   const p = await getProfile();
-  const myPosts = await getPostsByAuthor(p.id);
+  const [myPosts, followerCount, followingIds] = await Promise.all([
+    getPostsByAuthor(p.id),
+    getFollowerCount(p.id),
+    getFollowingIds(p.id),
+  ]);
   p.stats.posts = myPosts.length;
+  p.stats.followers = String(followerCount);
+  p.stats.following = followingIds.length;
   const isNewUser = p.name === p.handle && p.bio === "";
 
   return (

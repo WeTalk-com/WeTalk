@@ -18,12 +18,20 @@ export async function getUserProfile(handle: string): Promise<Profile> {
   return mapProfile(await apiFetch<BackendUser>(`/users/${encodeURIComponent(handle)}`));
 }
 
-/** IDs des utilisateurs suivis par `userId` (pour l'état initial du bouton Suivre). */
+/** IDs des utilisateurs suivis par `userId`. */
 export async function getFollowingIds(userId: string): Promise<string[]> {
   const data = await apiFetch<{ ids: string[] }>(
     `/users/${encodeURIComponent(userId)}/following/ids`,
   );
   return data.ids;
+}
+
+/** Nombre réel d'abonnés d'un utilisateur (GET /users/:id/followers). */
+export async function getFollowerCount(userId: string): Promise<number> {
+  const data = await apiFetch<{ data: unknown[] }>(
+    `/users/${encodeURIComponent(userId)}/followers?limit=5000`,
+  );
+  return data.data?.length ?? 0;
 }
 
 export type UpdateProfileInput = {
@@ -55,7 +63,14 @@ export function unfollowUser(id: string): Promise<unknown> {
   return apiFetch(`/users/${id}/follow`, { method: "DELETE" });
 }
 
-/** Suggestions "à suivre" — pas d'endpoint backend, reste mock. */
+/** Suggestions "à suivre" ou résultats de recherche depuis le backend. */
+export async function searchUsers(query?: string): Promise<User[]> {
+  const qs = query?.trim() ? `?search=${encodeURIComponent(query.trim())}` : "";
+  const data = await apiFetch<BackendUser[]>(`/users${qs}`);
+  return data.map(mapUser);
+}
+
+/** @deprecated utilisé uniquement si le backend est indisponible. */
 export async function getWhoToFollow(): Promise<User[]> {
   return structuredClone(whoToFollow);
 }

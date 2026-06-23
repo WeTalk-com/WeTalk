@@ -3,30 +3,37 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { followUser, unfollowUser } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
 
 type Props = {
-  /** ID de l'utilisateur à suivre — sera passé à l'API (POST /users/:id/follow). */
   userId: string;
   initialFollowing?: boolean;
   size?: "sm" | "md";
+  onFollow?: () => void;
+  onUnfollow?: () => void;
 };
 
 /**
  * Bouton Suivre / Suivi avec toggle optimiste.
  * En mode mock, l'état est local. Le back-end n'a qu'à brancher onFollow/onUnfollow.
  */
-export function FollowButton({ userId, initialFollowing = false, size = "sm" }: Props) {
+export function FollowButton({ userId, initialFollowing = false, size = "sm", onFollow, onUnfollow }: Props) {
   const t = useTranslations("app.rightRail");
   const [following, setFollowing] = useState(initialFollowing);
   const [hovered, setHovered] = useState(false);
 
-  // Toggle optimiste : on bascule l'UI tout de suite, on revient en arrière si l'API échoue.
   async function toggle() {
     const next = !following;
     setFollowing(next);
     try {
       await (next ? followUser(userId) : unfollowUser(userId));
-    } catch {
+      next ? onFollow?.() : onUnfollow?.();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 400) {
+        // 400 = déjà dans l'état cible (already following / not following)
+        // On garde l'UI optimiste — pas de callback car le delta serait faux.
+        return;
+      }
       setFollowing(!next);
     }
   }
