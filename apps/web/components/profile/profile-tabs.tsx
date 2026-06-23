@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Post } from "@/lib/types";
 import { PostCard } from "@/components/post/post-card";
-import { ImageIcon, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 
-type Tab = "posts" | "media" | "likes";
+type Tab = "posts" | "likes";
 
 type Props = {
   posts: Post[];
@@ -27,11 +27,8 @@ export function ProfileTabs({ posts }: Props) {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "posts", label: t("tabPosts") },
-    { key: "media", label: t("tabMedia") },
     { key: "likes", label: t("tabLikes") },
   ];
-
-  const mediaPosts = posts.filter((p) => p.hasImage);
 
   return (
     <>
@@ -61,12 +58,6 @@ export function ProfileTabs({ posts }: Props) {
           posts.length > 0
             ? posts.map((post) => <PostCard key={post.id} post={post} />)
             : <EmptyState icon={<Heart className="size-10" />} text={t("postsEmpty")} />
-        )}
-
-        {active === "media" && (
-          mediaPosts.length > 0
-            ? mediaPosts.map((post) => <PostCard key={post.id} post={post} />)
-            : <EmptyState icon={<ImageIcon className="size-10" />} text={t("mediaEmpty")} />
         )}
 
         {active === "likes" && (

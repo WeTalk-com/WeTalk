@@ -142,31 +142,9 @@ export function PostDetailComments({
   }
 
   return (
-    <div className="rounded-card border border-border bg-card">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="font-head text-base font-bold text-brown">
-          {t("title")} ({comments.length})
-        </h2>
-      </div>
-
-      <div className="px-4">
-        {comments.length > 0 ? (
-          comments.map((c) => (
-            <CommentRow
-              key={c.id}
-              comment={c}
-              onReply={(id) => {
-                setReplyingTo(id);
-                setInput("");
-              }}
-            />
-          ))
-        ) : (
-          <p className="py-8 text-center text-sm text-brown-sec">{t("empty")}</p>
-        )}
-      </div>
-
-      <div className="border-t border-border px-4 py-4">
+    <div className="border-t border-border">
+      {/* Composer style Twitter */}
+      <div className="border-b border-border py-3">
         {replyingTo && (
           <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
             <CornerDownRight className="size-3" />
@@ -188,21 +166,35 @@ export function PostDetailComments({
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit();
+                void handleSubmit();
               }
             }}
             placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
-            className="min-w-0 flex-1 rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
+            className="min-w-0 flex-1 bg-transparent text-sm text-brown outline-none placeholder:text-placeholder"
           />
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             disabled={!input.trim() || pending}
-            className="shrink-0 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+            className="shrink-0 rounded-full bg-gold px-4 py-1.5 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
           >
             {t("send")}
           </button>
         </div>
+      </div>
+
+      {/* Thread des commentaires */}
+      <div>
+        {comments.map((c) => (
+          <CommentRow
+            key={c.id}
+            comment={c}
+            onReply={(id) => {
+              setReplyingTo(id);
+              setInput("");
+            }}
+          />
+        ))}
       </div>
     </div>
   );

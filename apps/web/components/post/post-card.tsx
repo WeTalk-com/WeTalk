@@ -14,7 +14,7 @@ import type { Post, Comment } from "@/lib/types";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
   return (
-    <p className="text-ink leading-relaxed">
+    <p className="break-words text-ink leading-relaxed">
       {text}{" "}
       {tags.map((tag) => (
         <span key={tag} className="font-medium text-gold">

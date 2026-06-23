@@ -170,9 +170,12 @@ function LoginPageContent() {
     try {
       if (mode === "signup") {
         await apiRegister(form.username, form.email, form.password);
+        await apiLogin(form.email, form.password);
+        router.replace("/profile");
+      } else {
+        await apiLogin(form.email, form.password);
+        router.replace(redirectTo);
       }
-      await apiLogin(form.email, form.password);
-      router.replace(redirectTo);
     } catch (err) {
       if (err instanceof AuthError) {
         switch (err.code) {

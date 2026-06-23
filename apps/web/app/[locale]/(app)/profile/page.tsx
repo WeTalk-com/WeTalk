@@ -35,6 +35,7 @@ export default async function ProfilePage() {
   const p = await getProfile();
   const myPosts = await getPostsByAuthor(p.id);
   p.stats.posts = myPosts.length;
+  const isNewUser = p.name === p.handle && p.bio === "";
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
@@ -55,7 +56,7 @@ export default async function ProfilePage() {
           <span className="inline-block rounded-full ring-4 ring-canvas">
             <Avatar initial={p.initial} src={p.avatarUrl} solid size={96} />
           </span>
-          <EditProfileButton profile={p} />
+          <EditProfileButton profile={p} autoOpen={isNewUser} />
         </div>
 
         <div className="mt-3">

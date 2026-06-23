@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { X, ImageIcon, Film, Smile, MapPin, Sparkles } from "lucide-react";
+import { X, ImageIcon, Film, Sparkles } from "lucide-react";
 import type { User } from "@/lib/types";
 import { createPost } from "@/lib/api";
 import { Avatar } from "../ui/avatar";
@@ -186,21 +186,6 @@ export function CreatePostModal({
           </div>
         )}
 
-        {/* Zone placeholder si pas de media */}
-        {!hasMedia && (
-          <button
-            type="button"
-            aria-label={t("addImage")}
-            onClick={() => imageRef.current?.click()}
-            className="mt-3 grid aspect-16/10 w-full cursor-pointer place-items-center rounded-2xl border border-dashed border-border bg-gold/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(186,117,23,0.10)_12px,rgba(186,117,23,0.10)_24px)] transition-colors hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
-          >
-            <span className="flex flex-col items-center gap-1 text-sm text-brown-sec">
-              <ImageIcon className="size-6" />
-              {t("addPhoto")}
-            </span>
-          </button>
-        )}
-
         {/* Inputs fichiers cachés */}
         <input
           ref={imageRef}
@@ -225,13 +210,7 @@ export function CreatePostModal({
           <IconButton label={t("addVideo")} onClick={() => videoRef.current?.click()}>
             <Film className="size-5" />
           </IconButton>
-          <IconButton label={t("addEmoji")}>
-            <Smile className="size-5" />
-          </IconButton>
-          <IconButton label={t("addLocation")}>
-            <MapPin className="size-5" />
-          </IconButton>
-          <IconButton label={t("enhance")}>
+<IconButton label={t("enhance")}>
             <Sparkles className="size-5" />
           </IconButton>
 

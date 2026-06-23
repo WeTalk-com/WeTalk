@@ -56,10 +56,10 @@ function Field({
   );
 }
 
-export function EditProfileButton({ profile }: { profile: Profile }) {
+export function EditProfileButton({ profile, autoOpen = false }: { profile: Profile; autoOpen?: boolean }) {
   const t = useTranslations("app.profile");
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(autoOpen);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
