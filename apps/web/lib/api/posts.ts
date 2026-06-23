@@ -1,5 +1,4 @@
 import type { Post, Comment, Reply, ReportReason } from "@/lib/types";
-import { postComments, currentUser } from "@/lib/mock-data";
 import { apiFetch } from "./client";
 import { getCurrentUser } from "./users";
 import { mapPost, mapCommentTree, type BackendPost, type BackendComment } from "./map";

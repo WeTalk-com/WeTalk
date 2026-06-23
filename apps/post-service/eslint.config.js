@@ -1,18 +1,13 @@
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
+import { config } from "@repo/eslint-config/base";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...config,
   {
     files: ["src/**/*.ts"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-    },
-    rules: {
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
   },
   {
