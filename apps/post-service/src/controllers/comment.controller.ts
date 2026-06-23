@@ -65,14 +65,17 @@ export async function createComment(req: Request, res: Response): Promise<void> 
   });
 
   if (post.authorId !== req.user!.sub) {
-    notifyNotificationService({
-      type: "comment",
-      recipientId: post.authorId,
-      actorId: req.user!.sub,
-      postId: id!,
-      commentId: String(comment._id),
-      preview: parsed.data.content.slice(0, 100),
-    });
+    notifyNotificationService(
+      {
+        type: "comment",
+        recipientId: post.authorId,
+        actorId: req.user!.sub,
+        postId: id!,
+        commentId: String(comment._id),
+        preview: parsed.data.content.slice(0, 100),
+      },
+      forwardAuth(req),
+    );
   }
 
   // likedBy (ids des likers) n'est jamais exposé au client.

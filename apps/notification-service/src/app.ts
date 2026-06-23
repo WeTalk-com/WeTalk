@@ -5,6 +5,7 @@ import helmet from "helmet";
 import { createServer } from "http";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
+import { apiLimiter } from "./middleware/rateLimit.js";
 import { createNotificationRouter } from "./routes/notification.routes.js";
 import { createSocketServer } from "./socket/index.js";
 import type { Server as SocketServer } from "socket.io";
@@ -49,7 +50,7 @@ export function createApp(): { app: express.Application; httpServer: ReturnType<
     res.json({ status: "ok", service: "notification-service" });
   });
 
-  app.use("/notifications", createNotificationRouter(io));
+  app.use("/notifications", apiLimiter, createNotificationRouter(io));
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: "Not found" });

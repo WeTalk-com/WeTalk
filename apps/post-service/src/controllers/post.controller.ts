@@ -14,18 +14,21 @@ export function forwardAuth(req: Request): Record<string, string> {
   return headers;
 }
 
-export async function notifyNotificationService(payload: {
-  type: "like" | "comment";
-  recipientId: string;
-  actorId: string;
-  postId: string;
-  commentId?: string;
-  preview?: string;
-}): Promise<void> {
+export async function notifyNotificationService(
+  payload: {
+    type: "like" | "comment";
+    recipientId: string;
+    actorId: string;
+    postId: string;
+    commentId?: string;
+    preview?: string;
+  },
+  headers?: Record<string, string>,
+): Promise<void> {
   try {
     await fetch(`${env.notificationServiceUrl}/notifications/internal`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(3000),
     });
@@ -418,12 +421,15 @@ export async function likePost(req: Request, res: Response): Promise<void> {
   }
 
   if (post.authorId !== req.user!.sub) {
-    notifyNotificationService({
-      type: "like",
-      recipientId: post.authorId,
-      actorId: req.user!.sub,
-      postId: id!,
-    });
+    notifyNotificationService(
+      {
+        type: "like",
+        recipientId: post.authorId,
+        actorId: req.user!.sub,
+        postId: id!,
+      },
+      forwardAuth(req),
+    );
   }
 
   res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: true });
