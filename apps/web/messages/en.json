@@ -173,7 +173,8 @@
       "like": "Like",
       "comment": "Comment",
       "report": "Report",
-      "copyLink": "Copy link"
+      "copyLink": "Copy link",
+      "delete": "Delete"
     },
     "messages": {
       "title": "Messages",
@@ -208,7 +209,8 @@
       "cancel": "Cancel",
       "send": "Send",
       "reply": "Reply",
-      "replies": "replies"
+      "replies": "replies",
+      "delete": "Delete"
     },
     "report": {
       "title": "Report",

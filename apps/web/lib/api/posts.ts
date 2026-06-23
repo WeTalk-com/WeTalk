@@ -124,6 +124,16 @@ export function unlikeComment(commentId: string): Promise<LikeState> {
   return apiFetch<LikeState>(`/comments/${commentId}/like`, { method: "DELETE" });
 }
 
+/** Supprime un post (auteur uniquement, vérifié côté back). */
+export function deletePost(postId: string): Promise<void> {
+  return apiFetch(`/posts/${encodeURIComponent(postId)}`, { method: "DELETE" });
+}
+
+/** Supprime un commentaire (auteur uniquement, vérifié côté back). */
+export function deleteComment(commentId: string): Promise<void> {
+  return apiFetch(`/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
+}
+
 /** Signale un post. */
 export async function reportPost(
   _postId: string,

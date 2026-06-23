@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
-import { createComment, createReply, likeComment, unlikeComment } from "@/lib/api";
+import { createComment, createReply, likeComment, unlikeComment, deleteComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
+import { useCurrentUserId } from "@/components/create/create-modal-provider";
 
 // Bouton like d'un commentaire/réponse : optimiste, recalé sur la réponse serveur,
 // rollback si erreur. Même logique que PostActions.
@@ -56,9 +57,26 @@ function CommentLike({
   );
 }
 
-function ReplyRow({ reply }: { reply: Reply }) {
-  // Langue active, pour formater la date relative de la reponse.
+function ReplyRow({
+  reply,
+  currentUserId,
+  onDelete,
+}: {
+  reply: Reply;
+  currentUserId: string;
+  onDelete: (id: string) => void;
+}) {
+  const t = useTranslations("app.comments");
   const locale = useLocale();
+  const isOwner = currentUserId === reply.author.id;
+
+  async function handleDelete() {
+    try {
+      await deleteComment(reply.id);
+      onDelete(reply.id);
+    } catch {}
+  }
+
   return (
     <div className="ml-11 mt-2 flex gap-2.5">
       <Avatar initial={reply.author.initial} size={28} />
@@ -68,13 +86,23 @@ function ReplyRow({ reply }: { reply: Reply }) {
           <span className="font-normal text-brown-sec">@{reply.author.handle} · {formatTimeAgo(reply.createdAt, locale)}</span>
         </p>
         <p className="mt-0.5 text-sm text-ink">{reply.text}</p>
-        <div className="mt-1">
+        <div className="mt-1 flex items-center gap-3">
           <CommentLike
             commentId={reply.id}
             likes={reply.likes}
             likedByMe={reply.likedByMe}
             iconClass="size-3"
           />
+          {isOwner && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
+              aria-label={t("delete")}
+            >
+              <Trash2 className="size-3" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -83,15 +111,27 @@ function ReplyRow({ reply }: { reply: Reply }) {
 
 function CommentRow({
   comment,
+  currentUserId,
   onReply,
+  onDelete,
 }: {
   comment: Comment;
+  currentUserId: string;
   onReply: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const t = useTranslations("app.comments");
-  // Langue active, pour formater la date relative du commentaire.
   const locale = useLocale();
   const [showReplies, setShowReplies] = useState(false);
+  const [replies, setReplies] = useState(comment.replies);
+  const isOwner = currentUserId === comment.author.id;
+
+  async function handleDelete() {
+    try {
+      await deleteComment(comment.id);
+      onDelete(comment.id);
+    } catch {}
+  }
 
   return (
     <div className="border-b border-border py-3 last:border-0">
@@ -123,7 +163,18 @@ function CommentRow({
               {t("reply")}
             </button>
 
-            {comment.replies.length > 0 && (
+            {isOwner && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
+                aria-label={t("delete")}
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
+
+            {replies.length > 0 && (
               <button
                 type="button"
                 onClick={() => setShowReplies((v) => !v)}
@@ -134,8 +185,8 @@ function CommentRow({
                 ) : (
                   <ChevronDown className="size-3.5" />
                 )}
-                {comment.replies.length}{" "}
-                {comment.replies.length === 1 ? t("reply") : t("replies")}
+                {replies.length}{" "}
+                {replies.length === 1 ? t("reply") : t("replies")}
               </button>
             )}
           </div>
@@ -143,7 +194,14 @@ function CommentRow({
       </div>
 
       {showReplies &&
-        comment.replies.map((r) => <ReplyRow key={r.id} reply={r} />)}
+        replies.map((r) => (
+          <ReplyRow
+            key={r.id}
+            reply={r}
+            currentUserId={currentUserId}
+            onDelete={(id) => setReplies((prev) => prev.filter((x) => x.id !== id))}
+          />
+        ))}
     </div>
   );
 }
@@ -162,6 +220,7 @@ export function CommentThread({
   onCommentAdded?: () => void;
 }) {
   const t = useTranslations("app.comments");
+  const currentUserId = useCurrentUserId();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -235,10 +294,12 @@ export function CommentThread({
               <CommentRow
                 key={c.id}
                 comment={c}
+                currentUserId={currentUserId}
                 onReply={(id) => {
                   setReplyingTo(id);
                   setInput("");
                 }}
+                onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
               />
             ))
           ) : (

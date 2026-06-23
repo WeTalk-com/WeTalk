@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon } from "lucide-react";
+import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon, Trash2 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
 import { CommentThread } from "./comment-thread";
 import { ReportModal } from "./report-modal";
-import { getComments } from "@/lib/api";
+import { getComments, deletePost } from "@/lib/api";
+import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import type { Post, Comment } from "@/lib/types";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
@@ -28,12 +29,16 @@ function PostText({ text, tags }: { text: string; tags: string[] }) {
 function PostMenu({
   postId,
   locale,
+  isOwner,
   onReport,
+  onDelete,
   onClose,
 }: {
   postId: string;
   locale: string;
+  isOwner: boolean;
   onReport: () => void;
+  onDelete: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations("app.post");
@@ -61,17 +66,31 @@ function PostMenu({
           {t("copyLink")}
         </button>
       </li>
-      <li role="none">
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => { onReport(); onClose(); }}
-          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
-        >
-          <Flag className="size-4" />
-          {t("report")}
-        </button>
-      </li>
+      {isOwner ? (
+        <li role="none">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => { onDelete(); onClose(); }}
+            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
+          >
+            <Trash2 className="size-4" />
+            {t("delete")}
+          </button>
+        </li>
+      ) : (
+        <li role="none">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => { onReport(); onClose(); }}
+            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
+          >
+            <Flag className="size-4" />
+            {t("report")}
+          </button>
+        </li>
+      )}
     </ul>
   );
 }
@@ -81,6 +100,8 @@ export function PostCard({ post }: { post: Post }) {
   const t = useTranslations("app.post");
   const locale = useLocale();
   const router = useRouter();
+  const currentUserId = useCurrentUserId();
+  const isOwner = currentUserId === author.id;
 
   const [showMenu, setShowMenu] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -111,6 +132,15 @@ export function PostCard({ post }: { post: Post }) {
       } finally {
         setCommentsLoading(false);
       }
+    }
+  }
+
+  async function handleDelete() {
+    try {
+      await deletePost(post.id);
+      router.refresh();
+    } catch {
+      // silent — backend returns 403 if not author
     }
   }
 
@@ -149,6 +179,8 @@ export function PostCard({ post }: { post: Post }) {
               <PostMenu
                 postId={post.id}
                 locale={locale}
+                isOwner={isOwner}
+                onDelete={handleDelete}
                 onReport={() => setShowReport(true)}
                 onClose={() => setShowMenu(false)}
               />

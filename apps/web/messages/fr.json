@@ -173,7 +173,8 @@
       "like": "J'aime",
       "comment": "Commenter",
       "report": "Signaler",
-      "copyLink": "Copier le lien"
+      "copyLink": "Copier le lien",
+      "delete": "Supprimer"
     },
     "messages": {
       "title": "Messages",
@@ -208,7 +209,8 @@
       "cancel": "Annuler",
       "send": "Envoyer",
       "reply": "Répondre",
-      "replies": "réponses"
+      "replies": "réponses",
+      "delete": "Supprimer"
     },
     "report": {
       "title": "Signaler",

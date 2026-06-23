@@ -103,7 +103,9 @@ export function LeftSidebar({ user }: { user: UserModel }) {
 
       {/* Carte utilisateur */}
       <div ref={menuRef} className="relative mt-auto flex items-center gap-3 rounded-2xl px-2 py-2">
-        <UserChip user={user} solid className="min-w-0 flex-1" />
+        <Link href="/profile" className="min-w-0 flex-1 rounded-xl transition-colors hover:bg-cream">
+          <UserChip user={user} solid />
+        </Link>
         <button
           type="button"
           aria-label={t("accountMenu")}
