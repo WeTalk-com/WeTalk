@@ -13,10 +13,12 @@ export async function apiFetch<T>(
   const isServer = typeof window === "undefined";
   const base = isServer ? env.internalApiUrl : env.apiUrl;
 
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    ...Object.fromEntries(new Headers(init?.headers ?? {})),
-  });
+  const isFormData =
+    typeof FormData !== "undefined" && init?.body instanceof FormData;
+  const headers = new Headers(init?.headers ?? {});
+  if (!isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   // SSR : le fetch serveur n'a pas le cookie navigateur -> on relaie celui de la requete.
   if (isServer) {

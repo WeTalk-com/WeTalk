@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { writeLimiter } from "../middleware/rateLimit.js";
+import { uploadProfileMedia } from "../middleware/upload.js";
 import { validateBody, validateParams } from "../middleware/validate.js";
 import { idParamSchema, userIdentifierParamSchema, updateMeSchema } from "../schemas/user.schemas.js";
 import {
@@ -48,7 +49,7 @@ userRouter.get("/", requireAuth, getUsers);
 userRouter.get("/me", requireAuth, me);
 userRouter.get("/:id", requireAuth, validateParams(userIdentifierParamSchema), getUser);
 userRouter.get("/:id/status", requireAuth, validateParams(userIdentifierParamSchema), isUserAvailable);
-userRouter.patch("/me", requireAuth, writeLimiter, validateBody(updateMeSchema), updateMe);
+userRouter.patch("/me", requireAuth, writeLimiter, uploadProfileMedia, validateBody(updateMeSchema), updateMe);
 userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 
 // Abonnements

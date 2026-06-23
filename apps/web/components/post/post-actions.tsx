@@ -3,24 +3,49 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Heart, MessageCircle, Send, Bookmark } from "lucide-react";
+import { likePost, unlikePost } from "@/lib/api";
 
 type Props = {
+  postId: string;
   likes: number;
+  likedByMe?: boolean;
   comments: number;
   shares: number;
   onComment?: () => void;
 };
 
-export function PostActions({ likes, comments, shares, onComment }: Props) {
-  const [liked, setLiked] = useState(false);
+export function PostActions({ postId, likes, likedByMe, comments, shares, onComment }: Props) {
+  const [liked, setLiked] = useState(Boolean(likedByMe));
+  const [likeCount, setLikeCount] = useState(likes);
+  const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
   const t = useTranslations("app.post");
+
+  // Mise à jour optimiste : on bascule l'UI tout de suite, on cale sur la réponse
+  // serveur, et on annule si l'appel échoue.
+  async function toggleLike() {
+    if (pending) return;
+    const next = !liked;
+    setLiked(next);
+    setLikeCount((c) => c + (next ? 1 : -1));
+    setPending(true);
+    try {
+      const state = next ? await likePost(postId) : await unlikePost(postId);
+      setLiked(state.likedByMe);
+      setLikeCount(state.likeCount);
+    } catch {
+      setLiked(!next);
+      setLikeCount((c) => c + (next ? -1 : 1));
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <div className="flex items-center gap-6 text-ink-soft text-sm">
       <button
         type="button"
-        onClick={() => setLiked((v) => !v)}
+        onClick={toggleLike}
         aria-pressed={liked}
         aria-label={t("like")}
         className="flex items-center gap-2 hover:text-live transition-colors"
@@ -28,7 +53,7 @@ export function PostActions({ likes, comments, shares, onComment }: Props) {
         <Heart
           className={`size-5 ${liked ? "fill-live text-live" : ""}`}
         />
-        {likes + (liked ? 1 : 0)}
+        {likeCount}
       </button>
 
       <button

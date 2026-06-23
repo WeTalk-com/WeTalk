@@ -10,6 +10,7 @@ COPY package.json package-lock.json turbo.json ./
 COPY apps/auth-service/package.json ./apps/auth-service/package.json
 COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
+COPY apps/media-service/package.json ./apps/media-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
 COPY apps/message-service/package.json ./apps/message-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
@@ -30,6 +31,7 @@ COPY package.json package-lock.json ./
 COPY apps/auth-service/package.json ./apps/auth-service/package.json
 COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
+COPY apps/media-service/package.json ./apps/media-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
 COPY apps/message-service/package.json ./apps/message-service/package.json
 COPY apps/web/package.json ./apps/web/package.json

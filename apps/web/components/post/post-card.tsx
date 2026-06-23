@@ -87,6 +87,8 @@ export function PostCard({ post }: { post: Post }) {
   const [showReport, setShowReport] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,8 +105,13 @@ export function PostCard({ post }: { post: Post }) {
   async function openComments() {
     setShowComments(true);
     if (comments === null) {
-      const data = await getComments(post.id);
-      setComments(data);
+      setCommentsLoading(true);
+      try {
+        const data = await getComments(post.id);
+        setComments(data);
+      } finally {
+        setCommentsLoading(false);
+      }
     }
   }
 
@@ -146,31 +153,54 @@ export function PostCard({ post }: { post: Post }) {
           <PostText text={post.text} tags={post.tags} />
         </div>
 
-        {/* Image (placeholder design) */}
-        {post.hasImage && (
-          <div className="mt-3 grid aspect-16/10 place-items-center rounded-xl border border-border bg-gold/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(194,136,43,0.08)_12px,rgba(194,136,43,0.08)_24px)]">
-            <span className="flex flex-col items-center gap-1 text-sm text-brown-sec">
-              <ImageIcon className="size-6" />
-              {t("image", { ratio: post.imageRatio ?? "" })}
-            </span>
+        {/* Image (Fx18) — réelle si URL, sinon placeholder design (mocks) */}
+        {post.imageUrl ? (
+          <div className="mt-3 overflow-hidden rounded-xl border border-border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.imageUrl}
+              alt={t("image", { ratio: post.imageRatio ?? "" })}
+              className="max-h-[32rem] w-full object-cover"
+            />
           </div>
+        ) : (
+          post.hasImage && (
+            <div className="mt-3 grid aspect-16/10 place-items-center rounded-xl border border-border bg-gold/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(194,136,43,0.08)_12px,rgba(194,136,43,0.08)_24px)]">
+              <span className="flex flex-col items-center gap-1 text-sm text-brown-sec">
+                <ImageIcon className="size-6" />
+                {t("image", { ratio: post.imageRatio ?? "" })}
+              </span>
+            </div>
+          )
         )}
 
-        {/* Vidéo (placeholder design) */}
-        {post.hasVideo && (
-          <div className="mt-3 grid aspect-16/10 place-items-center rounded-xl border border-border bg-dark/5 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(0,0,0,0.04)_12px,rgba(0,0,0,0.04)_24px)]">
-            <span className="flex flex-col items-center gap-1 text-sm text-brown-sec">
-              <PlayCircle className="size-8 text-brown-sec/60" />
-              {t("video")}
-            </span>
+        {/* Vidéo (Fx19) — réelle si URL, sinon placeholder design (mocks) */}
+        {post.videoUrl ? (
+          <div className="mt-3 overflow-hidden rounded-xl border border-border">
+            <video
+              src={post.videoUrl}
+              controls
+              className="max-h-[32rem] w-full bg-dark/5 object-contain"
+            />
           </div>
+        ) : (
+          post.hasVideo && (
+            <div className="mt-3 grid aspect-16/10 place-items-center rounded-xl border border-border bg-dark/5 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(0,0,0,0.04)_12px,rgba(0,0,0,0.04)_24px)]">
+              <span className="flex flex-col items-center gap-1 text-sm text-brown-sec">
+                <PlayCircle className="size-8 text-brown-sec/60" />
+                {t("video")}
+              </span>
+            </div>
+          )
         )}
 
         {/* Actions */}
         <div className="mt-4">
           <PostActions
+            postId={post.id}
             likes={post.likes}
-            comments={post.comments}
+            likedByMe={post.likedByMe}
+            comments={commentCount}
             shares={post.shares}
             onComment={openComments}
           />
@@ -181,7 +211,9 @@ export function PostCard({ post }: { post: Post }) {
         <CommentThread
           postId={post.id}
           initialComments={comments ?? []}
+          loading={commentsLoading}
           onClose={() => setShowComments(false)}
+          onCommentAdded={() => setCommentCount((c) => c + 1)}
         />
       )}
 

@@ -1,15 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { X, Heart, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
-import { createComment, createReply } from "@/lib/api";
+import { createComment, createReply, likeComment, unlikeComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 
+// Bouton like d'un commentaire/réponse : optimiste, recalé sur la réponse serveur,
+// rollback si erreur. Même logique que PostActions.
+function CommentLike({
+  commentId,
+  likes,
+  likedByMe,
+  iconClass,
+}: {
+  commentId: string;
+  likes: number;
+  likedByMe?: boolean;
+  iconClass: string;
+}) {
+  const [liked, setLiked] = useState(Boolean(likedByMe));
+  const [count, setCount] = useState(likes);
+  const [pending, setPending] = useState(false);
+
+  async function toggle() {
+    if (pending) return;
+    const next = !liked;
+    setLiked(next);
+    setCount((c) => c + (next ? 1 : -1));
+    setPending(true);
+    try {
+      const s = next ? await likeComment(commentId) : await unlikeComment(commentId);
+      setLiked(s.likedByMe);
+      setCount(s.likeCount);
+    } catch {
+      setLiked(!next);
+      setCount((c) => c + (next ? -1 : 1));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={liked}
+      className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
+    >
+      <Heart className={`${iconClass} ${liked ? "fill-live" : ""}`} />
+      {count}
+    </button>
+  );
+}
+
 function ReplyRow({ reply }: { reply: Reply }) {
-  const [liked, setLiked] = useState(false);
   // Langue active, pour formater la date relative de la reponse.
   const locale = useLocale();
   return (
@@ -21,15 +68,14 @@ function ReplyRow({ reply }: { reply: Reply }) {
           <span className="font-normal text-brown-sec">@{reply.author.handle} · {formatTimeAgo(reply.createdAt, locale)}</span>
         </p>
         <p className="mt-0.5 text-sm text-ink">{reply.text}</p>
-        <button
-          type="button"
-          onClick={() => setLiked((v) => !v)}
-          aria-pressed={liked}
-          className={`mt-1 flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
-        >
-          <Heart className={`size-3 ${liked ? "fill-live" : ""}`} />
-          {reply.likes + (liked ? 1 : 0)}
-        </button>
+        <div className="mt-1">
+          <CommentLike
+            commentId={reply.id}
+            likes={reply.likes}
+            likedByMe={reply.likedByMe}
+            iconClass="size-3"
+          />
+        </div>
       </div>
     </div>
   );
@@ -45,7 +91,6 @@ function CommentRow({
   const t = useTranslations("app.comments");
   // Langue active, pour formater la date relative du commentaire.
   const locale = useLocale();
-  const [liked, setLiked] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
   return (
@@ -62,15 +107,12 @@ function CommentRow({
           <p className="mt-0.5 text-sm text-ink">{comment.text}</p>
 
           <div className="mt-2 flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setLiked((v) => !v)}
-              aria-pressed={liked}
-              className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
-            >
-              <Heart className={`size-3.5 ${liked ? "fill-live" : ""}`} />
-              {comment.likes + (liked ? 1 : 0)}
-            </button>
+            <CommentLike
+              commentId={comment.id}
+              likes={comment.likes}
+              likedByMe={comment.likedByMe}
+              iconClass="size-3.5"
+            />
 
             <button
               type="button"
@@ -109,11 +151,15 @@ function CommentRow({
 export function CommentThread({
   postId,
   initialComments,
+  loading,
   onClose,
+  onCommentAdded,
 }: {
   postId: string;
   initialComments: Comment[];
+  loading?: boolean;
   onClose: () => void;
+  onCommentAdded?: () => void;
 }) {
   const t = useTranslations("app.comments");
   const [comments, setComments] = useState<Comment[]>(initialComments);
@@ -121,13 +167,19 @@ export function CommentThread({
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
 
+  // La modale s'ouvre avant la fin du fetch : resynchroniser l'état interne
+  // quand les commentaires chargés arrivent (un useState(prop) ne suit pas le prop).
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
+
   async function handleSubmit() {
     const text = input.trim();
     if (!text || pending) return;
     setPending(true);
     try {
       if (replyingTo) {
-        const reply = await createReply(replyingTo, text);
+        const reply = await createReply(postId, replyingTo, text);
         setComments((prev) =>
           prev.map((c) =>
             c.id === replyingTo ? { ...c, replies: [...c.replies, reply] } : c,
@@ -138,6 +190,7 @@ export function CommentThread({
         const comment = await createComment(postId, text);
         setComments((prev) => [...prev, comment]);
       }
+      onCommentAdded?.();
       setInput("");
     } finally {
       setPending(false);
@@ -173,7 +226,11 @@ export function CommentThread({
 
         {/* Liste des commentaires */}
         <div className="flex-1 overflow-y-auto px-5">
-          {comments.length > 0 ? (
+          {loading && comments.length === 0 ? (
+            <div className="grid place-items-center py-12">
+              <Loader2 className="size-5 animate-spin text-brown-sec" />
+            </div>
+          ) : comments.length > 0 ? (
             comments.map((c) => (
               <CommentRow
                 key={c.id}
