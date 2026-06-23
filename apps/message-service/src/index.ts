@@ -24,6 +24,7 @@ async function main(): Promise<void> {
 
 	// 2. Initialisation de Socket.io sur ce serveur
 	const io = new Server(server, {
+		path: "/socket.io",
 		cors: {
 			origin: env.corsOrigins.length > 0 ? env.corsOrigins : false,
 			methods: ["GET", "POST", "DELETE"],
