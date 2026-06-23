@@ -1,0 +1,15 @@
+# Env (ne pas embarquer les secrets)
+.env
+.env.*
+!.env.example
+
+# Python
+**/__pycache__
+**/*.pyc
+
+# Base vectorielle locale (rebuild via `rag.ingest` côté chromadb)
+.chromadb
+
+# Docker
+Dockerfile*
+.dockerignore

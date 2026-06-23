@@ -186,3 +186,36 @@ flowchart TB
 | **Fx21.** Suspension ou bannissement des utilisateurs | ❌ | ❌ | ✅ | ✅ |
 | **Fx22.** Interface multi-langues | ❌ | ✅ | ✅ | ✅ |
 | **Fx23.** Thème personnalisé | ✅ | ✅ | ✅ | ✅ |
+
+## IA
+
+Assistant conversationnel basé sur un LLM local (Ollama). Trois briques :
+
+- **RAG** (`apps/agent/rag/`) : les documents `docs/*.txt` sont indexés
+- **Agent** (`apps/agent/agent.py`) : classe `ConversationAgent` qui garde l'historique (10 derniers messages), interroge le LLM et exécute les outils demandés.
+- **Serveur MCP** (`apps/agent/mcp-server/server.py`) : expose les outils.
+
+> Modèle : `qwen3:4b` (compatible tool-calling).
+
+Services IA : `agent` (FastAPI, `POST /chat` sur le port 8000) → `ollama` + `chromadb`, tous sur `wetalk-net`. Ingestion ChromaDB automatique au démarrage (`init-chromadb.sh`) si la collection `kg_b` n'existe pas.
+
+```
+# Après le docker compose up --build -d
+
+# Telecharger le modele Ollama (une seule fois)
+docker compose exec ollama ollama pull qwen3:4b
+
+# Appeler l'agent
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "vérifie le health du mcp"}'
+
+# REPL interactif (optionnel)
+docker compose exec -it agent python -m agent.agent
+
+# Forcer une re-ingestion apres modification des docs/*.txt
+docker compose exec agent python -m agent.rag.ingest
+
+# Hot-reload du code agent en dev
+docker compose watch
+```

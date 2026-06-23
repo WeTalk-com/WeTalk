@@ -1,0 +1,26 @@
+CATALOGUE PRODUITS - DESCRIPTION DETAILLEE
+
+CATEGORIE INFORMATIQUE
+Laptop Pro X1 (P001) : Ordinateur portable haute performance destine aux professionnels.
+Processeur Intel Core i7 de 12e generation, 16 Go RAM DDR5, SSD NVMe 512 Go.
+Ecran 15.6 pouces Full HD IPS anti-reflets. Autonomie 10h. Poids 1.8 kg.
+Ideal pour developpeurs, graphistes et analystes de donnees.
+Garantie fabricant 2 ans, extension possible a 4 ans. SAV sous 48h.
+
+CATEGORIE PERIPHERIQUES
+Souris Ergonomique (P002) : Conçue pour prevenir les troubles musculo-squelettiques.
+Forme verticale, 6 boutons programmables, capteur optique 1600 DPI.
+Compatible Windows, macOS et Linux. Connexion USB filaire.
+Garantie 1 an. Recommandee pour utilisation intensive (+ de 4h/jour).
+
+Clavier Mecanique RGB (P042) : Clavier gaming et bureautique haut de gamme.
+Switchs Cherry MX Red (lineaires, silencieux). Retroeclairage RGB personnalisable.
+Format 75%, compact avec touches fleches. Anti-ghosting 6 touches simultanées.
+Compatible tous systemes. Garantie 1 an.
+
+CATEGORIE AFFICHAGE
+Ecran 27 pouces (P003) : Moniteur professionnel dalle IPS 4K UHD (3840x2160).
+Taux de rafraichissement 60 Hz, temps de reponse 5ms, luminosite 350 cd/m2.
+Ports : 2x HDMI 2.0, 1x DisplayPort 1.4, 4x USB-A hub integre.
+Pied reglable en hauteur et inclinaison. Certifie Flicker-Free et Low Blue Light.
+Garantie 3 ans avec echange standard en 72h en cas de panne.

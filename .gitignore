@@ -66,3 +66,9 @@ package-lock.json
 /lib/
 .turbo
 .env
+.chromadb
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
