@@ -131,7 +131,7 @@ export function CreatePostModal({
         </div>
 
         <div className="mt-4 flex gap-3">
-          <Avatar initial={user.initial} solid />
+          <Avatar initial={user.initial} src={user.avatarUrl} solid />
           <textarea
             autoFocus
             value={text}

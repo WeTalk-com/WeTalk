@@ -26,6 +26,25 @@ export async function getFollowingIds(userId: string): Promise<string[]> {
   return data.ids;
 }
 
+export type UpdateProfileInput = {
+  displayName?: string;
+  description?: string;
+  avatar?: File;
+  banner?: File;
+};
+
+/**
+ * Met à jour le profil courant
+ */
+export async function updateProfile(input: UpdateProfileInput): Promise<void> {
+  const form = new FormData();
+  if (input.displayName !== undefined) form.append("displayName", input.displayName);
+  if (input.description !== undefined) form.append("description", input.description);
+  if (input.avatar) form.append("avatar", input.avatar);
+  if (input.banner) form.append("banner", input.banner);
+  await apiFetch("/users/me", { method: "PATCH", body: form });
+}
+
 /** S'abonner à un utilisateur. */
 export function followUser(id: string): Promise<unknown> {
   return apiFetch(`/users/${id}/follow`, { method: "POST" });

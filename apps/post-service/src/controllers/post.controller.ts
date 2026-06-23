@@ -1,12 +1,13 @@
 import type { Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, Types } from "mongoose";
 import { PostModel } from "../models/post.js";
+import { CommentModel } from "../models/comment.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 import { createSchema, updateSchema, listQuerySchema, feedQuerySchema } from "../schemas/post.schemas.js";
 
 // Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
-function forwardAuth(req: Request): Record<string, string> {
+export function forwardAuth(req: Request): Record<string, string> {
   const headers: Record<string, string> = {};
   if (req.headers.authorization) headers.authorization = req.headers.authorization;
   if (req.headers.cookie) headers.cookie = req.headers.cookie;
@@ -14,7 +15,7 @@ function forwardAuth(req: Request): Record<string, string> {
 }
 
 // Vérifie auprès du user-service si l'auteur peut publier
-async function authorPostingBlock(
+export async function authorPostingBlock(
   userId: string,
   headers: Record<string, string>,
 ): Promise<{ blocked: boolean; reason: string; status: number }> {
@@ -41,6 +42,56 @@ async function authorPostingBlock(
     return { blocked: true, reason: "Unable to verify account status", status: 503 };
   }
 }
+
+// Erreur d'upload média
+class MediaUploadError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+async function uploadMediaToService(
+  file: Express.Multer.File,
+  headers: Record<string, string>,
+): Promise<{ id: string; url: string; type: "image" | "video" }> {
+  const form = new FormData();
+  form.append("file", new Blob([file.buffer], { type: file.mimetype }), file.originalname);
+  const res = await fetch(`${env.mediaServiceUrl}/media`, {
+    method: "POST",
+    headers,
+    body: form,
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    const status = res.status >= 400 && res.status < 500 ? res.status : 502;
+    throw new MediaUploadError(status, body.error ?? `media-service responded ${res.status}`);
+  }
+  const data = (await res.json()) as { id?: string; url?: string; type?: string };
+  if (!data.id || !data.url || (data.type !== "image" && data.type !== "video")) {
+    throw new MediaUploadError(502, "media-service returned an invalid payload");
+  }
+  return { id: data.id, url: data.url, type: data.type };
+}
+
+async function deleteMediaFromService(id: string, headers: Record<string, string>): Promise<void> {
+  try {
+    await fetch(`${env.mediaServiceUrl}/media/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (err) {
+    logger.warn("orphan media cleanup failed", {
+      id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 
 type AuthorLite = {
   id: string;
@@ -109,7 +160,7 @@ async function fetchAuthors(
 // read-time : contenu non servi + author anonymisé + flag authorBanned. Rien
 // n'est muté en base, donc c'est réversible automatiquement à l'unban. Le front
 // affiche un message dédié quand authorBanned est vrai.
-async function withAuthors<T extends { authorId: string }>(
+export async function withAuthors<T extends { authorId: string }>(
   posts: T[],
   headers: Record<string, string>,
 ) {
@@ -128,6 +179,38 @@ async function withAuthors<T extends { authorId: string }>(
   });
 }
 
+// Nombre de commentaires par post, en une seule passe d'agrégation.
+async function commentCounts(postIds: string[]): Promise<Map<string, number>> {
+  if (postIds.length === 0) return new Map();
+  const rows = await CommentModel.aggregate<{ _id: Types.ObjectId; count: number }>([
+    { $match: { postId: { $in: postIds.map((id) => new Types.ObjectId(id)) } } },
+    { $group: { _id: "$postId", count: { $sum: 1 } } },
+  ]);
+  return new Map(rows.map((r) => [String(r._id), r.count]));
+}
+
+// Enrichit pour le lecteur courant : auteur (+ masquage banni) puis likeCount /
+// likedByMe / commentCount. likedBy (ids des likers) n'est jamais renvoyé au client.
+async function enrichForViewer<T extends { _id: unknown; authorId: string; likedBy: string[] }>(
+  posts: T[],
+  req: Request,
+) {
+  const authored = await withAuthors(posts, forwardAuth(req));
+  const counts = await commentCounts(posts.map((p) => String(p._id)));
+  const me = req.user!.sub;
+  return authored.map((p) => {
+    // likedBy peut manquer sur d'anciens documents (champ ajouté après coup) :
+    // le default Mongoose ne s'applique qu'à la création, pas à la lecture.
+    const { likedBy = [], ...rest } = p;
+    return {
+      ...rest,
+      likeCount: likedBy.length,
+      likedByMe: likedBy.includes(me),
+      commentCount: counts.get(String(p._id)) ?? 0,
+    };
+  });
+}
+
 export async function createPost(req: Request, res: Response): Promise<void> {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -142,11 +225,38 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const post = await PostModel.create({
-    authorId: req.user!.sub,
-    content: parsed.data.content,
-  });
-  res.status(201).json({ post });
+  // media optionnel
+  let media: { id: string; url: string; type: "image" | "video" } | undefined;
+  if (req.file) {
+    try {
+      media = await uploadMediaToService(req.file, forwardAuth(req));
+    } catch (err) {
+      const status = err instanceof MediaUploadError ? err.status : 502;
+      logger.error("media upload failed", {
+        status,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      res.status(status).json({
+        error: status === 502 ? "Media upload failed" : (err as MediaUploadError).message,
+      });
+      return;
+    }
+  }
+
+  let post;
+  try {
+    post = await PostModel.create({
+      authorId: req.user!.sub,
+      content: parsed.data.content,
+      ...(media ? { media: { url: media.url, type: media.type } } : {}),
+    });
+  } catch (err) {
+    if (media) await deleteMediaFromService(media.id, forwardAuth(req));
+    throw err;
+  }
+  // likedBy (ids des likers) n'est jamais exposé au client.
+  const { likedBy: _likedBy, ...postOut } = post.toObject();
+  res.status(201).json({ post: postOut });
 }
 
 export async function listPosts(req: Request, res: Response): Promise<void> {
@@ -166,7 +276,7 @@ export async function listPosts(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, forwardAuth(req));
+  const enriched = await enrichForViewer(posts, req);
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -189,7 +299,7 @@ export async function feed(req: Request, res: Response): Promise<void> {
   const last = posts[posts.length - 1];
   const nextCursor = posts.length === limit && last ? String(last._id) : null;
 
-  const enriched = await withAuthors(posts, forwardAuth(req));
+  const enriched = await enrichForViewer(posts, req);
   res.json({ posts: enriched, nextCursor });
 }
 
@@ -204,7 +314,7 @@ export async function getPost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  const [enriched] = await withAuthors([post], forwardAuth(req));
+  const [enriched] = await enrichForViewer([post], req);
   res.json({ post: enriched });
 }
 
@@ -250,4 +360,42 @@ export async function deletePost(req: Request, res: Response): Promise<void> {
   }
   await post.deleteOne();
   res.status(204).send();
+}
+
+// Like idempotent : $addToSet évite les doublons, re-liker = no-op.
+export async function likePost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const post = await PostModel.findByIdAndUpdate(
+    id,
+    { $addToSet: { likedBy: req.user!.sub } },
+    { new: true },
+  ).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: true });
+}
+
+// Unlike idempotent : $pull, retirer un like absent = no-op.
+export async function unlikePost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const post = await PostModel.findByIdAndUpdate(
+    id,
+    { $pull: { likedBy: req.user!.sub } },
+    { new: true },
+  ).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: false });
 }
