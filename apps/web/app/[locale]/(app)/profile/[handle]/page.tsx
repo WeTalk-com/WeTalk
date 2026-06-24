@@ -3,7 +3,6 @@ import {
   getUserProfile,
   getCurrentUser,
   getFollowingIds,
-  getFollowerCount,
   getPostsByAuthor,
 } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
@@ -27,17 +26,11 @@ export default async function UserProfilePage({
   const me = await getCurrentUser();
   const isSelf = me.id === profile.id;
 
-  const [posts, viewerFollowingIds, followerCount, profileFollowingIds] = await Promise.all([
+  const [posts, viewerFollowingIds] = await Promise.all([
     getPostsByAuthor(profile.id),
     isSelf ? Promise.resolve<string[]>([]) : getFollowingIds(me.id),
-    getFollowerCount(profile.id),
-    getFollowingIds(profile.id),
   ]);
   const isFollowing = viewerFollowingIds.includes(profile.id);
-  const profileWithStats = {
-    ...profile,
-    stats: { posts: posts.length, followers: String(followerCount), following: profileFollowingIds.length },
-  };
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
@@ -46,7 +39,7 @@ export default async function UserProfilePage({
       <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
 
       <ProfileInteractive
-        profile={profileWithStats}
+        profile={profile}
         isSelf={isSelf}
         initialFollowing={isFollowing}
       />

@@ -14,6 +14,9 @@ export type BackendUser = {
   profileBanner?: string | null;
   role?: "user" | "moderator" | "admin";
   createdAt?: string;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
 };
 
 // media attaché à un post
@@ -136,6 +139,10 @@ export function mapProfile(u: BackendUser): Profile {
     location: "",
     bannerUrl: u.profileBanner ?? undefined,
     joined: u.createdAt ? new Date(u.createdAt).getFullYear().toString() : "",
-    stats: { posts: 0, followers: "0", following: 0 },
+    stats: {
+      posts: u.postsCount ?? 0,
+      followers: String(u.followersCount ?? 0),
+      following: u.followingCount ?? 0,
+    },
   };
 }

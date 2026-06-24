@@ -23,7 +23,6 @@ export function UserHoverCard({
   const currentUserId = useCurrentUserId();
 
   async function onOpen() {
-    if (profile) return;
     try {
       setProfile(await getUserProfile(handle));
     } catch {
@@ -34,7 +33,7 @@ export function UserHoverCard({
   const isOwnProfile = !!currentUserId && !!profile && currentUserId === profile.id;
 
   return (
-    <HoverCard.Root openDelay={400} closeDelay={150} onOpenChange={(open) => { if (open) onOpen(); }}>
+    <HoverCard.Root openDelay={400} closeDelay={150} onOpenChange={(open) => { if (open) onOpen(); else setProfile(null); }}>
       <HoverCard.Trigger asChild>
         {children}
       </HoverCard.Trigger>

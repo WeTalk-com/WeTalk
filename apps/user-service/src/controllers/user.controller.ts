@@ -71,6 +71,20 @@ async function deleteMediaFromService(id: string, headers: Record<string, string
 	}
 }
 
+async function fetchPostCount(userId: string, headers: Record<string, string>): Promise<number> {
+	try {
+		const res = await fetch(
+			`${env.postServiceUrl}/posts/count?authorId=${encodeURIComponent(userId)}`,
+			{ headers, signal: AbortSignal.timeout(3000) },
+		);
+		if (!res.ok) return 0;
+		const data = (await res.json()) as { count?: number };
+		return typeof data.count === "number" ? data.count : 0;
+	} catch {
+		return 0;
+	}
+}
+
 // Échappe les jokers LIKE (\ % _) pour qu'un terme de recherche soit traité
 // littéralement et ne permette pas à l'utilisateur d'injecter des wildcards.
 function escapeLike(term: string): string {
@@ -142,7 +156,12 @@ export async function me(req: Request, res: Response): Promise<void> {
 		res.status(404).json({ error: "User not found" });
 		return;
 	}
-	res.json(publicUser(user, true));
+	const [followersCount, followingCount, postsCount] = await Promise.all([
+		Follow.count({ where: { followingId: user.id } }),
+		Follow.count({ where: { followerId: user.id } }),
+		fetchPostCount(user.id, forwardAuth(req)),
+	]);
+	res.json({ ...publicUser(user, true), followersCount, followingCount, postsCount });
 }
 
 export async function getUsers(req: Request, res: Response): Promise<void> {
@@ -205,7 +224,12 @@ export async function getUser(req: Request, res: Response): Promise<void> {
 		res.status(404).json({ error: "User not found" });
 		return;
 	}
-	res.json(publicUser(user, canSeeModeration(req.user, user.id)));
+	const [followersCount, followingCount, postsCount] = await Promise.all([
+		Follow.count({ where: { followingId: user.id } }),
+		Follow.count({ where: { followerId: user.id } }),
+		fetchPostCount(user.id, forwardAuth(req)),
+	]);
+	res.json({ ...publicUser(user, canSeeModeration(req.user, user.id)), followersCount, followingCount, postsCount });
 }
 
 // export async function updateMe(req: Request, res: Response): Promise<void> {}

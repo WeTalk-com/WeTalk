@@ -46,11 +46,6 @@ export async function getFollowingList(userId: string): Promise<User[]> {
   return (data.data ?? []).map((u) => mapUser(u as BackendUser));
 }
 
-/** Nombre d'abonnés — délègue à getFollowers pour éviter un double appel réseau. */
-export async function getFollowerCount(userId: string): Promise<number> {
-  return (await getFollowers(userId)).length;
-}
-
 export type UpdateProfileInput = {
   displayName?: string;
   description?: string;

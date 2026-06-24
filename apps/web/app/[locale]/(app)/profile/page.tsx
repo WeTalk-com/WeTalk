@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getProfile, getPostsByAuthor, getFollowerCount, getFollowingIds } from "@/lib/api";
+import { getProfile, getPostsByAuthor } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { ProfileInteractive } from "@/components/profile/profile-interactive";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
@@ -20,16 +20,8 @@ export async function generateMetadata({
 }
 
 export default async function ProfilePage() {
-  const base = await getProfile();
-  const [myPosts, followerCount, followingIds] = await Promise.all([
-    getPostsByAuthor(base.id),
-    getFollowerCount(base.id),
-    getFollowingIds(base.id),
-  ]);
-  const profile = {
-    ...base,
-    stats: { posts: myPosts.length, followers: String(followerCount), following: followingIds.length },
-  };
+  const profile = await getProfile();
+  const myPosts = await getPostsByAuthor(profile.id);
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
