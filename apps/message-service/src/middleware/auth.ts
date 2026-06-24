@@ -20,6 +20,17 @@ declare module "socket.io" {
 	}
 }
 
+const ACCESS_COOKIE = "wetalk_session";
+
+function parseCookie(cookieStr: string, name: string): string | undefined {
+	for (const part of cookieStr.split(";")) {
+		const [key, val] = part.split("=");
+		if (key?.trim() === name)
+			return val?.trim();
+	}
+	return undefined;
+}
+
 // Vérifie le JWT d'accès localement avec JWT_ACCESS_SECRET.
 // Ce secret étant partagé entre tous les microservices, ce middleware est
 // copiable tel quel dans chaque service : pas d'appel réseau à auth-service.
@@ -59,17 +70,18 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
 export function socketRequireAuth() {
 	return (socket: Socket<DefaultEventsMap, DefaultEventsMap>, next: (err?: ExtendedError | undefined) => void) => {
-		const token = socket.handshake.auth?.token;
+		const cookieStr = socket.handshake.headers.cookie ?? "";
+		const token = parseCookie(cookieStr, ACCESS_COOKIE);
 		
 		if (!token) {
 			return next(new Error("Authentication error: token missing"));
 		}
 		
 		try {
-			socket.user = verifyAccessToken(token);
+			const payload = verifyAccessToken(token);
+			(socket as unknown as Record<string, unknown>).userId = payload.sub;
 			return next();
-		} catch (err) {
-			logger.error((err as Error).message);
+		} catch {
 			return next(new Error("Authentication error: invalid token"));
 		}
 	};
