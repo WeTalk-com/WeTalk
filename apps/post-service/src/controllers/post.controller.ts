@@ -236,8 +236,7 @@ async function enrichForViewer<T extends { _id: unknown; authorId: string; liked
   });
 }
 
-// Extraction des #hashtags du content (réutilisée par posts et commentaires).
-// Regex unicode pour gérer les accents FR (#café). Lowercase + dédup, cap à 10 tags.
+// Extraction des #hashtags du contenu, cap à 10 tags
 const TAG_RE = /#([\p{L}\p{N}_]+)/gu;
 export function extractTags(content: string): string[] {
   const tags = new Set<string>();
@@ -249,22 +248,14 @@ export function extractTags(content: string): string[] {
   return [...tags];
 }
 
-// Liste paginée des likers, réutilisée par posts et commentaires. Pagination par
-// offset sur le tableau likedBy (ordre = ordre des likes). fetchAuthors ne tape
-// user-service que sur la tranche → coût réseau borné. Liker banni gardé + flag ;
-// user introuvable (compte supprimé) filtré.
-export async function buildLikers(
-  likedBy: string[],
-  cursor: number,
-  limit: number,
-  req: Request,
-): Promise<{ likers: AuthorLite[]; nextCursor: number | null; total: number }> {
+export async function buildLikers(likedBy: string[], cursor: number, limit: number, req: Request): Promise<{ likers: AuthorLite[]; nextCursor: number | null; total: number }> {
   const total = likedBy.length;
   const slice = likedBy.slice(cursor, cursor + limit);
   const authors = await fetchAuthors(slice, forwardAuth(req));
   const likers = slice
     .map((uid) => authors.get(uid) ?? null)
-    .filter((a): a is AuthorLite => a !== null);
+    .filter((a): a is AuthorLite => a !== null)
+    .map((a) => (a.isBanned ? { ...a, displayName: "Utilisateur banni", profileImage: null } : a));
   const nextCursor = cursor + limit < total ? cursor + limit : null;
   return { likers, nextCursor, total };
 }
@@ -460,7 +451,7 @@ export async function unlikePost(req: Request, res: Response): Promise<void> {
   res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: false });
 }
 
-// GET /posts/:id/likes — liste paginée des utilisateurs ayant liké le post.
+// liste paginée des utilisateurs ayant liké le post.
 export async function listPostLikers(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
@@ -482,7 +473,7 @@ export async function listPostLikers(req: Request, res: Response): Promise<void>
   res.json(result);
 }
 
-// GET /posts/liked — posts likés par un user (userId absent = user courant).
+// Posts likés par un user (userId absent = user courant).
 export async function listLikedPosts(req: Request, res: Response): Promise<void> {
   const parsed = likedQuerySchema.safeParse(req.query);
   if (!parsed.success) {

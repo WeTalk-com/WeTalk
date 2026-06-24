@@ -12,7 +12,6 @@ const createSchema = z.object({
   parentId: z.string().refine(isValidObjectId, "Invalid parentId").optional(),
 });
 
-// Édition : on ne touche qu'au contenu, jamais au parentId (une réponse ne change pas de fil).
 const updateCommentSchema = z.object({
   content: z.string().trim().min(1).max(280),
 });
@@ -152,7 +151,7 @@ export async function deleteComment(req: Request, res: Response): Promise<void> 
   res.status(204).send();
 }
 
-// PATCH /comments/:id — éditer son propre commentaire (ou sa propre réponse).
+// Editer son propre commentaire (ou sa propre réponse).
 export async function updateComment(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
@@ -174,10 +173,12 @@ export async function updateComment(req: Request, res: Response): Promise<void> 
     return;
   }
   comment.content = parsed.data.content;
+  comment.tags = extractTags(parsed.data.content); // ré-extraits sinon ?tag= / /tags périmés
   await comment.save();
-  // likedBy (ids des likers) n'est jamais exposé au client.
-  const { likedBy: _likedBy, ...commentOut } = comment.toObject();
-  res.json({ comment: commentOut });
+  // Forme enrichie identique à listComments : author + likeCount/likedByMe, likedBy jamais exposé.
+  const [authored] = await withAuthors([comment.toObject()], forwardAuth(req));
+  const { likedBy = [], ...rest } = authored!;
+  res.json({ comment: { ...rest, likeCount: likedBy.length, likedByMe: likedBy.includes(req.user!.sub) } });
 }
 
 // Like idempotent : $addToSet évite les doublons, re-liker = no-op.
@@ -218,7 +219,7 @@ export async function unlikeComment(req: Request, res: Response): Promise<void> 
   res.json({ likeCount: (comment.likedBy ?? []).length, likedByMe: false });
 }
 
-// GET /comments/:id/likes — liste paginée des utilisateurs ayant liké le commentaire.
+// Liste paginée des utilisateurs ayant liké le commentaire.
 export async function listCommentLikers(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
