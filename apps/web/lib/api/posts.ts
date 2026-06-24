@@ -146,9 +146,12 @@ export function updateComment(commentId: string, text: string): Promise<void> {
 
 /** Signale un post. */
 export async function reportPost(
-  _postId: string,
-  _reason: ReportReason,
-  _details?: string,
-): Promise<void> {
-  // TODO(api): await apiFetch(`/posts/${_postId}/report`, { method: "POST", body: JSON.stringify({ reason: _reason, details: _details }) });
+  postId: string,
+  reason: ReportReason,
+  details?: string,
+): Promise<{ duplicate?: boolean }> {
+  return apiFetch<{ duplicate?: boolean }>(`/posts/${encodeURIComponent(postId)}/report`, {
+    method: "POST",
+    body: JSON.stringify({ reason, details }),
+  });
 }

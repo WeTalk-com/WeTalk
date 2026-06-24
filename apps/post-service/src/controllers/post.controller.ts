@@ -124,6 +124,7 @@ type AuthorLite = {
   displayName: string | null;
   profileImage: string | null;
   isBanned: boolean;
+  isSuspended: boolean;
 };
 
 async function fetchFollowingIds(userId: string, headers: Record<string, string>): Promise<string[]> {
@@ -171,6 +172,7 @@ export async function fetchAuthors(
         displayName: u.displayName ?? null,
         profileImage: u.profileImage ?? null,
         isBanned: Boolean(u.isBanned),
+        isSuspended: Boolean(u.isSuspended),
       });
     }
   } catch (err) {
@@ -286,8 +288,19 @@ export async function createPost(req: Request, res: Response): Promise<void> {
 
 export async function countPosts(req: Request, res: Response): Promise<void> {
   const { authorId } = req.query;
-  if (!authorId || typeof authorId !== "string") {
-    res.status(400).json({ error: "authorId query param required" });
+  if (authorId !== undefined && typeof authorId !== "string") {
+    res.status(400).json({ error: "authorId must be a string" });
+    return;
+  }
+  if (!authorId) {
+    // Total count — réservé aux mods/admins
+    const role = req.user!.role;
+    if (role !== "moderator" && role !== "admin") {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+    const count = await PostModel.countDocuments({});
+    res.json({ count });
     return;
   }
   const count = await PostModel.countDocuments({ authorId });

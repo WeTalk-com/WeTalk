@@ -13,6 +13,8 @@ export type User = {
   avatarUrl?: string;
   verified?: boolean;
   role?: "user" | "moderator" | "admin";
+  isBanned?: boolean;
+  isSuspended?: boolean;
 };
 
 export type Post = {
@@ -107,9 +109,14 @@ export type ReportReason =
 
 export type ReportedPost = {
   id: string;
-  post: Post;
   reason: ReportReason;
-  reportedBy: User;
-  reportedAt: string;
+  details?: string | null;
   status: "pending" | "resolved" | "dismissed";
+  reportedAt: string;
+  reporter: User | null;
+  post: {
+    id: string;
+    text: string;
+    author: User | null;
+  } | null;
 };

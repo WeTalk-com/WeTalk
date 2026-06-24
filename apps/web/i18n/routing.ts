@@ -16,6 +16,7 @@ export const routing = defineRouting({
     "/profile/[handle]": "/profile/[handle]",
     "/posts/[id]": "/posts/[id]",
     "/settings": "/settings",
+    "/admin": "/admin",
   },
 });
 

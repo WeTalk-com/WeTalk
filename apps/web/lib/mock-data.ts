@@ -5,10 +5,8 @@
  */
 
 import type {
-  Post,
   TrendingTopic,
   Conversation,
-  ReportedPost,
 } from "./types";
 
 function ago(value: number, unit: "m" | "h" | "d"): string {
@@ -23,45 +21,6 @@ export const trending: TrendingTopic[] = [
   { category: "Trending", tag: "#wetalk", posts: "31.9K posts" },
   { category: "Design", tag: "#warmtones", posts: "12.4K posts" },
   { category: "Travel", tag: "#slowmornings", posts: "9.1K posts" },
-];
-
-/* ----------------------------- Signalements ----------------------------- */
-
-const _badPost = (id: string, text: string): Post => ({
-  id,
-  author: { id: `a-${id}`, name: "Bad Actor", handle: "badactor", initial: "B" },
-  createdAt: ago(3, "h"),
-  text,
-  tags: [],
-  likes: 0,
-  comments: 0,
-});
-
-export const reportedPosts: ReportedPost[] = [
-  {
-    id: "rep1",
-    post: _badPost("px1", "Buy followers now! Best prices guaranteed ✨✨✨"),
-    reason: "spam",
-    reportedBy: { id: "w3", name: "Remy Cole", handle: "remycole", initial: "R" },
-    reportedAt: ago(2, "h"),
-    status: "pending",
-  },
-  {
-    id: "rep2",
-    post: {
-      id: "px2",
-      author: { id: "ux2", name: "TrollUser99", handle: "trolluser99", initial: "T" },
-      createdAt: ago(6, "h"),
-      text: "This is completely false information about a public health topic.",
-      tags: [],
-      likes: 14,
-      comments: 3,
-    },
-    reason: "misinformation",
-    reportedBy: { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" },
-    reportedAt: ago(5, "h"),
-    status: "pending",
-  },
 ];
 
 /* ----------------------------- Messages ----------------------------- */

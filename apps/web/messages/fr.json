@@ -24,7 +24,8 @@
     "accountMenu": "Menu du compte",
     "brandHome": "Accueil WeTalk",
     "primary": "Navigation principale",
-    "messages": "Messages"
+    "messages": "Messages",
+    "admin": "Modération"
   },
   "landing": {
     "hero": {
@@ -248,8 +249,12 @@
       "submit": "Soumettre",
       "cancel": "Annuler",
       "close": "Fermer",
-      "soonTitle": "Bientôt disponible",
-      "soonText": "Le signalement n'est pas encore actif — il arrive très prochainement."
+      "successTitle": "Signalement envoyé",
+      "successText": "Merci, notre équipe va examiner ce post.",
+      "duplicateTitle": "Déjà signalé",
+      "duplicateText": "Vous avez déjà signalé ce post.",
+      "errorText": "Une erreur s'est produite. Réessayez.",
+      "submitting": "Envoi…"
     },
     "admin": {
       "title": "Modération",
@@ -260,8 +265,26 @@
       "reasonLabel": "Raison :",
       "reportedBy": "Signalé par",
       "dismiss": "Ignorer",
-      "remove": "Supprimer",
-      "noReports": "Aucun signalement en attente 🎉"
+      "remove": "Supprimer le post",
+      "noReports": "Aucun signalement en attente 🎉",
+      "banAuthor": "Bannir",
+      "banned": "Banni",
+      "suspendAuthor": "Suspendre",
+      "suspended": "Suspendu",
+      "banSuccess": "@{handle} a été banni.",
+      "banError": "Impossible de bannir cet utilisateur.",
+      "suspendTitle": "Suspendre l'utilisateur",
+      "suspendConfirm": "Suspendre",
+      "suspendSuccess": "@{handle} a été suspendu.",
+      "suspendError": "Impossible de suspendre cet utilisateur.",
+      "actionError": "Une erreur s'est produite.",
+      "unknownUser": "Utilisateur inconnu",
+      "cancel": "Annuler",
+      "unit_minutes": "minutes",
+      "unit_hours": "heures",
+      "unit_days": "jours",
+      "unit_months": "mois",
+      "unit_years": "ans"
     }
   },
   "settings": {

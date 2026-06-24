@@ -11,6 +11,7 @@ import {
   Settings,
   MessageSquare,
   MoreHorizontal,
+  Shield,
   type LucideIcon,
 } from "lucide-react";
 import type { User as UserModel } from "@/lib/types";
@@ -20,7 +21,7 @@ import { LogoutButton } from "../auth/logout-button";
 import { useUnreadCount } from "@/lib/use-unread-count";
 import { cn } from "@/lib/cn";
 
-type NavKey = "home" | "explore" | "notifications" | "messages" | "profile" | "settings";
+type NavKey = "home" | "explore" | "notifications" | "messages" | "profile" | "settings" | "admin";
 
 type NavHref =
   | "/home"
@@ -28,7 +29,8 @@ type NavHref =
   | "/notifications"
   | "/messages"
   | "/profile"
-  | "/settings";
+  | "/settings"
+  | "/admin";
 
 type NavItem = {
   key: NavKey;
@@ -42,6 +44,8 @@ export function LeftSidebar({ user }: { user: UserModel }) {
   const t = useTranslations("nav");
   const { count: unreadCount } = useUnreadCount();
 
+  const isModOrAdmin = user.role === "moderator" || user.role === "admin";
+
   const NAV: NavItem[] = [
     { key: "home", Icon: Home, href: "/home" },
     { key: "explore", Icon: Compass, href: "/explore" },
@@ -49,6 +53,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
     { key: "messages", Icon: MessageSquare, href: "/messages" },
     { key: "profile", Icon: User, href: "/profile" },
     { key: "settings", Icon: Settings, href: "/settings" },
+    ...(isModOrAdmin ? [{ key: "admin" as NavKey, Icon: Shield, href: "/admin" as NavHref }] : []),
   ];
 
   return (

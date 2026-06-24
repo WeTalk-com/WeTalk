@@ -24,7 +24,8 @@
     "accountMenu": "Account menu",
     "brandHome": "WeTalk home",
     "primary": "Primary navigation",
-    "messages": "Messages"
+    "messages": "Messages",
+    "admin": "Moderation"
   },
   "landing": {
     "hero": {
@@ -248,8 +249,12 @@
       "submit": "Submit",
       "cancel": "Cancel",
       "close": "Close",
-      "soonTitle": "Coming soon",
-      "soonText": "Reporting isn't available yet — it'll be enabled shortly."
+      "successTitle": "Report sent",
+      "successText": "Thank you, our team will review this post.",
+      "duplicateTitle": "Already reported",
+      "duplicateText": "You have already reported this post.",
+      "errorText": "Something went wrong. Please try again.",
+      "submitting": "Sending…"
     },
     "admin": {
       "title": "Moderation",
@@ -260,8 +265,26 @@
       "reasonLabel": "Reason:",
       "reportedBy": "Reported by",
       "dismiss": "Dismiss",
-      "remove": "Remove",
-      "noReports": "No pending reports 🎉"
+      "remove": "Remove post",
+      "noReports": "No pending reports 🎉",
+      "banAuthor": "Ban",
+      "banned": "Banned",
+      "suspendAuthor": "Suspend",
+      "suspended": "Suspended",
+      "banSuccess": "@{handle} has been banned.",
+      "banError": "Failed to ban this user.",
+      "suspendTitle": "Suspend user",
+      "suspendConfirm": "Suspend",
+      "suspendSuccess": "@{handle} has been suspended.",
+      "suspendError": "Failed to suspend this user.",
+      "actionError": "Something went wrong.",
+      "unknownUser": "Unknown user",
+      "cancel": "Cancel",
+      "unit_minutes": "minutes",
+      "unit_hours": "hours",
+      "unit_days": "days",
+      "unit_months": "months",
+      "unit_years": "years"
     }
   },
   "settings": {
