@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Heart, MessageCircle } from "lucide-react";
 import { likePost, unlikePost } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { useOptimisticLike } from "@/hooks/use-optimistic-like";
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
@@ -21,30 +21,12 @@ type Props = {
 };
 
 export function PostActions({ postId, likes, likedByMe, comments, onComment }: Props) {
-  const [liked, setLiked] = useState(Boolean(likedByMe));
-  const [likeCount, setLikeCount] = useState(likes);
-  const [pending, setPending] = useState(false);
   const t = useTranslations("app.post");
-
-  // Mise à jour optimiste : bascule immédiate, recalée sur la réponse serveur,
-  // rollback si l'appel échoue.
-  async function toggleLike() {
-    if (pending) return;
-    const next = !liked;
-    setLiked(next);
-    setLikeCount((c) => c + (next ? 1 : -1));
-    setPending(true);
-    try {
-      const state = next ? await likePost(postId) : await unlikePost(postId);
-      setLiked(state.likedByMe);
-      setLikeCount(state.likeCount);
-    } catch {
-      setLiked(!next);
-      setLikeCount((c) => c + (next ? -1 : 1));
-    } finally {
-      setPending(false);
-    }
-  }
+  const { liked, count: likeCount, pending, toggle: toggleLike } = useOptimisticLike({
+    initial: Boolean(likedByMe),
+    initialCount: likes,
+    onToggle: (next) => next ? likePost(postId) : unlikePost(postId),
+  });
 
   return (
     <div className="flex items-center gap-5 text-brown-sec">

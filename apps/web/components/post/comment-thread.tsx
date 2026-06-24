@@ -10,6 +10,7 @@ import { createComment, createReply, likeComment, unlikeComment, deleteComment }
 import { formatTimeAgo } from "@/lib/format-time";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import { cn } from "@/lib/cn";
+import { useOptimisticLike } from "@/hooks/use-optimistic-like";
 
 // Bouton like d'un commentaire/réponse : optimiste, recalé sur la réponse serveur,
 // rollback si erreur. Même logique que PostActions.
@@ -24,27 +25,11 @@ function CommentLike({
   likedByMe?: boolean;
   iconClass: string;
 }) {
-  const [liked, setLiked] = useState(Boolean(likedByMe));
-  const [count, setCount] = useState(likes);
-  const [pending, setPending] = useState(false);
-
-  async function toggle() {
-    if (pending) return;
-    const next = !liked;
-    setLiked(next);
-    setCount((c) => c + (next ? 1 : -1));
-    setPending(true);
-    try {
-      const s = next ? await likeComment(commentId) : await unlikeComment(commentId);
-      setLiked(s.likedByMe);
-      setCount(s.likeCount);
-    } catch {
-      setLiked(!next);
-      setCount((c) => c + (next ? -1 : 1));
-    } finally {
-      setPending(false);
-    }
-  }
+  const { liked, count, toggle } = useOptimisticLike({
+    initial: Boolean(likedByMe),
+    initialCount: likes,
+    onToggle: (next) => next ? likeComment(commentId) : unlikeComment(commentId),
+  });
 
   return (
     <button
