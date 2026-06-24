@@ -2,10 +2,13 @@ import { createApp } from "./app.js";
 import { connectDb, mongoose } from "./config/db.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
+import { createPosts } from "./seeds/posts.js";
 
 async function main(): Promise<void> {
   await connectDb();
   logger.info("connected to MongoDB");
+  
+  await createPosts();
 
   const app = createApp();
   const server = app.listen(env.port, () => {

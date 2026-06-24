@@ -3,10 +3,15 @@ import { connectDb, sequelize } from "./config/db.js";
 import { connectRedis, redis } from "./config/redis.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
+import { createUsers } from "./seeds/users.js";
+import { createFollow } from "./seeds/follows.js";
 
 async function main(): Promise<void> {
 	await connectDb();
 	logger.info("connected to PostgreSQL");
+	
+	await createUsers();
+	await createFollow();
 
 	await connectRedis();
 	logger.info("connected to Redis");
