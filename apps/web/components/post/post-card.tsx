@@ -183,7 +183,7 @@ export function PostCard({ post }: { post: Post }) {
 
   function handleCardClick(e: React.MouseEvent<HTMLElement>) {
     // Ne pas naviguer si le clic provient d'un bouton, d'un lien ou du menu contextuel.
-    if ((e.target as HTMLElement).closest("a, button, [role='menu']")) return;
+    if ((e.target as HTMLElement).closest("a, button, textarea, [role='menu']")) return;
     router.push({ pathname: "/posts/[id]", params: { id: post.id } });
   }
 
