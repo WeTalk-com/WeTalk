@@ -37,16 +37,36 @@ export async function apiFetch<T>(
     if (cookieHeader) headers.set("cookie", cookieHeader);
   }
 
-  const res = await fetch(`${base}${path}`, {
-    ...init,
-    credentials: "include",
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+  let res: Response;
+  try {
+    res = await fetch(`${base}${path}`, {
+      ...init,
+      credentials: "include",
+      headers,
+      signal: init?.signal ?? controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error(`API timeout — ${path} did not respond within 10s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
     let body: Record<string, unknown> = {};
     try { body = await res.json(); } catch { /* réponse sans corps JSON */ }
-    throw new ApiError(res.status, body, path);
+    const error = new ApiError(res.status, body, path);
+    // Côté client, signale la session expirée via un événement custom
+    // pour que SessionWatcher puisse rediriger sans coupler apiFetch au routeur.
+    if (!isServer && res.status === 401) {
+      window.dispatchEvent(new CustomEvent("wetalk:unauthorized"));
+    }
+    throw error;
   }
 
   const text = await res.text();

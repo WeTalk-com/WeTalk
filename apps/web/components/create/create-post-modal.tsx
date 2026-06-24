@@ -153,7 +153,7 @@ export function CreatePostModal({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imagePreview}
-              alt="Aperçu"
+              alt={t("imagePreviewAlt")}
               className="max-h-64 w-full rounded-2xl object-cover"
             />
             <button

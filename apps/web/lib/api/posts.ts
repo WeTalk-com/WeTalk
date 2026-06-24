@@ -62,12 +62,12 @@ export type LikeState = { likeCount: number; likedByMe: boolean };
 
 /** Like un post (idempotent côté back). */
 export function likePost(postId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/posts/${postId}/like`, { method: "POST" });
+  return apiFetch<LikeState>(`/posts/${encodeURIComponent(postId)}/like`, { method: "POST" });
 }
 
 /** Retire son like (idempotent côté back). */
 export function unlikePost(postId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/posts/${postId}/like`, { method: "DELETE" });
+  return apiFetch<LikeState>(`/posts/${encodeURIComponent(postId)}/like`, { method: "DELETE" });
 }
 
 /** Commentaires d'un post (liste plate → arbre 1 niveau). */
@@ -117,11 +117,19 @@ export async function createReply(
 
 /** Like / unlike un commentaire (idempotent côté back). */
 export function likeComment(commentId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/comments/${commentId}/like`, { method: "POST" });
+  return apiFetch<LikeState>(`/comments/${encodeURIComponent(commentId)}/like`, { method: "POST" });
 }
 
 export function unlikeComment(commentId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/comments/${commentId}/like`, { method: "DELETE" });
+  return apiFetch<LikeState>(`/comments/${encodeURIComponent(commentId)}/like`, { method: "DELETE" });
+}
+
+/** Modifie le texte d'un post (auteur uniquement, vérifié côté back). */
+export function updatePost(postId: string, text: string): Promise<void> {
+  return apiFetch(`/posts/${encodeURIComponent(postId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ content: text }),
+  });
 }
 
 /** Supprime un post (auteur uniquement, vérifié côté back). */

@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon, Trash2 } from "lucide-react";
+import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon, Trash2, Pencil } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
 import { CommentThread } from "./comment-thread";
 import { ReportModal } from "./report-modal";
-import { getComments, deletePost } from "@/lib/api";
+import { getComments, deletePost, updatePost } from "@/lib/api";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import type { Post, Comment } from "@/lib/types";
 
@@ -31,6 +31,7 @@ function PostMenu({
   locale,
   isOwner,
   onReport,
+  onEdit,
   onDelete,
   onClose,
 }: {
@@ -38,6 +39,7 @@ function PostMenu({
   locale: string;
   isOwner: boolean;
   onReport: () => void;
+  onEdit: () => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -67,17 +69,30 @@ function PostMenu({
         </button>
       </li>
       {isOwner ? (
-        <li role="none">
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => { onDelete(); onClose(); }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
-          >
-            <Trash2 className="size-4" />
-            {t("delete")}
-          </button>
-        </li>
+        <>
+          <li role="none">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => { onEdit(); onClose(); }}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-brown hover:bg-canvas"
+            >
+              <Pencil className="size-4 text-brown-sec" />
+              {t("edit")}
+            </button>
+          </li>
+          <li role="none">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => { onDelete(); onClose(); }}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
+            >
+              <Trash2 className="size-4" />
+              {t("delete")}
+            </button>
+          </li>
+        </>
       ) : (
         <li role="none">
           <button
@@ -103,12 +118,19 @@ export function PostCard({ post }: { post: Post }) {
   const currentUserId = useCurrentUserId();
   const isOwner = currentUserId === author.id;
 
+  const MAX_CHARS = 280;
+
   const [showMenu, setShowMenu] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments);
+  const [currentText, setCurrentText] = useState(post.text);
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,6 +154,31 @@ export function PostCard({ post }: { post: Post }) {
       } finally {
         setCommentsLoading(false);
       }
+    }
+  }
+
+  function handleStartEdit() {
+    setEditText(currentText);
+    setEditError(false);
+    setEditing(true);
+  }
+
+  async function handleSaveEdit() {
+    const trimmed = editText.trim();
+    if (!trimmed || trimmed === currentText) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    setEditError(false);
+    try {
+      await updatePost(post.id, trimmed);
+      setCurrentText(trimmed);
+      setEditing(false);
+    } catch {
+      setEditError(true);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -180,6 +227,7 @@ export function PostCard({ post }: { post: Post }) {
                 postId={post.id}
                 locale={locale}
                 isOwner={isOwner}
+                onEdit={handleStartEdit}
                 onDelete={handleDelete}
                 onReport={() => setShowReport(true)}
                 onClose={() => setShowMenu(false)}
@@ -188,9 +236,49 @@ export function PostCard({ post }: { post: Post }) {
           </div>
         </div>
 
-        {/* Texte */}
+        {/* Texte / Mode édition */}
         <div className="mt-3">
-          <PostText text={post.text} tags={post.tags} />
+          {editing ? (
+            <div>
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                maxLength={MAX_CHARS}
+                rows={3}
+                autoFocus
+                className="w-full resize-none rounded-xl border border-border bg-canvas px-3 py-2 text-sm text-brown placeholder:text-brown-sec/60 focus:outline-none focus:ring-2 focus:ring-gold/40"
+                placeholder={t("editPlaceholder")}
+              />
+              <div className="mt-1 flex items-center justify-between">
+                <span className={`text-xs ${editText.length >= MAX_CHARS ? "text-live" : "text-brown-sec"}`}>
+                  {editText.length}/{MAX_CHARS}
+                </span>
+                {editError && (
+                  <span className="text-xs text-live">{t("editError")}</span>
+                )}
+              </div>
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  disabled={saving}
+                  className="rounded-full px-4 py-1.5 text-sm text-brown-sec hover:bg-canvas disabled:opacity-50"
+                >
+                  {t("editCancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={saving || !editText.trim() || editText.length > MAX_CHARS}
+                  className="rounded-full bg-brown px-4 py-1.5 text-sm font-semibold text-canvas hover:bg-brown/90 disabled:opacity-50"
+                >
+                  {t("editSave")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <PostText text={currentText} tags={post.tags} />
+          )}
         </div>
 
         {/* Image (Fx18) — réelle si URL, sinon placeholder design (mocks) */}

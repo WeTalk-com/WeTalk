@@ -20,30 +20,31 @@ export async function generateMetadata({
 }
 
 export default async function ProfilePage() {
-  const p = await getProfile();
+  const base = await getProfile();
   const [myPosts, followerCount, followingIds] = await Promise.all([
-    getPostsByAuthor(p.id),
-    getFollowerCount(p.id),
-    getFollowingIds(p.id),
+    getPostsByAuthor(base.id),
+    getFollowerCount(base.id),
+    getFollowingIds(base.id),
   ]);
-  p.stats.posts = myPosts.length;
-  p.stats.followers = String(followerCount);
-  p.stats.following = followingIds.length;
+  const profile = {
+    ...base,
+    stats: { posts: myPosts.length, followers: String(followerCount), following: followingIds.length },
+  };
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
       <TopBar />
 
-      {p.bannerUrl ? (
+      {profile.bannerUrl ? (
         <div className="h-40 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={p.bannerUrl} alt="" className="size-full object-cover" />
+          <img src={profile.bannerUrl} alt="" className="size-full object-cover" />
         </div>
       ) : (
         <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
       )}
 
-      <ProfileInteractive profile={p} isSelf={true} initialFollowing={false} />
+      <ProfileInteractive profile={profile} isSelf={true} initialFollowing={false} />
 
       <ProfileTabs posts={myPosts} />
     </main>

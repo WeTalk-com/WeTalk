@@ -25,13 +25,15 @@ export default async function ExplorePage({
 }) {
   const t = await getTranslations("app.explore");
   const { q } = await searchParams;
-  const [trending, users, posts, me] = await Promise.all([
+  // getCurrentUser() est dédupliqué par cache() — appel gratuit si déjà résolu dans le layout.
+  // On peut donc récupérer me.id immédiatement et lancer tous les appels en parallèle.
+  const me = await getCurrentUser();
+  const [trending, users, posts, followingIds] = await Promise.all([
     getTrending(),
     searchUsers(q),
     getPosts(),
-    getCurrentUser(),
+    getFollowingIds(me.id),
   ]);
-  const followingIds = await getFollowingIds(me.id);
   // Exclude self and already-followed users from the people list
   const visibleUsers = users.filter((u) => u.id !== me.id && !followingIds.includes(u.id));
 

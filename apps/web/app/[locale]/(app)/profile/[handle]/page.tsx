@@ -33,10 +33,11 @@ export default async function UserProfilePage({
     getFollowerCount(profile.id),
     getFollowingIds(profile.id),
   ]);
-  profile.stats.posts = posts.length;
-  profile.stats.followers = String(followerCount);
-  profile.stats.following = profileFollowingIds.length;
   const isFollowing = viewerFollowingIds.includes(profile.id);
+  const profileWithStats = {
+    ...profile,
+    stats: { posts: posts.length, followers: String(followerCount), following: profileFollowingIds.length },
+  };
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
@@ -45,7 +46,7 @@ export default async function UserProfilePage({
       <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
 
       <ProfileInteractive
-        profile={profile}
+        profile={profileWithStats}
         isSelf={isSelf}
         initialFollowing={isFollowing}
       />

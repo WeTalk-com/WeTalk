@@ -74,7 +74,7 @@ export function FollowListModal({ userId, type, title, isOpen, onClose }: Props)
             ref={closeRef}
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t("followListClose")}
             className="rounded-full p-1 text-brown-sec hover:bg-card"
           >
             <X className="size-5" />

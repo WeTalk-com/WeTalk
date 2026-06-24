@@ -38,19 +38,22 @@ export default async function PostPage({
     notFound();
   }
 
-  const comments = await getComments(id);
+  const [comments, t] = await Promise.all([
+    getComments(id),
+    getTranslations("app.post"),
+  ]);
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
       <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-border bg-canvas/80 px-4 py-3 backdrop-blur">
         <Link
           href="/home"
-          aria-label="Back"
+          aria-label={t("backLabel")}
           className="grid size-9 place-items-center rounded-full text-brown transition-colors hover:bg-canvas"
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <h1 className="font-head text-xl font-bold text-brown">Post</h1>
+        <h1 className="font-head text-xl font-bold text-brown">{t("pageTitle")}</h1>
       </header>
 
       <div className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">

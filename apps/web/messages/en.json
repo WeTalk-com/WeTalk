@@ -149,6 +149,7 @@
       "followListLoading": "Loading…",
       "followListEmpty": "No users yet",
       "followListError": "Could not load the list. Please try again.",
+      "followListClose": "Close",
       "tabPosts": "Posts",
       "tabMedia": "Media",
       "tabLikes": "Likes",
@@ -177,7 +178,14 @@
       "comment": "Comment",
       "report": "Report",
       "copyLink": "Copy link",
-      "delete": "Delete"
+      "delete": "Delete",
+      "edit": "Edit",
+      "pageTitle": "Post",
+      "backLabel": "Back",
+      "editPlaceholder": "Edit your post…",
+      "editSave": "Save",
+      "editCancel": "Cancel",
+      "editError": "Failed to save changes. Please try again."
     },
     "messages": {
       "title": "Messages",
@@ -200,7 +208,8 @@
       "close": "Close",
       "removeImage": "Remove image",
       "removeVideo": "Remove video",
-      "charCount": "{count}/{max}"
+      "charCount": "{count}/{max}",
+      "imagePreviewAlt": "Image preview"
     },
     "comments": {
       "title": "Comments",
@@ -253,7 +262,17 @@
     "themeLabel": "Theme",
     "themeDescription": "Customize how WeTalk looks.",
     "accountLabel": "Account",
-    "accountDescription": "Manage your session."
+    "accountDescription": "Manage your session.",
+    "dangerLabel": "Danger zone",
+    "dangerDescription": "These actions are permanent and cannot be undone.",
+    "deleteAccountButton": "Delete account",
+    "deleteAccountTitle": "Permanently delete your account?",
+    "deleteAccountText": "All your posts, comments and subscriptions will be deleted. This action cannot be undone. Type {keyword} to confirm.",
+    "deleteAccountKeyword": "DELETE",
+    "deleteAccountPlaceholder": "Type DELETE to confirm",
+    "deleteAccountSubmit": "Permanently delete",
+    "deleteAccountCancel": "Cancel",
+    "deleteAccountError": "An error occurred. Please try again."
   },
   "theme": {
     "changeTheme": "Change theme",

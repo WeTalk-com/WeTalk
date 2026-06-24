@@ -17,8 +17,11 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
   const t = useTranslations("app.rightRail");
   const [following, setFollowing] = useState(initialFollowing);
   const [hovered, setHovered] = useState(false);
+  const [pending, setPending] = useState(false);
 
   async function toggle() {
+    if (pending) return;
+    setPending(true);
     const next = !following;
     setFollowing(next);
     try {
@@ -26,11 +29,12 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
       next ? onFollow?.() : onUnfollow?.();
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
-        // 400 = déjà dans l'état cible (already following / not following)
-        // On garde l'UI optimiste — pas de callback car le delta serait faux.
+        // 400 = déjà dans l'état cible — on garde l'UI optimiste.
         return;
       }
       setFollowing(!next);
+    } finally {
+      setPending(false);
     }
   }
 
@@ -53,10 +57,11 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
       type="button"
       aria-pressed={following}
       aria-label={label}
+      disabled={pending}
       onClick={toggle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`shrink-0 rounded-full font-semibold transition-colors ${sizeClass} ${colorClass}`}
+      className={`shrink-0 rounded-full font-semibold transition-colors disabled:opacity-60 ${sizeClass} ${colorClass}`}
     >
       {label}
     </button>

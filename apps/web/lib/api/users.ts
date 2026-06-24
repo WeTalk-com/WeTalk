@@ -70,14 +70,19 @@ export async function updateProfile(input: UpdateProfileInput): Promise<void> {
   await apiFetch("/users/me", { method: "PATCH", body: form });
 }
 
+/** Supprime définitivement le compte courant (révoque les tokens côté back). */
+export function deleteAccount(): Promise<void> {
+  return apiFetch("/users/me", { method: "DELETE" });
+}
+
 /** S'abonner à un utilisateur. */
 export function followUser(id: string): Promise<unknown> {
-  return apiFetch(`/users/${id}/follow`, { method: "POST" });
+  return apiFetch(`/users/${encodeURIComponent(id)}/follow`, { method: "POST" });
 }
 
 /** Se désabonner. */
 export function unfollowUser(id: string): Promise<unknown> {
-  return apiFetch(`/users/${id}/follow`, { method: "DELETE" });
+  return apiFetch(`/users/${encodeURIComponent(id)}/follow`, { method: "DELETE" });
 }
 
 /** Suggestions "à suivre" ou résultats de recherche depuis le backend. */

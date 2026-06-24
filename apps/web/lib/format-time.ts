@@ -6,5 +6,7 @@ register("fr", fr);
 export function formatTimeAgo(iso: string, locale: string): string {
   const date = new Date(iso);
   if (isNaN(date.getTime())) return "—";
-  return format(date, locale === "fr" ? "fr" : "en_US");
+  const result = format(date, locale === "fr" ? "fr" : "en_US");
+  // Supprimer le préfixe/suffixe narratif pour un affichage compact.
+  return result.replace(/^il y a /, "").replace(/ ago$/, "");
 }

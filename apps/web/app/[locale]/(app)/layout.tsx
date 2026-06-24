@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/api/client";
 import { CreateModalProvider } from "@/components/create/create-modal-provider";
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { SessionWatcher } from "@/components/auth/session-watcher";
 
 /** Shell de l'app connectee : sidebar + zone centrale + nav mobile + modale Create. */
 export default async function AppLayout({
@@ -23,6 +24,7 @@ export default async function AppLayout({
 
   return (
     <CreateModalProvider user={user}>
+      <SessionWatcher />
       <div className="min-h-dvh bg-canvas">
         <div className="mx-auto flex w-full max-w-[1240px]">
           <LeftSidebar user={user} />
