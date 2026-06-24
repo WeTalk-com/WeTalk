@@ -8,6 +8,8 @@ import { createPost } from "@/lib/api";
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { IconButton } from "../ui/icon-button";
+import { MentionDropdown } from "../ui/mention-dropdown";
+import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
 
 const MAX_CHARS = 280;
 
@@ -32,6 +34,18 @@ export function CreatePostModal({
   const [pending, setPending] = useState(false);
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { users, mention, loading, update, insertMention, clear } = useMentionAutocomplete();
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const cursorRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (cursorRef.current !== null && textareaRef.current) {
+      textareaRef.current.selectionStart = cursorRef.current;
+      textareaRef.current.selectionEnd = cursorRef.current;
+      cursorRef.current = null;
+    }
+  });
   const t = useTranslations("app.create");
 
   const remaining = MAX_CHARS - text.length;
@@ -92,6 +106,37 @@ export function CreatePostModal({
     if (videoRef.current) videoRef.current.value = "";
   }
 
+  function handleTextChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const val = e.target.value;
+    setText(val);
+    setSelectedIdx(0);
+    update(val, e.target.selectionStart);
+  }
+
+  function handleMentionSelect(username: string) {
+    const idx = textareaRef.current?.selectionStart ?? text.length;
+    const next = insertMention(username, text, idx);
+    setText(next);
+    cursorRef.current = (mention?.start ?? 0) + username.length + 1;
+    clear();
+  }
+
+  function handleTextKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (!mention || users.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIdx((i) => (i + 1) % users.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIdx((i) => (i - 1 + users.length) % users.length);
+    } else if (e.key === "Enter" && users[selectedIdx]) {
+      e.preventDefault();
+      handleMentionSelect(users[selectedIdx].username);
+    } else if (e.key === "Escape") {
+      clear();
+    }
+  }
+
   async function handlePost() {
     setPending(true);
     try {
@@ -132,15 +177,25 @@ export function CreatePostModal({
 
         <div className="mt-4 flex gap-3">
           <Avatar initial={user.initial} src={user.avatarUrl} solid />
-          <textarea
-            autoFocus
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t("placeholder")}
-            rows={4}
-            maxLength={MAX_CHARS + 20}
-            className="min-h-28 flex-1 resize-none bg-transparent text-lg text-brown outline-none placeholder:text-placeholder"
-          />
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              autoFocus
+              value={text}
+              onChange={handleTextChange}
+              onKeyDown={handleTextKeyDown}
+              placeholder={t("placeholder")}
+              rows={4}
+              maxLength={MAX_CHARS + 20}
+              className="min-h-28 w-full resize-none bg-transparent text-lg text-brown outline-none placeholder:text-placeholder"
+            />
+            <MentionDropdown
+              users={users}
+              loading={loading}
+              mention={mention}
+              onSelect={handleMentionSelect}
+            />
+          </div>
         </div>
 
         {/* Aperçu image */}

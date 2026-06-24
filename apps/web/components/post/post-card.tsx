@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
 import { Card } from "../ui/card";
 import { UserChip } from "../ui/user-chip";
+import { MentionText } from "../ui/mention-text";
 import { PostActions } from "./post-actions";
 import { CommentThread } from "./comment-thread";
 import { ReportModal } from "./report-modal";
@@ -16,7 +17,8 @@ import type { Post, Comment } from "@/lib/types";
 function PostText({ text, tags }: { text: string; tags: string[] }) {
   return (
     <p className="text-ink leading-relaxed">
-      {text}{" "}
+      <MentionText text={text} />
+      {tags.length > 0 && " "}
       {tags.map((tag) => (
         <span key={tag} className="font-medium text-gold">
           {tag}{" "}

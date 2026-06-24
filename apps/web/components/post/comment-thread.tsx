@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
+import { MentionDropdown } from "@/components/ui/mention-dropdown";
+import { MentionText } from "@/components/ui/mention-text";
+import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
 import { createComment, createReply, likeComment, unlikeComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 
@@ -67,7 +70,7 @@ function ReplyRow({ reply }: { reply: Reply }) {
           {reply.author.name}{" "}
           <span className="font-normal text-brown-sec">@{reply.author.handle} · {formatTimeAgo(reply.createdAt, locale)}</span>
         </p>
-        <p className="mt-0.5 text-sm text-ink">{reply.text}</p>
+        <p className="mt-0.5 text-sm text-ink"><MentionText text={reply.text} /></p>
         <div className="mt-1">
           <CommentLike
             commentId={reply.id}
@@ -104,7 +107,7 @@ function CommentRow({
               @{comment.author.handle} · {formatTimeAgo(comment.createdAt, locale)}
             </span>
           </p>
-          <p className="mt-0.5 text-sm text-ink">{comment.text}</p>
+          <p className="mt-0.5 text-sm text-ink"><MentionText text={comment.text} /></p>
 
           <div className="mt-2 flex items-center gap-4">
             <CommentLike
@@ -166,12 +169,67 @@ export function CommentThread({
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { users, mention, loading: mentionLoading, update, insertMention, clear } = useMentionAutocomplete();
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const cursorRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (cursorRef.current !== null && inputRef.current) {
+      inputRef.current.selectionStart = cursorRef.current;
+      inputRef.current.selectionEnd = cursorRef.current;
+      cursorRef.current = null;
+    }
+  });
 
   // La modale s'ouvre avant la fin du fetch : resynchroniser l'état interne
   // quand les commentaires chargés arrivent (un useState(prop) ne suit pas le prop).
   useEffect(() => {
     setComments(initialComments);
   }, [initialComments]);
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setInput(val);
+    setSelectedIdx(0);
+    update(val, e.target.selectionStart ?? 0);
+  }
+
+  function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (mention && users.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIdx((i) => (i + 1) % users.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIdx((i) => (i - 1 + users.length) % users.length);
+        return;
+      }
+      if (e.key === "Enter" && users[selectedIdx]) {
+        e.preventDefault();
+        handleMentionSelect(users[selectedIdx].username);
+        return;
+      }
+      if (e.key === "Escape") {
+        clear();
+        return;
+      }
+    }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  }
+
+  function handleMentionSelect(username: string) {
+    const idx = inputRef.current?.selectionStart ?? input.length;
+    const next = insertMention(username, input, idx);
+    setInput(next);
+    cursorRef.current = (mention?.start ?? 0) + username.length + 1;
+    clear();
+  }
 
   async function handleSubmit() {
     const text = input.trim();
@@ -263,20 +321,24 @@ export function CommentThread({
               </button>
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
-              className="min-w-0 flex-1 rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
-            />
+          <div className="relative flex items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleInputKeyDown}
+                placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
+                className="w-full rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
+              />
+              <MentionDropdown
+                users={users}
+                loading={mentionLoading}
+                mention={mention}
+                onSelect={handleMentionSelect}
+              />
+            </div>
             <button
               type="button"
               onClick={handleSubmit}
