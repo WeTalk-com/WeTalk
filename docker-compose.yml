@@ -267,6 +267,20 @@ services:
     networks:
       - wetalk-net
 
+  provisioner:
+    build:
+      context: apps/provisioner
+      dockerfile: Dockerfile
+    container_name: wetalk-provisioner
+    restart: "no"
+    env_file:
+      - .env
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - wetalk-net
+
 networks:
   wetalk-net:
     driver: bridge
