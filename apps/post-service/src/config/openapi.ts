@@ -1,6 +1,6 @@
 import { OpenAPIRegistry, extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { createSchema, updateSchema, listQuerySchema, feedQuerySchema, postResponseSchema } from "../schemas/post.schemas.js";
+import { createSchema, listQuerySchema, feedQuerySchema, postResponseSchema } from "../schemas/post.schemas.js";
 
 // Active l'extension .openapi() de Zod (requise par zod-to-openapi avant la génération du doc).
 extendZodWithOpenApi(z);
@@ -63,20 +63,6 @@ registry.registerPath({
   request: { params: z.object({ id: z.string() }) },
   responses: {
     200: { description: "Post", content: { "application/json": { schema: postSingleSchema } } },
-    404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
-  },
-});
-
-registry.registerPath({
-  method: "patch",
-  path: "/posts/{id}",
-  summary: "Update own post",
-  security: [{ [bearerAuth.name]: [] }],
-  tags: ["Posts"],
-  request: { params: z.object({ id: z.string() }), body: { content: { "application/json": { schema: updateSchema } } } },
-  responses: {
-    200: { description: "Post updated", content: { "application/json": { schema: postSingleSchema } } },
-    403: { description: "Forbidden (not author)", content: { "application/json": { schema: errorSchema } } },
     404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
   },
 });
