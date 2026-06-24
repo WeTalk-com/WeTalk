@@ -43,18 +43,20 @@ export async function createComment(req: Request, res: Response): Promise<void> 
   }
 
   // Une réponse doit cibler un commentaire existant du même post.
+  let parentAuthorId: string | null = null;
   if (parsed.data.parentId) {
     const parent = await CommentModel.findById(parsed.data.parentId)
-      .select({ postId: 1, parentId: 1 })
+      .select({ postId: 1, parentId: 1, authorId: 1 })
       .lean();
     if (!parent || String(parent.postId) !== id) {
       res.status(404).json({ error: "Parent comment not found" });
       return;
     }
-    if (parent.parentId) {  
-      res.status(400).json({ error: "Replies can only target top-level comments" });  
-      return;  
-    } 
+    if (parent.parentId) {
+      res.status(400).json({ error: "Replies can only target top-level comments" });
+      return;
+    }
+    parentAuthorId = parent.authorId;
   }
 
   const comment = await CommentModel.create({
@@ -64,18 +66,25 @@ export async function createComment(req: Request, res: Response): Promise<void> 
     parentId: parsed.data.parentId ?? null,
   });
 
-  if (post.authorId !== req.user!.sub) {
-    notifyNotificationService(
-      {
-        type: "comment",
-        recipientId: post.authorId,
-        actorId: req.user!.sub,
-        postId: id!,
-        commentId: String(comment._id),
-        preview: parsed.data.content.slice(0, 100),
-      },
-      forwardAuth(req),
-    );
+  const actorId = req.user!.sub;
+  const headers = forwardAuth(req);
+  const commentPayload = {
+    type: "comment" as const,
+    actorId,
+    postId: id!,
+    commentId: String(comment._id),
+    preview: parsed.data.content.slice(0, 100),
+  };
+
+  // Notifie l'auteur du post (sauf si c'est l'auteur du commentaire).
+  if (post.authorId !== actorId) {
+    notifyNotificationService({ ...commentPayload, recipientId: post.authorId }, headers);
+  }
+
+  // Fx8 : réponse à un commentaire → notifie aussi l'auteur du commentaire parent.
+  // Dédup : pas soi-même, ni un doublon si parent == auteur du post.
+  if (parentAuthorId && parentAuthorId !== actorId && parentAuthorId !== post.authorId) {
+    notifyNotificationService({ ...commentPayload, recipientId: parentAuthorId }, headers);
   }
 
   // likedBy (ids des likers) n'est jamais exposé au client.
