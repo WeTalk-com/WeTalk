@@ -44,3 +44,18 @@ yarn-error.log
 .settings
 **/.vs
 **/.DS_Store
+yarn.lock
+yarn-error.log
+.parallelperf.*
+tests/baselines/reference/dt
+.failed-tests
+TEST-results.xml
+# package-lock.json versionné pour reproductibilité (npm ci dans Dockerfiles + CI)
+.eslintcache
+*v8.log
+/lib/
+.turbo
+dist/
+.env
+# Rapport JUnit généré en CI (dorny/test-reporter)
+junit.xml
