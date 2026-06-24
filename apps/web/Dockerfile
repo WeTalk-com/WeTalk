@@ -35,6 +35,8 @@ ENV PORT=3000
 
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+# Next standalone n'inclut pas public/ : on le copie pour servir les assets statiques.
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000
 WORKDIR /app/apps/web
