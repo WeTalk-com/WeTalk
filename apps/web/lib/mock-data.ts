@@ -5,7 +5,6 @@
  */
 
 import type {
-  User,
   Post,
   TrendingTopic,
   Conversation,
@@ -16,14 +15,6 @@ function ago(value: number, unit: "m" | "h" | "d"): string {
   const ms = { m: 60_000, h: 3_600_000, d: 86_400_000 }[unit];
   return new Date(Date.now() - value * ms).toISOString();
 }
-
-/* ----------------------------- Suggestions ----------------------------- */
-
-export const whoToFollow: User[] = [
-  { id: "w1", name: "Jonas Beck", handle: "jonasbeck", initial: "J" },
-  { id: "w2", name: "Elif Demir", handle: "elifd", initial: "E" },
-  { id: "w3", name: "Remy Cole", handle: "remycole", initial: "R" },
-];
 
 /* ----------------------------- Tendances ----------------------------- */
 
