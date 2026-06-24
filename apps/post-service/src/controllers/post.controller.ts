@@ -147,7 +147,7 @@ async function fetchFollowingIds(userId: string, headers: Record<string, string>
   }
 }
 
-async function fetchAuthors(
+export async function fetchAuthors(
   ids: string[],
   headers: Record<string, string>,
 ): Promise<Map<string, AuthorLite>> {
@@ -318,6 +318,16 @@ export async function createPost(req: Request, res: Response): Promise<void> {
   res.status(201).json({ post: postOut });
 }
 
+export async function countPosts(req: Request, res: Response): Promise<void> {
+  const { authorId } = req.query;
+  if (!authorId || typeof authorId !== "string") {
+    res.status(400).json({ error: "authorId query param required" });
+    return;
+  }
+  const count = await PostModel.countDocuments({ authorId });
+  res.json({ count });
+}
+
 export async function listPosts(req: Request, res: Response): Promise<void> {
   const parsed = listQuerySchema.safeParse(req.query);
   if (!parsed.success) {
@@ -389,7 +399,9 @@ export async function deletePost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  if (post.authorId !== req.user!.sub) {
+  // Auteur, ou modérateur/admin (modération de contenu, Fx20).
+  const role = req.user!.role;
+  if (post.authorId !== req.user!.sub && role !== "moderator" && role !== "admin") {
     res.status(403).json({ error: "Forbidden" });
     return;
   }

@@ -8,17 +8,11 @@ export async function getReportedPosts(): Promise<ReportedPost[]> {
 }
 
 /** Ignore un signalement (le post reste visible). */
-export async function dismissReport(reportId: string): Promise<void> {
-  // TODO(api): await apiFetch(`/admin/reports/${reportId}/dismiss`, { method: "POST" });
-  if (process.env.NODE_ENV === "development") {
-    console.log("dismissReport (mock)", reportId);
-  }
+export async function dismissReport(_reportId: string): Promise<void> {
+  // TODO(api): await apiFetch(`/admin/reports/${_reportId}/dismiss`, { method: "POST" });
 }
 
 /** Supprime le post signalé et résout le rapport. */
-export async function removeReportedPost(reportId: string): Promise<void> {
-  // TODO(api): await apiFetch(`/admin/reports/${reportId}/remove`, { method: "POST" });
-  if (process.env.NODE_ENV === "development") {
-    console.log("removeReportedPost (mock)", reportId);
-  }
+export async function removeReportedPost(_reportId: string): Promise<void> {
+  // TODO(api): await apiFetch(`/admin/reports/${_reportId}/remove`, { method: "POST" });
 }

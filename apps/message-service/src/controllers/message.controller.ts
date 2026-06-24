@@ -34,11 +34,25 @@ export async function getConversationList(req: Request, res: Response) {
 		// L'interlocuteur est l'autre participant : si je suis l'expéditeur,
 		// c'est le destinataire, sinon c'est l'expéditeur. On déduplique en
 		// gardant l'ordre (messages déjà triés du plus récent au plus ancien).
-		const others = conversations.map(o => (o.senderId === myId ? o.receiverId : o.senderId));
-
-		res.json({
-			data: [...new Set(others)],
-		});
+		const conversationIds = [...new Set(conversations.map(o => (o.senderId === myId ? o.receiverId : o.senderId)))];
+		try {
+			const conversationList = await Promise.all(conversationIds.map(async id => ({
+				user: publicUser((await axios.get(`${env.userServiceUrl}/users/${id}`, {
+					// @ts-expect-error "Pas le bon type de headers" typescript doin' it again...
+					headers: { Authorization: req.headers.authorization },
+					timeout: 3000,
+				})).data),
+				lastMessage: conversations.find(msg => msg.senderId === id || msg.receiverId === id),
+				unread: conversations.filter(msg => msg.senderId === id && msg.receiverId === myId && !msg.isRead).length
+			})));
+			
+			res.json({
+				data: conversationList,
+			});
+		} catch (error) {
+			logger.error((error as Error).message);
+			res.status(500).json({ error: "Impossible de retourner la liste des conversations. User service injoignable." });
+		}
 	} catch (e) {
 		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la récupération de la liste des conversations." });

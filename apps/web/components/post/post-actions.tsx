@@ -1,89 +1,76 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Heart, MessageCircle, Send, Bookmark } from "lucide-react";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { Heart, MessageCircle } from "lucide-react";
 import { likePost, unlikePost } from "@/lib/api";
+import { cn } from "@/lib/cn";
+import { useOptimisticLike } from "@/hooks/use-optimistic-like";
+
+function formatCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  return String(n);
+}
 
 type Props = {
   postId: string;
   likes: number;
   likedByMe?: boolean;
   comments: number;
-  shares: number;
   onComment?: () => void;
 };
 
-export function PostActions({ postId, likes, likedByMe, comments, shares, onComment }: Props) {
-  const [liked, setLiked] = useState(Boolean(likedByMe));
-  const [likeCount, setLikeCount] = useState(likes);
-  const [pending, setPending] = useState(false);
-  const [saved, setSaved] = useState(false);
+export function PostActions({ postId, likes, likedByMe, comments, onComment }: Props) {
   const t = useTranslations("app.post");
-
-  // Mise à jour optimiste : on bascule l'UI tout de suite, on cale sur la réponse
-  // serveur, et on annule si l'appel échoue.
-  async function toggleLike() {
-    if (pending) return;
-    const next = !liked;
-    setLiked(next);
-    setLikeCount((c) => c + (next ? 1 : -1));
-    setPending(true);
-    try {
-      const state = next ? await likePost(postId) : await unlikePost(postId);
-      setLiked(state.likedByMe);
-      setLikeCount(state.likeCount);
-    } catch {
-      setLiked(!next);
-      setLikeCount((c) => c + (next ? -1 : 1));
-    } finally {
-      setPending(false);
-    }
-  }
+  const { liked, count: likeCount, toggle: toggleLike } = useOptimisticLike({
+    initial: Boolean(likedByMe),
+    initialCount: likes,
+    onToggle: (next) => next ? likePost(postId) : unlikePost(postId),
+  });
 
   return (
-    <div className="flex items-center gap-6 text-ink-soft text-sm">
-      <button
-        type="button"
-        onClick={toggleLike}
-        aria-pressed={liked}
-        aria-label={t("like")}
-        className="flex items-center gap-2 hover:text-live transition-colors"
-      >
-        <Heart
-          className={`size-5 ${liked ? "fill-live text-live" : ""}`}
-        />
-        {likeCount}
-      </button>
+    <div className="flex items-center gap-5 text-brown-sec">
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <button
+            type="button"
+            aria-label={t("comment")}
+            onClick={onComment}
+            className="flex items-center gap-1.5 text-sm transition-colors hover:text-gold"
+          >
+            <MessageCircle className="size-4.5" />
+            <span className="tabular-nums">{formatCount(comments)}</span>
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content sideOffset={6} className="z-50 rounded-lg bg-brown px-2.5 py-1.5 text-xs font-medium text-canvas shadow-md">
+            {t("comment")}
+            <Tooltip.Arrow className="fill-brown" />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
 
-      <button
-        type="button"
-        aria-label={t("comment")}
-        onClick={onComment}
-        className="flex items-center gap-2 hover:text-ink transition-colors"
-      >
-        <MessageCircle className="size-5" />
-        {comments}
-      </button>
-
-      <button
-        type="button"
-        aria-label={t("share")}
-        className="flex items-center gap-2 hover:text-ink transition-colors"
-      >
-        <Send className="size-5" />
-        {shares}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setSaved((v) => !v)}
-        aria-pressed={saved}
-        aria-label={t("save")}
-        className="ml-auto hover:text-gold transition-colors"
-      >
-        <Bookmark className={`size-5 ${saved ? "fill-gold text-gold" : ""}`} />
-      </button>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <button
+            type="button"
+            onClick={toggleLike}
+            aria-pressed={liked}
+            aria-label={t("like")}
+            className={cn("flex items-center gap-1.5 text-sm transition-colors", liked ? "text-live" : "hover:text-live")}
+          >
+            <Heart className={cn("size-4.5 transition-colors", liked && "fill-live")} />
+            <span className="tabular-nums">{formatCount(likeCount)}</span>
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content sideOffset={6} className="z-50 rounded-lg bg-brown px-2.5 py-1.5 text-xs font-medium text-canvas shadow-md">
+            {liked ? t("unlike") : t("like")}
+            <Tooltip.Arrow className="fill-brown" />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
     </div>
   );
 }

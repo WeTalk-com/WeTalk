@@ -1,12 +1,12 @@
+import { cache } from "react";
 import type { User, Profile } from "@/lib/types";
-import { whoToFollow } from "@/lib/mock-data";
 import { apiFetch } from "./client";
 import { mapUser, mapProfile, type BackendUser } from "./map";
 
-/** Utilisateur connecté (depuis le cookie de session). */
-export async function getCurrentUser(): Promise<User> {
+/** Utilisateur connecté (depuis le cookie de session). Dédupliqué par requête via cache(). */
+export const getCurrentUser = cache(async (): Promise<User> => {
   return mapUser(await apiFetch<BackendUser>("/users/me"));
-}
+});
 
 /** Profil affiché — ici le profil de l'utilisateur courant. */
 export async function getProfile(): Promise<Profile> {
@@ -18,12 +18,32 @@ export async function getUserProfile(handle: string): Promise<Profile> {
   return mapProfile(await apiFetch<BackendUser>(`/users/${encodeURIComponent(handle)}`));
 }
 
-/** IDs des utilisateurs suivis par `userId` (pour l'état initial du bouton Suivre). */
+/** IDs des utilisateurs suivis par `userId`. */
 export async function getFollowingIds(userId: string): Promise<string[]> {
   const data = await apiFetch<{ ids: string[] }>(
     `/users/${encodeURIComponent(userId)}/following/ids`,
   );
   return data.ids;
+}
+
+// Le backend retourne seulement { id, username } dans les listes de follow.
+// mapUser gère les champs manquants (displayName → username, profileImage → undefined).
+type FollowEntry = Pick<BackendUser, "id" | "username">;
+
+/** Liste des abonnés d'un utilisateur. */
+export async function getFollowers(userId: string): Promise<User[]> {
+  const data = await apiFetch<{ data: FollowEntry[] }>(
+    `/users/${encodeURIComponent(userId)}/followers?limit=100`,
+  );
+  return (data.data ?? []).map((u) => mapUser(u as BackendUser));
+}
+
+/** Liste des comptes suivis par un utilisateur. */
+export async function getFollowingList(userId: string): Promise<User[]> {
+  const data = await apiFetch<{ data: FollowEntry[] }>(
+    `/users/${encodeURIComponent(userId)}/following?limit=100`,
+  );
+  return (data.data ?? []).map((u) => mapUser(u as BackendUser));
 }
 
 export type UpdateProfileInput = {
@@ -45,17 +65,25 @@ export async function updateProfile(input: UpdateProfileInput): Promise<void> {
   await apiFetch("/users/me", { method: "PATCH", body: form });
 }
 
+/** Supprime définitivement le compte courant (révoque les tokens côté back). */
+export function deleteAccount(): Promise<void> {
+  return apiFetch("/users/me", { method: "DELETE" });
+}
+
 /** S'abonner à un utilisateur. */
 export function followUser(id: string): Promise<unknown> {
-  return apiFetch(`/users/${id}/follow`, { method: "POST" });
+  return apiFetch(`/users/${encodeURIComponent(id)}/follow`, { method: "POST" });
 }
 
 /** Se désabonner. */
 export function unfollowUser(id: string): Promise<unknown> {
-  return apiFetch(`/users/${id}/follow`, { method: "DELETE" });
+  return apiFetch(`/users/${encodeURIComponent(id)}/follow`, { method: "DELETE" });
 }
 
-/** Suggestions "à suivre" — pas d'endpoint backend, reste mock. */
-export async function getWhoToFollow(): Promise<User[]> {
-  return structuredClone(whoToFollow);
+/** Suggestions "à suivre" ou résultats de recherche depuis le backend. */
+export async function searchUsers(query?: string): Promise<User[]> {
+  const qs = query?.trim() ? `?search=${encodeURIComponent(query.trim())}` : "";
+  const data = await apiFetch<BackendUser[]>(`/users${qs}`);
+  return data.map(mapUser);
 }
+

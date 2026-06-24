@@ -19,13 +19,6 @@ export const MailIcon = ({ className }: IconProps) => (
   </svg>
 );
 
-export const PhoneIcon = ({ className }: IconProps) => (
-  <svg {...baseIcon(className)}>
-    <rect x="6" y="2" width="12" height="20" rx="3" />
-    <path d="M11 18h2" />
-  </svg>
-);
-
 export const LockIcon = ({ className }: IconProps) => (
   <svg {...baseIcon(className)}>
     <rect x="4" y="11" width="16" height="10" rx="2" />

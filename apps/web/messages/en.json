@@ -39,19 +39,6 @@
       "goldenHours": "golden hours",
       "comeBackDaily": "come back daily"
     },
-    "marquee": {
-      "heading": "Loved by warm-light people everywhere"
-    },
-    "features": {
-      "visualTitle": "Made for visual stories",
-      "visualText": "Full-bleed photo posts with warm-tone presets built in.",
-      "discoveryTitle": "A calmer discovery",
-      "discoveryText": "No doomscroll. Curated by people, sorted by warmth.",
-      "connectionTitle": "Real connection",
-      "connectionText": "Follow fewer, talk more. Comments that feel like a coffee.",
-      "ctaHeading": "Come for the light. Stay for the people.",
-      "getStarted": "Get started"
-    },
     "phone": {
       "sceneHome": "Home feed",
       "sceneExplore": "Explore",
@@ -69,39 +56,39 @@
   "auth": {
     "subtitle": "Talk warmer · Share slower",
     "invalidCredentials": "Invalid credentials",
-    "emailTaken": "This email or username is already in use",
     "logout": "Log out",
-    "backToLogin": "Back to log in",
     "toggleLogin": "Log in",
     "toggleSignup": "Sign up",
-    "methodEmail": "Email",
-    "methodPhone": "Phone",
     "loginTitle": "Welcome back",
     "loginSubtitle": "Log in to pick up where you left off.",
     "loginCta": "Log in",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join the warm side of the internet.",
     "signupCta": "Create account",
-    "forgotTitle": "Reset your password",
-    "forgotSubtitle": "Enter your email and we'll send you a link to get back in.",
-    "forgotCta": "Send reset link",
-    "nameLabel": "Full name",
-    "namePlaceholder": "Jane Doe",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. jane_doe",
+    "usernameHint": "3–50 characters, no spaces",
+    "usernameErrorMin": "At least 3 characters",
+    "usernameErrorSpaces": "No spaces allowed",
+    "usernameErrorTaken": "This username is already taken",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
-    "phoneLabel": "Phone",
-    "phonePlaceholder": "+33 6 12 34 56 78",
+    "emailErrorInvalid": "Invalid email address",
+    "emailErrorTaken": "This email is already in use",
     "passwordLabel": "Password",
+    "passwordHint": "Minimum 8 characters",
+    "passwordErrorMin": "Password must be at least 8 characters",
+    "passwordStrengthWeak": "Weak",
+    "passwordStrengthFair": "Fair",
+    "passwordStrengthStrong": "Strong",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordError": "Passwords don't match",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "rememberMe": "Remember me",
-    "forgotPassword": "Forgot password?",
     "footerLoginPrompt": "New to WeTalk?",
     "footerCreateAccount": "Create an account",
     "footerSignupPrompt": "Already have an account?",
     "footerLoginLink": "Log in",
-    "footerForgotPrompt": "Remembered it?",
-    "footerBackLink": "Back to log in",
     "legal": "By continuing you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
   },
   "app": {
@@ -144,7 +131,9 @@
       "actionLike": "liked your post",
       "actionComment": "commented on your post",
       "actionFollow": "started following you",
-      "actionMention": "mentioned you in a post"
+      "actionMention": "mentioned you in a post",
+      "loading": "Loading…",
+      "empty": "No notifications yet"
     },
     "profile": {
       "editProfile": "Edit profile",
@@ -159,6 +148,10 @@
       "statPosts": "Posts",
       "statFollowers": "Followers",
       "statFollowing": "Following",
+      "followListLoading": "Loading…",
+      "followListEmpty": "No users yet",
+      "followListError": "Could not load the list. Please try again.",
+      "followListClose": "Close",
       "tabPosts": "Posts",
       "tabMedia": "Media",
       "tabLikes": "Likes",
@@ -184,11 +177,20 @@
       "video": "Video",
       "more": "More options",
       "like": "Like",
+      "unlike": "Unlike",
       "comment": "Comment",
-      "share": "Share",
-      "save": "Save",
       "report": "Report",
-      "copyLink": "Copy link"
+      "copyLink": "Copy link",
+      "delete": "Delete",
+      "edit": "Edit",
+      "pageTitle": "Post",
+      "backLabel": "Back",
+      "editPlaceholder": "Edit your post…",
+      "editSave": "Save",
+      "editCancel": "Cancel",
+      "editError": "Failed to save changes. Please try again.",
+      "toastEditSaved": "Post updated",
+      "toastDeleteError": "Couldn't delete the post. Please try again."
     },
     "messages": {
       "title": "Messages",
@@ -211,7 +213,10 @@
       "close": "Close",
       "removeImage": "Remove image",
       "removeVideo": "Remove video",
-      "charCount": "{count}/{max}"
+      "charCount": "{count}/{max}",
+      "imagePreviewAlt": "Image preview",
+      "toastSuccess": "Post published!",
+      "toastError": "Failed to publish. Please try again."
     },
     "comments": {
       "title": "Comments",
@@ -223,7 +228,9 @@
       "cancel": "Cancel",
       "send": "Send",
       "reply": "Reply",
-      "replies": "replies"
+      "replies": "replies",
+      "delete": "Delete",
+      "deleteError": "Couldn't delete. Please try again."
     },
     "report": {
       "title": "Report",
@@ -238,8 +245,8 @@
       "submit": "Submit",
       "cancel": "Cancel",
       "close": "Close",
-      "successTitle": "Report submitted",
-      "successText": "Thanks, we'll review this shortly."
+      "soonTitle": "Coming soon",
+      "soonText": "Reporting isn't available yet — it'll be enabled shortly."
     },
     "admin": {
       "title": "Moderation",
@@ -263,13 +270,28 @@
     "themeLabel": "Theme",
     "themeDescription": "Customize how WeTalk looks.",
     "accountLabel": "Account",
-    "accountDescription": "Manage your session."
+    "accountDescription": "Manage your session.",
+    "dangerLabel": "Danger zone",
+    "dangerDescription": "These actions are permanent and cannot be undone.",
+    "deleteAccountButton": "Delete account",
+    "deleteAccountTitle": "Permanently delete your account?",
+    "deleteAccountText": "All your posts, comments and subscriptions will be deleted. This action cannot be undone. Type {keyword} to confirm.",
+    "deleteAccountKeyword": "DELETE",
+    "deleteAccountPlaceholder": "Type DELETE to confirm",
+    "deleteAccountSubmit": "Permanently delete",
+    "deleteAccountCancel": "Cancel",
+    "deleteAccountError": "An error occurred. Please try again.",
+    "toastProfileSaved": "Profile updated",
+    "toastProfileError": "Failed to update profile. Please try again."
   },
   "theme": {
     "changeTheme": "Change theme",
     "amber": "Amber",
     "rose": "Rose",
     "dark": "Dark"
+  },
+  "ui": {
+    "toastClose": "Close notification"
   },
   "errors": {
     "notFoundLabel": "NOT FOUND",

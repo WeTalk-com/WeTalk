@@ -32,7 +32,6 @@ export type Post = {
   /** Le lecteur courant a-t-il liké ce post (état initial du bouton). */
   likedByMe?: boolean;
   comments: number;
-  shares: number;
 };
 
 export type Reply = {

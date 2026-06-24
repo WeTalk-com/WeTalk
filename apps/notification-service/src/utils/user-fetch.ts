@@ -18,3 +18,20 @@ export async function fetchActorInfo(actorId: string, headers?: Record<string, s
     return null;
   }
 }
+
+export async function fetchUserRole(userId: string,headers?: Record<string, string>): Promise<"user" | "moderator" | "admin" | null> {
+  try {
+    const res = await axios.get(`${env.userServiceUrl}/users/${userId}`, {
+      headers,
+      timeout: 3000,
+    });
+    const role = (res.data as { role?: string }).role;
+    return role === "user" || role === "moderator" || role === "admin" ? role : null;
+  } catch (err) {
+    logger.warn("recipient role lookup failed", {
+      userId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}

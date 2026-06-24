@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { LanguageSwitcher } from "@/components/settings/language-switcher";
 import { ThemeSwitcher } from "@/components/settings/theme-switcher";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { DeleteAccountButton } from "@/components/settings/delete-account-button";
 
 export async function generateMetadata({
   params,
@@ -63,6 +64,10 @@ export default function SettingsPage() {
 
         <Section title={t("accountLabel")} description={t("accountDescription")}>
           <LogoutButton />
+        </Section>
+
+        <Section title={t("dangerLabel")} description={t("dangerDescription")}>
+          <DeleteAccountButton />
         </Section>
       </div>
     </main>

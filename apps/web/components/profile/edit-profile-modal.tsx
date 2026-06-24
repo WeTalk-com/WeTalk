@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import * as Dialog from "@radix-ui/react-dialog";
 import { X, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Profile } from "@/lib/types";
 import { updateProfile } from "@/lib/api";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
+import { useToast } from "@/components/ui/toast-provider";
 
 function Field({
   label,
@@ -36,7 +39,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           maxLength={maxLength}
           rows={3}
-          className={`${cls} resize-none`}
+          className={cn(cls, "resize-none")}
         />
       ) : (
         <input
@@ -56,12 +59,13 @@ function Field({
   );
 }
 
-export function EditProfileButton({ profile }: { profile: Profile }) {
+export function EditProfileButton({ profile, autoOpen = false }: { profile: Profile; autoOpen?: boolean }) {
   const t = useTranslations("app.profile");
+  const tSettings = useTranslations("settings");
+  const toast = useToast();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(autoOpen);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: profile.name,
     bio: profile.bio,
@@ -106,22 +110,14 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
 
   const handleClose = useCallback(() => {
     setOpen(false);
-    setError(null);
-    setForm({
-      name: profile.name,
-      bio: profile.bio,
-    });
+    setForm({ name: profile.name, bio: profile.bio });
     resetMedia();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   async function handleSave() {
     setPending(true);
-    setError(null);
     try {
-      // On n'envoie que les champs valides côté backend (displayName ≥ 3,
-      // description ≥ 1). Les champs vides sont omis -> inchangés, ce qui évite
-      // un 400 (cas d'un profil sans bio).
       const displayName = form.name.trim();
       const description = form.bio.trim();
       await updateProfile({
@@ -132,56 +128,41 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
       });
       resetMedia();
       setOpen(false);
+      toast.success(tSettings("toastProfileSaved"));
       router.refresh();
     } catch {
-      setError(t("editError"));
+      toast.error(tSettings("toastProfileError"));
     } finally {
       setPending(false);
     }
   }
 
-  useEffect(() => {
-    if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") handleClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, handleClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
-
   return (
-    <>
-      <Button variant="outline" size="sm" className="mb-1" onClick={() => setOpen(true)}>
-        {t("editProfile")}
-      </Button>
+    <Dialog.Root open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
+      <Dialog.Trigger asChild>
+        <Button variant="outline" size="sm" className="mb-1">
+          {t("editProfile")}
+        </Button>
+      </Dialog.Trigger>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-dark/40 backdrop-blur-sm px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
-        >
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-dark/40 backdrop-blur-sm" />
+        <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="w-full max-w-md rounded-2xl bg-canvas shadow-card">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="font-display text-lg font-bold text-brown">
+              <Dialog.Title className="font-display text-lg font-bold text-brown">
                 {t("editProfileTitle")}
-              </h2>
-              <button
-                type="button"
+              </Dialog.Title>
+              <Dialog.Close
                 aria-label={t("editCancel")}
-                onClick={() => handleClose()}
                 className="grid size-8 place-items-center rounded-full text-brown-sec transition-colors hover:bg-gold/10 hover:text-gold"
               >
                 <X className="size-5" />
-              </button>
+              </Dialog.Close>
             </div>
 
-            {/* Bannière + avatar (Fx10) */}
+            {/* Bannière + avatar */}
             <div className="relative">
               <button
                 type="button"
@@ -191,11 +172,7 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
               >
                 {(bannerPreview ?? profile.bannerUrl) && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={bannerPreview ?? profile.bannerUrl}
-                    alt=""
-                    className="size-full object-cover"
-                  />
+                  <img src={bannerPreview ?? profile.bannerUrl} alt="" className="size-full object-cover" />
                 )}
                 <span className="absolute inset-0 grid place-items-center bg-dark/30 text-canvas opacity-0 transition-opacity group-hover:opacity-100">
                   <Camera className="size-6" />
@@ -208,32 +185,15 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
                 onClick={() => avatarRef.current?.click()}
                 className="group absolute -bottom-8 left-5 rounded-full ring-4 ring-canvas"
               >
-                <Avatar
-                  initial={profile.initial}
-                  src={avatarPreview ?? profile.avatarUrl}
-                  solid
-                  size={72}
-                />
+                <Avatar initial={profile.initial} src={avatarPreview ?? profile.avatarUrl} solid size={72} />
                 <span className="absolute inset-0 grid place-items-center rounded-full bg-dark/30 text-canvas opacity-0 transition-opacity group-hover:opacity-100">
                   <Camera className="size-5" />
                 </span>
               </button>
             </div>
 
-            <input
-              ref={avatarRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={onAvatarChange}
-            />
-            <input
-              ref={bannerRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={onBannerChange}
-            />
+            <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
+            <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={onBannerChange} />
 
             {/* Form */}
             <div className="flex flex-col gap-4 px-5 pb-5 pt-12">
@@ -241,24 +201,16 @@ export function EditProfileButton({ profile }: { profile: Profile }) {
               <Field label={t("editBio")} value={form.bio} onChange={set("bio")} multiline maxLength={160} />
             </div>
 
-            {error && (
-              <p className="px-5 pb-1 text-sm text-live" role="alert">
-                {error}
-              </p>
-            )}
-
             {/* Actions */}
             <div className="flex justify-end gap-3 border-t border-border px-5 py-4">
-              <Button variant="outline" size="sm" onClick={() => handleClose()} disabled={pending}>
-                {t("editCancel")}
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={pending}>
-                {t("editSave")}
-              </Button>
+              <Dialog.Close asChild>
+                <Button variant="outline" size="sm" disabled={pending}>{t("editCancel")}</Button>
+              </Dialog.Close>
+              <Button size="sm" onClick={handleSave} disabled={pending}>{t("editSave")}</Button>
             </div>
           </div>
-        </div>
-      )}
-    </>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

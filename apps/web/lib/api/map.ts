@@ -14,6 +14,9 @@ export type BackendUser = {
   profileBanner?: string | null;
   role?: "user" | "moderator" | "admin";
   createdAt?: string;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
 };
 
 // media attaché à un post
@@ -52,11 +55,13 @@ export function mapPost(p: BackendPost): Post {
   const author: User = p.author
     ? mapUser(p.author)
     : { id: p.authorId, name: "?", handle: "unknown", initial: "?" };
+  // Garantit que createdAt est en UTC — MongoDB peut omettre le suffixe Z.
+  const createdAt = p.createdAt.endsWith("Z") ? p.createdAt : `${p.createdAt}Z`;
   const media = p.media ?? null;
   return {
     id: p._id,
     author,
-    createdAt: p.createdAt,
+    createdAt,
     text: p.content ?? "",
     tags: [],
     likes: p.likeCount,
@@ -66,7 +71,6 @@ export function mapPost(p: BackendPost): Post {
     imageUrl: media?.type === "image" ? media.url : undefined,
     hasVideo: media?.type === "video" || undefined,
     videoUrl: media?.type === "video" ? media.url : undefined,
-    shares: 0,
   };
 }
 
@@ -135,6 +139,10 @@ export function mapProfile(u: BackendUser): Profile {
     location: "",
     bannerUrl: u.profileBanner ?? undefined,
     joined: u.createdAt ? new Date(u.createdAt).getFullYear().toString() : "",
-    stats: { posts: 0, followers: "0", following: 0 },
+    stats: {
+      posts: u.postsCount ?? 0,
+      followers: String(u.followersCount ?? 0),
+      following: u.followingCount ?? 0,
+    },
   };
 }

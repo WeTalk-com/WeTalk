@@ -39,19 +39,6 @@
       "goldenHours": "golden hours",
       "comeBackDaily": "reviennent chaque jour"
     },
-    "marquee": {
-      "heading": "Adoré par les amoureux de la lumière chaude, partout"
-    },
-    "features": {
-      "visualTitle": "Pensé pour les histoires visuelles",
-      "visualText": "Des posts photo plein cadre avec des presets aux tons chauds intégrés.",
-      "discoveryTitle": "Une découverte plus calme",
-      "discoveryText": "Pas de scroll infini. Une curation humaine, triée par chaleur.",
-      "connectionTitle": "De vraies connexions",
-      "connectionText": "Suivez moins, parlez plus. Des commentaires qui ont le goût d'un café.",
-      "ctaHeading": "Venez pour la lumière. Restez pour les gens.",
-      "getStarted": "Commencer"
-    },
     "phone": {
       "sceneHome": "Fil d'accueil",
       "sceneExplore": "Explorer",
@@ -69,39 +56,39 @@
   "auth": {
     "subtitle": "Parlez plus chaleureux · Partagez plus lentement",
     "invalidCredentials": "Identifiants invalides",
-    "emailTaken": "Cet email ou nom d'utilisateur est déjà utilisé",
     "logout": "Se déconnecter",
-    "backToLogin": "Retour à la connexion",
     "toggleLogin": "Se connecter",
     "toggleSignup": "S'inscrire",
-    "methodEmail": "E-mail",
-    "methodPhone": "Téléphone",
     "loginTitle": "Bon retour",
     "loginSubtitle": "Connectez-vous pour reprendre là où vous en étiez.",
     "loginCta": "Se connecter",
     "signupTitle": "Créez votre compte",
     "signupSubtitle": "Rejoignez le côté chaleureux d'internet.",
     "signupCta": "Créer le compte",
-    "forgotTitle": "Réinitialiser le mot de passe",
-    "forgotSubtitle": "Entrez votre e-mail et nous vous enverrons un lien pour vous reconnecter.",
-    "forgotCta": "Envoyer le lien",
-    "nameLabel": "Nom complet",
-    "namePlaceholder": "Jean Dupont",
+    "usernameLabel": "Nom d'utilisateur",
+    "usernamePlaceholder": "ex : matt_dupont",
+    "usernameHint": "3 à 50 caractères, sans espaces",
+    "usernameErrorMin": "Minimum 3 caractères",
+    "usernameErrorSpaces": "Pas d'espaces autorisés",
+    "usernameErrorTaken": "Ce nom d'utilisateur est déjà utilisé",
     "emailLabel": "E-mail",
     "emailPlaceholder": "vous@exemple.com",
-    "phoneLabel": "Téléphone",
-    "phonePlaceholder": "+33 6 12 34 56 78",
+    "emailErrorInvalid": "Adresse e-mail invalide",
+    "emailErrorTaken": "Cet e-mail est déjà utilisé",
     "passwordLabel": "Mot de passe",
+    "passwordHint": "8 caractères minimum",
+    "passwordErrorMin": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordStrengthWeak": "Faible",
+    "passwordStrengthFair": "Moyen",
+    "passwordStrengthStrong": "Fort",
+    "confirmPasswordLabel": "Confirmer le mot de passe",
+    "confirmPasswordError": "Les mots de passe ne correspondent pas",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
-    "rememberMe": "Se souvenir de moi",
-    "forgotPassword": "Mot de passe oublié ?",
     "footerLoginPrompt": "Nouveau sur WeTalk ?",
     "footerCreateAccount": "Créer un compte",
     "footerSignupPrompt": "Vous avez déjà un compte ?",
     "footerLoginLink": "Se connecter",
-    "footerForgotPrompt": "Ça vous revient ?",
-    "footerBackLink": "Retour à la connexion",
     "legal": "En continuant, vous acceptez nos <terms>Conditions</terms> et notre <privacy>Politique de confidentialité</privacy>."
   },
   "app": {
@@ -144,7 +131,9 @@
       "actionLike": "a aimé votre post",
       "actionComment": "a commenté votre post",
       "actionFollow": "a commencé à vous suivre",
-      "actionMention": "vous a mentionné dans un post"
+      "actionMention": "vous a mentionné dans un post",
+      "loading": "Chargement…",
+      "empty": "Aucune notification pour l'instant"
     },
     "profile": {
       "editProfile": "Modifier le profil",
@@ -159,6 +148,10 @@
       "statPosts": "Posts",
       "statFollowers": "Abonnés",
       "statFollowing": "Abonnements",
+      "followListLoading": "Chargement…",
+      "followListEmpty": "Aucun utilisateur",
+      "followListError": "Impossible de charger la liste. Réessayez.",
+      "followListClose": "Fermer",
       "tabPosts": "Posts",
       "tabMedia": "Médias",
       "tabLikes": "J'aime",
@@ -184,11 +177,20 @@
       "video": "Vidéo",
       "more": "Plus d'options",
       "like": "J'aime",
+      "unlike": "Retirer le j'aime",
       "comment": "Commenter",
-      "share": "Partager",
-      "save": "Enregistrer",
       "report": "Signaler",
-      "copyLink": "Copier le lien"
+      "copyLink": "Copier le lien",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "pageTitle": "Post",
+      "backLabel": "Retour",
+      "editPlaceholder": "Modifiez votre post…",
+      "editSave": "Enregistrer",
+      "editCancel": "Annuler",
+      "editError": "Erreur lors de la modification. Réessayez.",
+      "toastEditSaved": "Post modifié",
+      "toastDeleteError": "Suppression du post impossible. Réessayez."
     },
     "messages": {
       "title": "Messages",
@@ -211,7 +213,10 @@
       "close": "Fermer",
       "removeImage": "Supprimer l'image",
       "removeVideo": "Supprimer la vidéo",
-      "charCount": "{count}/{max}"
+      "charCount": "{count}/{max}",
+      "imagePreviewAlt": "Aperçu de l'image",
+      "toastSuccess": "Post publié !",
+      "toastError": "Impossible de publier. Réessayez."
     },
     "comments": {
       "title": "Commentaires",
@@ -223,7 +228,9 @@
       "cancel": "Annuler",
       "send": "Envoyer",
       "reply": "Répondre",
-      "replies": "réponses"
+      "replies": "réponses",
+      "delete": "Supprimer",
+      "deleteError": "Suppression impossible. Réessayez."
     },
     "report": {
       "title": "Signaler",
@@ -238,8 +245,8 @@
       "submit": "Soumettre",
       "cancel": "Annuler",
       "close": "Fermer",
-      "successTitle": "Signalement envoyé",
-      "successText": "Merci, nous allons examiner ça prochainement."
+      "soonTitle": "Bientôt disponible",
+      "soonText": "Le signalement n'est pas encore actif — il arrive très prochainement."
     },
     "admin": {
       "title": "Modération",
@@ -263,13 +270,28 @@
     "themeLabel": "Thème",
     "themeDescription": "Personnalisez l'apparence de WeTalk.",
     "accountLabel": "Compte",
-    "accountDescription": "Gérez votre session."
+    "accountDescription": "Gérez votre session.",
+    "dangerLabel": "Zone de danger",
+    "dangerDescription": "Ces actions sont irréversibles et définitives.",
+    "deleteAccountButton": "Supprimer le compte",
+    "deleteAccountTitle": "Supprimer définitivement votre compte ?",
+    "deleteAccountText": "Tous vos posts, commentaires et abonnements seront supprimés. Cette action est irréversible. Tapez {keyword} pour confirmer.",
+    "deleteAccountKeyword": "SUPPRIMER",
+    "deleteAccountPlaceholder": "Tapez SUPPRIMER pour confirmer",
+    "deleteAccountSubmit": "Supprimer définitivement",
+    "deleteAccountCancel": "Annuler",
+    "deleteAccountError": "Une erreur s'est produite. Réessayez.",
+    "toastProfileSaved": "Profil mis à jour",
+    "toastProfileError": "Impossible de mettre à jour le profil."
   },
   "theme": {
     "changeTheme": "Changer de thème",
     "amber": "Ambre",
     "rose": "Rose",
     "dark": "Sombre"
+  },
+  "ui": {
+    "toastClose": "Fermer la notification"
   },
   "errors": {
     "notFoundLabel": "INTROUVABLE",

@@ -96,6 +96,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_URL: redis://redis:6379
       MEDIA_SERVICE_URL: http://media-service:4004
+      POST_SERVICE_URL: http://post-service:4002
     depends_on:
       postgres:
         condition: service_healthy

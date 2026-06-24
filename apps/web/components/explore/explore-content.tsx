@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as Tabs from "@radix-ui/react-tabs";
 import { TrendingUp, MoreHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -9,12 +10,10 @@ import { PostCard } from "@/components/post/post-card";
 import { UserChip } from "@/components/ui/user-chip";
 import { FollowButton } from "@/components/ui/follow-button";
 
-type Tab = "trending" | "foryou" | "people";
-
 export function ExploreContent({
   posts,
   trending,
-  users,
+  users: initialUsers,
   query = "",
 }: {
   posts: Post[];
@@ -23,9 +22,12 @@ export function ExploreContent({
   query?: string;
 }) {
   const t = useTranslations("app.explore");
-  const [tab, setTab] = useState<Tab>("trending");
+  const [users, setUsers] = useState(initialUsers);
 
-  const q = query.toLowerCase().trim();
+  // Sync avec le serveur quand la prop change (nouveau résultat de recherche)
+  useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
+
+  const q = query.toLowerCase().trim().replace(/^@/, "");
   const filteredPosts = q
     ? posts.filter(
         (p) =>
@@ -41,56 +43,38 @@ export function ExploreContent({
           tp.category.toLowerCase().includes(q),
       )
     : trending;
-  const filteredUsers = q
-    ? users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(q) ||
-          u.handle.toLowerCase().includes(q),
-      )
-    : users;
-
-  const tabs: { key: Tab; label: string }[] = [
+  const tabList = [
     { key: "trending", label: t("tabTrending") },
     { key: "foryou", label: t("tabForYou") },
     { key: "people", label: t("tabPeople") },
-  ];
+  ] as const;
 
   return (
-    <>
-      {/* Onglets style Twitter */}
-      <div className="flex border-b border-border">
-        {tabs.map(({ key, label }) => (
-          <button
+    <Tabs.Root defaultValue="trending">
+      <Tabs.List className="flex border-b border-border">
+        {tabList.map(({ key, label }) => (
+          <Tabs.Trigger
             key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={`flex-1 py-4 text-sm font-semibold transition-colors relative ${
-              tab === key ? "text-brown" : "text-brown-sec hover:text-brown"
-            }`}
+            value={key}
+            className="relative flex-1 py-4 text-sm font-semibold text-brown-sec transition-colors hover:text-brown data-[state=active]:text-brown"
           >
             {label}
-            {tab === key && (
-              <span className="absolute bottom-0 left-1/2 h-0.75 w-12 -translate-x-1/2 rounded-full bg-gold" />
-            )}
-          </button>
+            <span className="absolute bottom-0 left-1/2 h-0.75 w-12 -translate-x-1/2 rounded-full bg-gold opacity-0 transition-opacity data-[state=active]:opacity-100" />
+          </Tabs.Trigger>
         ))}
-      </div>
+      </Tabs.List>
 
       {/* Tendances */}
-      {tab === "trending" && (
+      <Tabs.Content value="trending">
         <ul>
           {filteredTrending.map((topic, i) => (
             <li
               key={topic.tag}
               className="group flex cursor-pointer items-start gap-4 border-b border-border px-5 py-4 transition-colors hover:bg-card last:border-0"
             >
-              <span className="mt-0.5 w-5 shrink-0 text-sm font-bold text-brown-sec">
-                {i + 1}
-              </span>
+              <span className="mt-0.5 w-5 shrink-0 text-sm font-bold text-brown-sec">{i + 1}</span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-brown-sec">
-                  {topic.category} · {t("trending")}
-                </p>
+                <p className="text-xs text-brown-sec">{topic.category} · {t("trending")}</p>
                 <p className="flex items-center gap-1.5 font-bold text-brown">
                   <TrendingUp className="size-4 shrink-0 text-gold" />
                   {topic.tag}
@@ -107,46 +91,35 @@ export function ExploreContent({
             </li>
           ))}
         </ul>
-      )}
+      </Tabs.Content>
 
-      {/* Pour vous — feed de posts */}
-      {tab === "foryou" && (
-        <div className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">
-          {filteredPosts.length > 0 ? (
-            filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
-          ) : (
-            <p className="py-12 text-center text-sm text-brown-sec">
-              {t("noResults", { query })}
-            </p>
-          )}
-        </div>
-      )}
+      {/* Pour vous */}
+      <Tabs.Content value="foryou" className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">
+        {filteredPosts.length > 0
+          ? filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
+          : <p className="py-12 text-center text-sm text-brown-sec">{t("noResults", { query })}</p>}
+      </Tabs.Content>
 
       {/* Personnes */}
-      {tab === "people" && (
+      <Tabs.Content value="people">
         <ul>
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((u) => (
-              <li
-                key={u.id}
-                className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0"
-              >
-                <Link
-                  href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }}
-                  className="min-w-0 flex-1"
-                >
+          {users.length > 0 ? (
+            users.map((u) => (
+              <li key={u.id} className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0">
+                <Link href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }} className="min-w-0 flex-1">
                   <UserChip user={u} />
                 </Link>
-                <FollowButton userId={u.id} />
+                <FollowButton
+                  userId={u.id}
+                  onFollow={() => setUsers((prev) => prev.filter((x) => x.id !== u.id))}
+                />
               </li>
             ))
           ) : (
-            <li className="py-12 text-center text-sm text-brown-sec">
-              {t("noResults", { query })}
-            </li>
+            <li className="py-12 text-center text-sm text-brown-sec">{t("noResults", { query })}</li>
           )}
         </ul>
-      )}
-    </>
+      </Tabs.Content>
+    </Tabs.Root>
   );
 }

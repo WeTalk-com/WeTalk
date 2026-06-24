@@ -186,3 +186,83 @@ flowchart TB
 | **Fx21.** Suspension ou bannissement des utilisateurs | ❌ | ❌ | ✅ | ✅ |
 | **Fx22.** Interface multi-langues | ❌ | ✅ | ✅ | ✅ |
 | **Fx23.** Thème personnalisé | ✅ | ✅ | ✅ | ✅ |
+
+## Endpoints API — état d'intégration front
+
+> Récapitulatif de tous les endpoints consommés par le front (`apps/web/lib/api/`).
+> **Intégré = Oui** : appel `apiFetch` réel vers le back. **Non** : encore en mock / stub `TODO(api)`.
+
+### Auth (`lib/api/auth.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| POST | `/auth/register` | `register` | ✅ Oui |
+| POST | `/auth/login` | `login` | ✅ Oui |
+| POST | `/auth/logout` | `logout` | ✅ Oui |
+| GET | `/auth/me` | `me` | ✅ Oui |
+
+### Users (`lib/api/users.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/users/me` | `getCurrentUser` / `getProfile` | ✅ Oui |
+| GET | `/users/:handle` | `getUserProfile` | ✅ Oui |
+| PATCH | `/users/me` | `updateProfile` | ✅ Oui |
+| DELETE | `/users/me` | `deleteAccount` | ✅ Oui |
+| GET | `/users?search=` | `searchUsers` | ✅ Oui |
+| GET | `/users/:id/followers` | `getFollowers` | ✅ Oui |
+| GET | `/users/:id/following` | `getFollowingList` | ✅ Oui |
+| GET | `/users/:id/following/ids` | `getFollowingIds` | ✅ Oui |
+| POST | `/users/:id/follow` | `followUser` | ✅ Oui |
+| DELETE | `/users/:id/follow` | `unfollowUser` | ✅ Oui |
+
+### Posts & commentaires (`lib/api/posts.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/posts` | `getPosts` | ✅ Oui |
+| GET | `/posts?authorId=` | `getPostsByAuthor` | ✅ Oui |
+| GET | `/posts/feed` | `getFeed` | ✅ Oui |
+| GET | `/posts/:id` | `getPost` | ✅ Oui |
+| POST | `/posts` | `createPost` | ✅ Oui |
+| PATCH | `/posts/:id` | `updatePost` | ✅ Oui |
+| DELETE | `/posts/:id` | `deletePost` | ✅ Oui |
+| POST | `/posts/:id/like` | `likePost` | ✅ Oui |
+| DELETE | `/posts/:id/like` | `unlikePost` | ✅ Oui |
+| GET | `/posts/:id/comments` | `getComments` | ✅ Oui |
+| POST | `/posts/:id/comments` | `createComment` / `createReply` | ✅ Oui |
+| DELETE | `/comments/:id` | `deleteComment` | ✅ Oui |
+| POST | `/comments/:id/like` | `likeComment` | ✅ Oui |
+| DELETE | `/comments/:id/like` | `unlikeComment` | ✅ Oui |
+| POST | `/posts/:id/report` | `reportPost` | ❌ Non (stub `TODO`) |
+
+### Notifications (`lib/api/notifications.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/notifications` | `getNotifications` | ✅ Oui |
+| GET | `/notifications/unread` | `getUnreadCount` | ✅ Oui |
+| PATCH | `/notifications/:id/read` | `markNotificationRead` | ✅ Oui |
+
+### Messages privés (`lib/api/messages.ts`) — Fx17
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/conversations` | `getConversations` | ❌ Non (mock) |
+| POST | `/conversations/:id/messages` | `sendMessage` | ❌ Non (mock) |
+
+### Modération / Admin (`lib/api/admin.ts`) — Fx20/Fx21
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/admin/reports?status=pending` | `getReportedPosts` | ❌ Non (mock) |
+| POST | `/admin/reports/:id/dismiss` | `dismissReport` | ❌ Non (stub) |
+| POST | `/admin/reports/:id/remove` | `removeReportedPost` | ❌ Non (stub) |
+
+### Explore / Tendances (`lib/api/explore.ts`) — Fx13
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/trending` | `getTrending` | ❌ Non (mock) |
+
+**Bilan : 28 endpoints intégrés ✅ · 8 non connectés ❌** (report, messages privés, modération admin, tendances).

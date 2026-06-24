@@ -36,6 +36,9 @@ export const env = {
   // media-service
   mediaServiceUrl: required("MEDIA_SERVICE_URL", "http://media-service:4004"),
 
+  // post-service (pour récupérer le nombre de posts d'un utilisateur)
+  postServiceUrl: required("POST_SERVICE_URL", "http://post-service:4002"),
+
   // notification-service
   notificationServiceUrl: required("NOTIFICATION_SERVICE_URL", "http://notification-service:4003"),
 

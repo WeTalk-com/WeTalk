@@ -10,6 +10,7 @@ import { logger } from "./utils/logger.js";
 import { postRouter } from "./routes/post.routes.js";
 import { commentRouter } from "./routes/comment.routes.js";
 import { tagRouter } from "./routes/tag.routes.js";
+import { adminRouter } from "./routes/admin.routes.js";
 
 export function createApp() {
   const app = express();
@@ -59,6 +60,7 @@ export function createApp() {
   app.use("/posts", postRouter);
   app.use("/comments", commentRouter);
   app.use("/tags", tagRouter);
+  app.use("/admin", adminRouter);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: "Not found" });

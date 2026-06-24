@@ -3,31 +3,39 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { followUser, unfollowUser } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
+import { cn } from "@/lib/cn";
 
 type Props = {
-  /** ID de l'utilisateur à suivre — sera passé à l'API (POST /users/:id/follow). */
   userId: string;
   initialFollowing?: boolean;
   size?: "sm" | "md";
+  onFollow?: () => void;
+  onUnfollow?: () => void;
 };
 
-/**
- * Bouton Suivre / Suivi avec toggle optimiste.
- * En mode mock, l'état est local. Le back-end n'a qu'à brancher onFollow/onUnfollow.
- */
-export function FollowButton({ userId, initialFollowing = false, size = "sm" }: Props) {
+export function FollowButton({ userId, initialFollowing = false, size = "sm", onFollow, onUnfollow }: Props) {
   const t = useTranslations("app.rightRail");
   const [following, setFollowing] = useState(initialFollowing);
   const [hovered, setHovered] = useState(false);
+  const [pending, setPending] = useState(false);
 
-  // Toggle optimiste : on bascule l'UI tout de suite, on revient en arrière si l'API échoue.
   async function toggle() {
+    if (pending) return;
+    setPending(true);
     const next = !following;
     setFollowing(next);
     try {
       await (next ? followUser(userId) : unfollowUser(userId));
-    } catch {
+      if (next) onFollow?.(); else onUnfollow?.();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 400) {
+        // 400 = déjà dans l'état cible — on garde l'UI optimiste.
+        return;
+      }
       setFollowing(!next);
+    } finally {
+      setPending(false);
     }
   }
 
@@ -50,10 +58,11 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm" }: 
       type="button"
       aria-pressed={following}
       aria-label={label}
+      disabled={pending}
       onClick={toggle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`shrink-0 rounded-full font-semibold transition-colors ${sizeClass} ${colorClass}`}
+      className={cn("shrink-0 rounded-full font-semibold transition-colors disabled:opacity-60", sizeClass, colorClass)}
     >
       {label}
     </button>

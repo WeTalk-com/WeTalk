@@ -17,9 +17,7 @@ export default function NotificationsPage() {
     try {
       const data = await getNotifications();
       setNotifications(data);
-    } catch {
-      // Keep empty list on error
-    } finally {
+    } catch { /* silent */ } finally {
       setLoading(false);
     }
   }, []);
@@ -48,9 +46,7 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
-    } catch {
-      // ignore
-    }
+    } catch { /* silent */ }
   }
 
   return (
@@ -65,22 +61,23 @@ export default function NotificationsPage() {
 
       {loading ? (
         <div className="flex justify-center py-12 text-brown-sec">
-          Loading...
+          {t("loading")}
         </div>
       ) : notifications.length === 0 ? (
         <div className="flex justify-center py-12 text-brown-sec">
-          No notifications yet
+          {t("empty")}
         </div>
       ) : (
         <ul className="pb-24 lg:pb-10">
           {notifications.map((n) => (
-            <div
+            <button
               key={n.id}
+              type="button"
               onClick={() => !n.read && handleMarkRead(n.id)}
-              className={n.read ? "" : "cursor-pointer"}
+              className="w-full text-left"
             >
               <NotificationItem notification={n} />
-            </div>
+            </button>
           ))}
         </ul>
       )}
