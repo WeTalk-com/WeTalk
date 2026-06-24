@@ -114,6 +114,36 @@ services:
       retries: 5
       start_period: 20s
 
+  message-service:
+    build:
+      context: .
+      dockerfile: apps/message-service/Dockerfile
+    container_name: wetalk-message-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: 4004
+      USER_SERVICE_URL: http://user-service:4001
+      MONGO_URI: ${MONGO_URI_MESSAGE}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks:
+      - wetalk-net
+    expose:
+      - "4004"
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4004/health',r=>process.exit(r.statusCode<300?0:1)).on('error',()=>process.exit(1))" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
   post-service:
     build:
       context: .
