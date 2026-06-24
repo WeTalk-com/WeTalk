@@ -16,7 +16,7 @@ import {logger} from "../utils/logger.js";
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function notifyFollow(followerId: string, followingId: string, forwardHeaders: Record<string, string>): Promise<void> {
+async function notifyFollow(followingId: string, forwardHeaders: Record<string, string>): Promise<void> {
   try {
     await fetch(`${env.notificationServiceUrl}/notifications/internal`, {
       method: "POST",
@@ -51,10 +51,7 @@ class MediaUploadError extends Error {
 }
 
 // Relaie une image de profil au media-service (pattern proxy)
-async function uploadImageToMediaService(
-	file: Express.Multer.File,
-	headers: Record<string, string>,
-): Promise<{ id: string; url: string }> {
+async function uploadImageToMediaService(file: Express.Multer.File, headers: Record<string, string>): Promise<{ id: string; url: string }> {
 	const form = new FormData();
 	form.append("file", new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname);
 	const res = await fetch(`${env.mediaServiceUrl}/media`, {
@@ -340,20 +337,22 @@ export async function follow(req: Request, res: Response): Promise<void> {
       res.status(404).json({ error: "Utilisateur cible introuvable." });
       return;
     }
-
-		const [, created] = await Follow.findOrCreate({
-			where: { followerId: myId, followingId: targetId }
-		});
+	
+    const [_, created] = await Follow.findOrCreate({
+      where: { followerId: myId, followingId: targetId }
+    });
 
     if (!created) {
       res.status(400).json({ error: "Vous suivez déjà cet utilisateur." });
       return;
     }
 
-    notifyFollow(myId, targetId, forwardAuth(req));
-
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
-	} catch {
+
+    // Best-effort notification; don't block the follow response.
+    void notifyFollow(targetId, forwardAuth(req));
+	} catch (error) {
+	  logger.error((error as Error).message);
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}
 }
@@ -448,7 +447,8 @@ export async function followingIds(req: Request, res: Response): Promise<void> {
 			limit: 5000,
 		});
 		res.json({ ids: rows.map((r) => r.get("followingId") as string) });
-	} catch {
+	} catch (error) {
+		logger.error((error as Error).message);
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
 }
