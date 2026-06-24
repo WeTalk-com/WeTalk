@@ -162,7 +162,9 @@
       "postsEmpty": "Aucun post pour l'instant.",
       "mediaEmpty": "Aucun média pour l'instant.",
       "likesEmpty": "Aucun j'aime pour l'instant.",
-      "commentsEmpty": "Aucun commentaire pour l'instant."
+      "commentsEmpty": "Aucun commentaire pour l'instant.",
+      "bannedTitle": "Compte banni",
+      "bannedText": "Ce compte a été banni de WeTalk."
     },
     "rightRail": {
       "whoToFollow": "À suivre",

@@ -162,7 +162,9 @@
       "postsEmpty": "No posts yet.",
       "mediaEmpty": "No media yet.",
       "likesEmpty": "No likes yet.",
-      "commentsEmpty": "No comments yet."
+      "commentsEmpty": "No comments yet.",
+      "bannedTitle": "Account banned",
+      "bannedText": "This account has been suspended from WeTalk."
     },
     "rightRail": {
       "whoToFollow": "Who to follow",

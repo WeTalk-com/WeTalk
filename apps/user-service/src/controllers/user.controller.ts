@@ -154,11 +154,12 @@ function publicUser(user: User, includeModeration = false) {
 		role: user.role,
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
+		// Toujours exposé : le front en a besoin pour afficher l'état banni sur le profil.
+		isBanned: user.isBanned,
 	};
 	if (!includeModeration) return base;
 	return {
 		...base,
-		isBanned: user.isBanned,
 		isSuspended: isSuspended(user),
 		suspendedUntil: isSuspended(user) ? user.suspendedUntil : null,
 	};
@@ -204,10 +205,12 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 	}
 
 	// Recherche (Fx13) : match partiel insensible à la casse sur username + displayName.
-	let where: WhereOptions | undefined;
+	// Les bannis sont toujours exclus des suggestions/résultats de recherche.
+	let where: WhereOptions = { isBanned: false };
 	if (search) {
 		const pattern = `%${escapeLike(search)}%`;
 		where = {
+			isBanned: false,
 			[Op.or]: [
 				{ username: { [Op.iLike]: pattern } },
 				{ displayName: { [Op.iLike]: pattern } },
@@ -216,7 +219,7 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 	}
 
 	const users = await User.findAll({
-		...(where && { where }),
+		where,
 		limit,
 		...(cursor !== undefined && { offset: cursor }),
 		order: [
