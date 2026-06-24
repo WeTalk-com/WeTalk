@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyAccessToken, type JwtPayload } from "../utils/jwt.js";
+import { verifyAccessToken, type JwtPayload, type UserRole } from "../utils/jwt.js";
 import { logger } from "../utils/logger.js";
 
 declare global {
@@ -35,4 +35,19 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     res.status(401).json({ error: "Invalid or expired token" });
     return;
   }
+}
+
+// Autorise seulement les rôles passés en params
+export function requireRole(...roles: UserRole[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    if (!roles.includes(req.user.role)) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+    next();
+  };
 }
