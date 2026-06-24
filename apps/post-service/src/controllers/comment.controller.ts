@@ -135,7 +135,9 @@ export async function deleteComment(req: Request, res: Response): Promise<void> 
     res.status(404).json({ error: "Comment not found" });
     return;
   }
-  if (comment.authorId !== req.user!.sub) {
+  // Auteur, ou modérateur/admin (modération de contenu, Fx20).
+  const role = req.user!.role;
+  if (comment.authorId !== req.user!.sub && role !== "moderator" && role !== "admin") {
     res.status(403).json({ error: "Forbidden" });
     return;
   }

@@ -3,6 +3,7 @@ import multer from "multer";
 import { requireAuth } from "../middleware/auth.js";
 import { createPost, listPosts, feed, getPost, updatePost, deletePost, likePost, unlikePost } from "../controllers/post.controller.js";
 import { createComment, listComments } from "../controllers/comment.controller.js";
+import { createReport } from "../controllers/report.controller.js";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 52428800, files: 1 } });
 
@@ -18,3 +19,4 @@ postRouter.post("/:id/like", requireAuth, likePost);
 postRouter.delete("/:id/like", requireAuth, unlikePost);
 postRouter.post("/:id/comments", requireAuth, createComment);
 postRouter.get("/:id/comments", requireAuth, listComments);
+postRouter.post("/:id/report", requireAuth, createReport);
