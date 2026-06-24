@@ -14,8 +14,8 @@ export async function getProfile(): Promise<Profile> {
 }
 
 /** Profil public d'un utilisateur par handle (username) ou id. */
-export async function getUserProfile(handle: string): Promise<Profile> {
-  return mapProfile(await apiFetch<BackendUser>(`/users/${encodeURIComponent(handle)}`));
+export async function getUserProfile(handle: string, silent = false): Promise<Profile> {
+  return mapProfile(await apiFetch<BackendUser>(`/users/${encodeURIComponent(handle)}`, { silent }));
 }
 
 /** IDs des utilisateurs suivis par `userId`. */

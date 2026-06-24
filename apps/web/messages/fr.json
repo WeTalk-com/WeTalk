@@ -230,6 +230,9 @@
       "reply": "Répondre",
       "replies": "réponses",
       "delete": "Supprimer",
+      "edit": "Modifier",
+      "editSave": "Enregistrer",
+      "editError": "Erreur lors de la modification. Réessayez.",
       "deleteError": "Suppression impossible. Réessayez."
     },
     "report": {

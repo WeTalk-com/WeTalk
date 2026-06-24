@@ -230,6 +230,9 @@
       "reply": "Reply",
       "replies": "replies",
       "delete": "Delete",
+      "edit": "Edit",
+      "editSave": "Save",
+      "editError": "Failed to save changes. Please try again.",
       "deleteError": "Couldn't delete. Please try again."
     },
     "report": {

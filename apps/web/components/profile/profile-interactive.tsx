@@ -81,7 +81,7 @@ export function ProfileInteractive({
         <p className="text-brown-sec">@{profile.handle}</p>
       </div>
 
-      <p className="mt-3 text-brown">{profile.bio}</p>
+      {profile.bio && <p className="mt-3 text-brown">{profile.bio}</p>}
 
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-brown-sec">
         {profile.location && (

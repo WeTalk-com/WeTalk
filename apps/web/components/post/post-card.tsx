@@ -3,18 +3,15 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon, Trash2, Pencil } from "lucide-react";
+import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon, Trash2 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
-import { CommentThread } from "./comment-thread";
 import { ReportModal } from "./report-modal";
-import { getComments, deletePost, updatePost } from "@/lib/api";
+import { deletePost } from "@/lib/api";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
-import type { Post, Comment } from "@/lib/types";
-import { cn } from "@/lib/cn";
-import { useToast } from "@/components/ui/toast-provider";
+import type { Post } from "@/lib/types";
 import { UserHoverCard } from "@/components/ui/user-hover-card";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
@@ -35,14 +32,12 @@ function PostMenu({
   locale,
   isOwner,
   onReport,
-  onEdit,
   onDelete,
 }: {
   postId: string;
   locale: string;
   isOwner: boolean;
   onReport: () => void;
-  onEdit: () => void;
   onDelete: () => void;
 }) {
   const t = useTranslations("app.post");
@@ -80,22 +75,13 @@ function PostMenu({
           </DropdownMenu.Item>
 
           {isOwner ? (
-            <>
-              <DropdownMenu.Item
-                onSelect={onEdit}
-                className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-brown outline-none hover:bg-canvas data-[highlighted]:bg-canvas"
-              >
-                <Pencil className="size-4 text-brown-sec" />
-                {t("edit")}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                onSelect={onDelete}
-                className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none hover:bg-live/5 data-[highlighted]:bg-live/5"
-              >
-                <Trash2 className="size-4" />
-                {t("delete")}
-              </DropdownMenu.Item>
-            </>
+            <DropdownMenu.Item
+              onSelect={onDelete}
+              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none hover:bg-live/5 data-[highlighted]:bg-live/5"
+            >
+              <Trash2 className="size-4" />
+              {t("delete")}
+            </DropdownMenu.Item>
           ) : (
             <DropdownMenu.Item
               onSelect={onReport}
@@ -117,73 +103,25 @@ export function PostCard({ post }: { post: Post }) {
   const locale = useLocale();
   const router = useRouter();
   const currentUserId = useCurrentUserId();
-  const toast = useToast();
   const isOwner = currentUserId === author.id;
 
-  const MAX_CHARS = 280;
-
   const [showReport, setShowReport] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<Comment[] | null>(null);
-  const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentCount, setCommentCount] = useState(post.comments);
-  const [currentText, setCurrentText] = useState(post.text);
-  const [editing, setEditing] = useState(false);
-  const [editText, setEditText] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [editError, setEditError] = useState(false);
-
-  async function openComments() {
-    setShowComments(true);
-    if (comments === null) {
-      setCommentsLoading(true);
-      try {
-        const data = await getComments(post.id);
-        setComments(data);
-      } finally {
-        setCommentsLoading(false);
-      }
-    }
-  }
-
-  function handleStartEdit() {
-    setEditText(currentText);
-    setEditError(false);
-    setEditing(true);
-  }
-
-  async function handleSaveEdit() {
-    const trimmed = editText.trim();
-    if (!trimmed || trimmed === currentText) {
-      setEditing(false);
-      return;
-    }
-    setSaving(true);
-    setEditError(false);
-    try {
-      await updatePost(post.id, trimmed);
-      setCurrentText(trimmed);
-      setEditing(false);
-      toast.success(t("toastEditSaved"));
-    } catch {
-      setEditError(true);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleDelete() {
     try {
       await deletePost(post.id);
       router.refresh();
     } catch {
-      toast.error(t("toastDeleteError"));
+      // silent — backend returns 403 if not author
     }
   }
 
   function handleCardClick(e: React.MouseEvent<HTMLElement>) {
-    // Ne pas naviguer si le clic provient d'un bouton, d'un lien ou du menu contextuel.
-    if ((e.target as HTMLElement).closest("a, button, textarea, [role='menu']")) return;
+    if ((e.target as HTMLElement).closest("a, button, [role='menu']")) return;
+    router.push({ pathname: "/posts/[id]", params: { id: post.id } });
+  }
+
+  function handleComment() {
     router.push({ pathname: "/posts/[id]", params: { id: post.id } });
   }
 
@@ -193,7 +131,6 @@ export function PostCard({ post }: { post: Post }) {
         onClick={handleCardClick}
         className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-canvas/60"
       >
-        {/* En-tête */}
         <div className="flex items-center gap-3">
           <UserHoverCard handle={author.handle}>
             <Link
@@ -208,58 +145,15 @@ export function PostCard({ post }: { post: Post }) {
             postId={post.id}
             locale={locale}
             isOwner={isOwner}
-            onEdit={handleStartEdit}
             onDelete={handleDelete}
             onReport={() => setShowReport(true)}
           />
         </div>
 
-        {/* Texte / Mode édition */}
         <div className="mt-3">
-          {editing ? (
-            <div>
-              <textarea
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                maxLength={MAX_CHARS}
-                rows={3}
-                autoFocus
-                className="w-full resize-none rounded-xl border border-border bg-canvas px-3 py-2 text-sm text-brown placeholder:text-brown-sec/60 focus:outline-none focus:ring-2 focus:ring-gold/40"
-                placeholder={t("editPlaceholder")}
-              />
-              <div className="mt-1 flex items-center justify-between">
-                <span className={cn("text-xs", editText.length >= MAX_CHARS ? "text-live" : "text-brown-sec")}>
-                  {editText.length}/{MAX_CHARS}
-                </span>
-                {editError && (
-                  <span className="text-xs text-live">{t("editError")}</span>
-                )}
-              </div>
-              <div className="mt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditing(false)}
-                  disabled={saving}
-                  className="rounded-full px-4 py-1.5 text-sm text-brown-sec hover:bg-canvas disabled:opacity-50"
-                >
-                  {t("editCancel")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  disabled={saving || !editText.trim() || editText.length > MAX_CHARS}
-                  className="rounded-full bg-brown px-4 py-1.5 text-sm font-semibold text-canvas hover:bg-brown/90 disabled:opacity-50"
-                >
-                  {t("editSave")}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <PostText text={currentText} tags={post.tags} />
-          )}
+          <PostText text={post.text} tags={post.tags} />
         </div>
 
-        {/* Image (Fx18) — réelle si URL, sinon placeholder design (mocks) */}
         {post.imageUrl ? (
           <div className="mt-3 overflow-hidden rounded-xl border border-border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -280,7 +174,6 @@ export function PostCard({ post }: { post: Post }) {
           )
         )}
 
-        {/* Vidéo (Fx19) — réelle si URL, sinon placeholder design (mocks) */}
         {post.videoUrl ? (
           <div className="mt-3 overflow-hidden rounded-xl border border-border">
             <video
@@ -300,28 +193,16 @@ export function PostCard({ post }: { post: Post }) {
           )
         )}
 
-        {/* Actions */}
         <div className="mt-4">
           <PostActions
             postId={post.id}
             likes={post.likes}
             likedByMe={post.likedByMe}
-            comments={commentCount}
-            onComment={openComments}
+            comments={post.comments}
+            onComment={handleComment}
           />
         </div>
       </article>
-
-      {showComments && (
-        <CommentThread
-          postId={post.id}
-          initialComments={comments ?? []}
-          loading={commentsLoading}
-          onClose={() => setShowComments(false)}
-          onCommentAdded={() => setCommentCount((c) => c + 1)}
-          onCommentDeleted={() => setCommentCount((c) => Math.max(0, c - 1))}
-        />
-      )}
 
       {showReport && (
         <ReportModal postId={post.id} onClose={() => setShowReport(false)} />

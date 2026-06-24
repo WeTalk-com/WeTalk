@@ -36,7 +36,14 @@ export default async function UserProfilePage({
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
       <TopBar />
 
-      <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
+      {profile.bannerUrl ? (
+        <div className="h-40 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={profile.bannerUrl} alt="" className="size-full object-cover" />
+        </div>
+      ) : (
+        <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
+      )}
 
       <ProfileInteractive
         profile={profile}
