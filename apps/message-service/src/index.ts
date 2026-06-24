@@ -37,20 +37,40 @@ async function main(): Promise<void> {
 	
 	// 3. Gestion des connexions WebSockets
 	io.on("connection", (socket) => {
-		logger.info(`Un utilisateur s'est connecté : ${socket.id}`);
+		// L'identité vient TOUJOURS du token vérifié (socketRequireAuth), jamais du client.
+		const senderId = socket.user?.sub;
+		if (!senderId) {
+			socket.disconnect(true);
+			return;
+		}
 
-		// Étape A : L'utilisateur s'identifie et rejoint sa propre "room" privée
-		socket.on("join_private_room", (userId) => {
-			socket.join(userId);
-			logger.info(`Utilisateur ${userId} a rejoint sa room privée.`);
-		});
+		logger.info(`Un utilisateur s'est connecté : ${socket.id} (${senderId})`);
 
-		// Étape B : Écouter quand un utilisateur envoie un message privé
+		// L'utilisateur rejoint automatiquement sa propre room privée (= son UUID).
+		// Aucun paramètre client : on ne peut pas rejoindre la room d'autrui.
+		socket.join(senderId);
+		logger.info(`Utilisateur ${senderId} a rejoint sa room privée.`);
+
+		// Écouter quand un utilisateur envoie un message privé
 		socket.on("send_private_message", async (data) => {
-			const { senderId, receiverId, content } = data;
+			const receiverId = data?.receiverId as string | undefined;
+			const content = typeof data?.content === "string" ? data.content.trim() : "";
+
+			if (!receiverId || !content) {
+				socket.emit("message_error", { error: "Destinataire et contenu requis" });
+				return;
+			}
+			if (content.length > 1000) {
+				socket.emit("message_error", { error: "Message trop long" });
+				return;
+			}
+			if (receiverId === senderId) {
+				socket.emit("message_error", { error: "Vous ne pouvez pas vous envoyer un message à vous-même" });
+				return;
+			}
 
 			try {
-				// 1. Sauvegarde instantanée dans MongoDB en tâche de fond
+				// 1. Sauvegarde instantanée dans MongoDB
 				const newMessage = await Message.create({
 					senderId,
 					receiverId,
@@ -61,7 +81,7 @@ async function main(): Promise<void> {
 				// On cible uniquement la room qui porte l'UUID du destinataire
 				io.to(receiverId).emit("receive_private_message", newMessage);
 
-				// 3. Optionnel : On renvoie une confirmation à l'expéditeur
+				// 3. Confirmation à l'expéditeur
 				// (utile pour accuser réception ou synchroniser plusieurs onglets ouverts)
 				socket.emit("message_sent_success", newMessage);
 

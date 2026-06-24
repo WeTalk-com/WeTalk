@@ -1,4 +1,4 @@
-import jwt, { type SignOptions } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import type { UserRole } from "../models/user.js";
 
@@ -7,25 +7,9 @@ export interface JwtPayload {
 	role: UserRole;
 }
 
-// Le refresh token porte un jti (identifiant unique) pour la rotation / révocation via Redis.
-export interface RefreshPayload extends JwtPayload {
-	jti: string;
-}
-
-export function signAccessToken(payload: JwtPayload): string {
-	return jwt.sign(payload, env.jwtAccessSecret, {
-		expiresIn: env.jwtAccessExpiresIn,
-	} as SignOptions);
-}
-
-export function signRefreshToken(payload: RefreshPayload): string {
-	return jwt.sign(payload, env.jwtRefreshSecret, {
-		expiresIn: env.refreshTtlSeconds,
-	} as SignOptions);
-}
-
+// Le message-service ne fait que vérifier l'access token (secret partagé entre
+// services). L'émission des tokens et le refresh sont la responsabilité d'auth-service.
 export function verifyAccessToken(token: string): JwtPayload {
-	// return jwt.verify(token, env.jwtAccessSecret) as JwtPayload;
 	const decoded = jwt.verify(token, env.jwtAccessSecret);
 	if (
 		!decoded ||
@@ -36,19 +20,4 @@ export function verifyAccessToken(token: string): JwtPayload {
 		throw new Error("Invalid access token payload");
 	}
 	return { sub: decoded.sub, role: decoded.role };
-}
-
-export function verifyRefreshToken(token: string): RefreshPayload {
-	// return jwt.verify(token, env.jwtRefreshSecret) as RefreshPayload;
-	const decoded = jwt.verify(token, env.jwtRefreshSecret);
-	if (
-		!decoded ||
-		typeof decoded !== "object" ||
-		typeof decoded.sub !== "string" ||
-		!["user", "moderator", "admin"].includes(decoded.role) ||
-		typeof decoded.jti !== "string"
-	) {
-		throw new Error("Invalid refresh token payload");
-	}
-	return { sub: decoded.sub, role: decoded.role, jti: decoded.jti };
 }

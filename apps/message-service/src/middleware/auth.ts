@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { type JwtPayload, verifyAccessToken } from "../utils/jwt.js";
 import { logger } from "../utils/logger.js";
-import type { UserRole } from "../models/user.js";
 import { isAccessBanned } from "../utils/banStore.js";
 import type { DefaultEventsMap, ExtendedError, Socket } from "socket.io";
 
@@ -11,6 +10,13 @@ declare global {
 		interface Request {
 			user?: JwtPayload;
 		}
+	}
+}
+
+// Expose l'utilisateur authentifié sur le socket (rempli par socketRequireAuth).
+declare module "socket.io" {
+	interface Socket {
+		user?: JwtPayload;
 	}
 }
 
@@ -51,21 +57,6 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 	next();
 }
 
-// RBAC : à chaîner après requireAuth. Autorise seulement les rôles listés.
-export function requireRole(...roles: UserRole[]) {
-	return (req: Request, res: Response, next: NextFunction): void => {
-		if (!req.user) {
-			res.status(401).json({ error: "Unauthorized" });
-			return;
-		}
-		if (!roles.includes(req.user.role)) {
-			res.status(403).json({ error: "Forbidden" });
-			return;
-		}
-		next();
-	};
-}
-
 export function socketRequireAuth() {
 	return (socket: Socket<DefaultEventsMap, DefaultEventsMap>, next: (err?: ExtendedError | undefined) => void) => {
 		const token = socket.handshake.auth?.token;
@@ -75,7 +66,6 @@ export function socketRequireAuth() {
 		}
 		
 		try {
-			// @ts-expect-error Simple ajout de propriété par un middleware
 			socket.user = verifyAccessToken(token);
 			return next();
 		} catch (err) {

@@ -7,28 +7,11 @@ import type { Conversation, User } from "../schemas/types.js";
 
 function publicUser(user: User): { id: string; name: string; handle: string; initial: string; verified: boolean; } {
 	return  {
-		id: "u1",
+		id: user.id,
 		name: user.displayName || user.username,
 		handle: user.username,
 		initial: (user.displayName || user.username).substring(0, 1).toUpperCase(),
 		verified: false
-	};
-}
-
-function msgDateDiff(msgDate: Date) {
-	const diff = Math.abs(Date.now() - msgDate.getTime());
-	const seconds = Math.floor(diff / 1000);
-	const minutes = Math.floor(seconds / 60);
-	const hours = Math.floor(minutes / 60);
-	const days = Math.floor(hours / 24);
-	const years = Math.floor(days / 365);
-	
-	return {
-		seconds,
-		minutes,
-		hours,
-		days,
-		years,
 	};
 }
 
@@ -48,8 +31,13 @@ export async function getConversationList(req: Request, res: Response) {
 			.sort({ createdAt: -1 });
 			// .limit(limit);
 
+		// L'interlocuteur est l'autre participant : si je suis l'expéditeur,
+		// c'est le destinataire, sinon c'est l'expéditeur. On déduplique en
+		// gardant l'ordre (messages déjà triés du plus récent au plus ancien).
+		const others = conversations.map(o => (o.senderId === myId ? o.receiverId : o.senderId));
+
 		res.json({
-			data: [...new Set(conversations.map(o => o.receiverId))],
+			data: [...new Set(others)],
 		});
 	} catch (e) {
 		logger.error((e as Error).message);
@@ -181,6 +169,24 @@ export async function sendMessage(req: Request, res: Response){
 	}
 }
 
+export async function markConversationRead(req: Request, res: Response) {
+	try {
+		const myId = req.user!.sub as string;
+		const targetId = req.params.id as string;
+
+		// On ne marque comme lus que les messages reçus de l'interlocuteur.
+		const result = await Message.updateMany(
+			{ senderId: targetId, receiverId: myId, isRead: false },
+			{ $set: { isRead: true } }
+		);
+
+		res.json({ message: "Conversation marquée comme lue.", modified: result.modifiedCount });
+	} catch (e) {
+		logger.error((e as Error).message);
+		res.status(500).json({ error: "Erreur lors du marquage de la conversation comme lue." });
+	}
+}
+
 export async function deleteConversation(req: Request, res: Response) {
 	try {
 		const myId = req.user!.sub as string;
@@ -191,8 +197,10 @@ export async function deleteConversation(req: Request, res: Response) {
 		}
 
 		await Message.deleteMany({
-			senderId: myId,
-			receiverId: targetId,
+			$or: [
+				{ senderId: myId, receiverId: targetId },
+				{ senderId: targetId, receiverId: myId },
+			],
 		});
 
 		res.json({ message: "Conversation supprimée." });
