@@ -1,16 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import * as Tabs from "@radix-ui/react-tabs";
 import { useTranslations } from "next-intl";
 import type { Post } from "@/lib/types";
 import { PostCard } from "@/components/post/post-card";
 import { Heart } from "lucide-react";
 
-type Tab = "posts" | "likes";
-
-type Props = {
-  posts: Post[];
-};
+type Props = { posts: Post[] };
 
 function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
@@ -23,48 +19,32 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 export function ProfileTabs({ posts }: Props) {
   const t = useTranslations("app.profile");
-  const [active, setActive] = useState<Tab>("posts");
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "posts", label: t("tabPosts") },
-    { key: "likes", label: t("tabLikes") },
-  ];
 
   return (
-    <>
-      {/* Onglets */}
-      <div className="mt-5 flex border-b border-border">
-        {tabs.map(({ key, label }) => (
-          <button
+    <Tabs.Root defaultValue="posts" className="mt-5">
+      <Tabs.List className="flex border-b border-border">
+        {([["posts", t("tabPosts")], ["likes", t("tabLikes")]] as const).map(([key, label]) => (
+          <Tabs.Trigger
             key={key}
-            type="button"
-            onClick={() => setActive(key)}
-            aria-pressed={active === key}
-            className={`flex-1 pb-3 text-sm font-semibold transition-colors relative ${
-              active === key ? "text-brown" : "text-brown-sec hover:text-brown"
-            }`}
+            value={key}
+            className="relative flex-1 pb-3 text-sm font-semibold text-brown-sec transition-colors hover:text-brown data-[state=active]:text-brown"
           >
             {label}
-            {active === key && (
-              <span className="absolute bottom-0 left-1/2 h-0.75 w-10 -translate-x-1/2 rounded-full bg-gold" />
-            )}
-          </button>
+            <span className="absolute bottom-0 left-1/2 h-0.75 w-10 -translate-x-1/2 rounded-full bg-gold opacity-0 transition-opacity data-[state=active]:opacity-100" />
+          </Tabs.Trigger>
         ))}
-      </div>
+      </Tabs.List>
 
-      {/* Contenu */}
-      <div className="flex flex-col gap-5 px-4 pb-24 pt-5 lg:pb-10">
-        {active === "posts" && (
-          posts.length > 0
-            ? posts.map((post) => <PostCard key={post.id} post={post} />)
-            : <EmptyState icon={<Heart className="size-10" />} text={t("postsEmpty")} />
-        )}
+      <Tabs.Content value="posts" className="flex flex-col gap-5 px-4 pb-24 pt-5 lg:pb-10">
+        {posts.length > 0
+          ? posts.map((post) => <PostCard key={post.id} post={post} />)
+          : <EmptyState icon={<Heart className="size-10" />} text={t("postsEmpty")} />}
+      </Tabs.Content>
 
-        {active === "likes" && (
-          /* TODO(api): charger les posts likés via GET /me/likes */
-          <EmptyState icon={<Heart className="size-10" />} text={t("likesEmpty")} />
-        )}
-      </div>
-    </>
+      <Tabs.Content value="likes" className="flex flex-col gap-5 px-4 pb-24 pt-5 lg:pb-10">
+        {/* TODO(api): charger les posts likés via GET /me/likes */}
+        <EmptyState icon={<Heart className="size-10" />} text={t("likesEmpty")} />
+      </Tabs.Content>
+    </Tabs.Root>
   );
 }

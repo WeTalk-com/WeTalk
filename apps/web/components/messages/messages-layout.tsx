@@ -8,6 +8,7 @@ import { sendMessage } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 import { Avatar } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/icons/brand";
+import { cn } from "@/lib/cn";
 
 function ConversationRow({
   conv,
@@ -24,9 +25,10 @@ function ConversationRow({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card ${
-        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : ""
-      }`}
+      className={cn(
+        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card",
+        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : "",
+      )}
     >
       <div className="relative shrink-0">
         <Avatar initial={conv.user.initial} size={44} />
@@ -44,7 +46,7 @@ function ConversationRow({
           </span>
           <span className="shrink-0 text-xs text-brown-sec">{formatTimeAgo(conv.lastMessageAt, locale)}</span>
         </div>
-        <p className={`truncate text-sm ${(conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec"}`}>
+        <p className={cn("truncate text-sm", (conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec")}>
           {conv.lastMessage}
         </p>
       </div>
@@ -81,9 +83,7 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
     <div className="flex min-h-0 flex-1">
       {/* Liste des conversations */}
       <div
-        className={`flex w-full flex-col border-r border-border lg:w-85 lg:shrink-0 ${
-          mobileShowChat ? "hidden lg:flex" : "flex"
-        }`}
+        className={cn("flex w-full flex-col border-r border-border lg:w-85 lg:shrink-0", mobileShowChat ? "hidden lg:flex" : "flex")}
       >
         <div className="border-b border-border px-5 py-4">
           <h1 className="font-display text-2xl font-bold text-brown">{t("title")}</h1>
@@ -103,9 +103,7 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
 
       {/* Zone de chat */}
       <div
-        className={`flex min-w-0 flex-1 flex-col ${
-          mobileShowChat ? "flex" : "hidden lg:flex"
-        }`}
+        className={cn("flex min-w-0 flex-1 flex-col", mobileShowChat ? "flex" : "hidden lg:flex")}
       >
         {selected ? (
           <>
@@ -134,17 +132,16 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
               {selected.messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${msg.mine ? "justify-end" : "justify-start"}`}
+                  className={cn("flex", msg.mine ? "justify-end" : "justify-start")}
                 >
                   <div
-                    className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                      msg.mine
-                        ? "rounded-br-sm bg-gold text-white"
-                        : "rounded-bl-sm bg-card text-brown"
-                    }`}
+                    className={cn(
+                      "max-w-[72%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      msg.mine ? "rounded-br-sm bg-gold text-white" : "rounded-bl-sm bg-card text-brown",
+                    )}
                   >
                     {msg.text}
-                    <span className={`mt-1 block text-[10px] ${msg.mine ? "text-white/70" : "text-brown-sec"}`}>
+                    <span className={cn("mt-1 block text-[10px]", msg.mine ? "text-white/70" : "text-brown-sec")}>
                       {formatTimeAgo(msg.createdAt, locale)}
                     </span>
                   </div>

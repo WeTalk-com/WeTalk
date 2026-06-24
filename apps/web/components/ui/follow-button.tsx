@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { followUser, unfollowUser } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { cn } from "@/lib/cn";
 
 type Props = {
   userId: string;
@@ -61,7 +62,7 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
       onClick={toggle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`shrink-0 rounded-full font-semibold transition-colors disabled:opacity-60 ${sizeClass} ${colorClass}`}
+      className={cn("shrink-0 rounded-full font-semibold transition-colors disabled:opacity-60", sizeClass, colorClass)}
     >
       {label}
     </button>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Heart, MessageCircle } from "lucide-react";
 import { likePost, unlikePost } from "@/lib/api";
+import { cn } from "@/lib/cn";
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
@@ -62,9 +63,9 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
         onClick={toggleLike}
         aria-pressed={liked}
         aria-label={t("like")}
-        className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? "text-live" : "hover:text-live"}`}
+        className={cn("flex items-center gap-1.5 text-sm transition-colors", liked ? "text-live" : "hover:text-live")}
       >
-        <Heart className={`size-4.5 transition-colors ${liked ? "fill-live" : ""}`} />
+        <Heart className={cn("size-4.5 transition-colors", liked && "fill-live")} />
         <span className="tabular-nums">{formatCount(likeCount)}</span>
       </button>
     </div>

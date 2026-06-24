@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { cn } from "@/lib/cn";
 
 type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "aria-label"> & {
   /** Libelle accessible (obligatoire pour un bouton-icone). */
@@ -17,7 +18,7 @@ export function IconButton({
     <button
       type="button"
       aria-label={label}
-      className={`grid size-10 shrink-0 place-items-center rounded-full text-gold transition-colors hover:bg-cream ${className}`}
+      className={cn("grid size-10 shrink-0 place-items-center rounded-full text-gold transition-colors hover:bg-cream", className)}
       {...rest}
     >
       {children}

@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { createComment, createReply, deleteComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
+import { cn } from "@/lib/cn";
 
 function ReplyRow({
   reply,
@@ -46,9 +47,9 @@ function ReplyRow({
             type="button"
             onClick={() => setLiked((v) => !v)}
             aria-pressed={liked}
-            className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
+            className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
           >
-            <Heart className={`size-3 ${liked ? "fill-live" : ""}`} />
+            <Heart className={cn("size-3", liked && "fill-live")} />
             {reply.likes + (liked ? 1 : 0)}
           </button>
           {isOwner && (
@@ -110,9 +111,9 @@ function CommentRow({
               type="button"
               onClick={() => setLiked((v) => !v)}
               aria-pressed={liked}
-              className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
+              className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
             >
-              <Heart className={`size-3.5 ${liked ? "fill-live" : ""}`} />
+              <Heart className={cn("size-3.5", liked && "fill-live")} />
               {comment.likes + (liked ? 1 : 0)}
             </button>
 

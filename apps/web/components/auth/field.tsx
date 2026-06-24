@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
 
 type FieldProps = {
   id: string;
@@ -59,9 +60,9 @@ export function Field({
         {label}
       </label>
       <div
-        className={`group flex h-12.5 items-center gap-2.5 rounded-field border-[1.5px] bg-cream px-3.5 transition-all duration-150 focus-within:bg-card ${borderClass}`}
+        className={cn("group flex h-12.5 items-center gap-2.5 rounded-field border-[1.5px] bg-cream px-3.5 transition-all duration-150 focus-within:bg-card", borderClass)}
       >
-        <span className={`shrink-0 transition-colors ${iconClass}`}>
+        <span className={cn("shrink-0 transition-colors", iconClass)}>
           {icon}
         </span>
         <input
@@ -80,7 +81,7 @@ export function Field({
         {trailing}
       </div>
       {(showError ? error : hint) && (
-        <p className={`mt-1 text-xs ${showError ? "text-live" : "text-brown-sec"}`}>
+        <p className={cn("mt-1 text-xs", showError ? "text-live" : "text-brown-sec")}>
           {showError ? error : hint}
         </p>
       )}

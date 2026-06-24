@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useTranslations, useLocale } from "next-intl";
 import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
@@ -8,6 +9,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { createComment, createReply, likeComment, unlikeComment, deleteComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
+import { cn } from "@/lib/cn";
 
 // Bouton like d'un commentaire/réponse : optimiste, recalé sur la réponse serveur,
 // rollback si erreur. Même logique que PostActions.
@@ -49,9 +51,9 @@ function CommentLike({
       type="button"
       onClick={toggle}
       aria-pressed={liked}
-      className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
+      className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
     >
-      <Heart className={`${iconClass} ${liked ? "fill-live" : ""}`} />
+      <Heart className={cn(iconClass, liked && "fill-live")} />
       {count}
     </button>
   );
@@ -257,98 +259,78 @@ export function CommentThread({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-60 flex items-end justify-center bg-dark/50 backdrop-blur-sm p-4 sm:items-center"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("title")}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[80dvh] w-full max-w-lg flex-col rounded-card border border-border bg-card shadow-card"
-      >
-        {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="font-head text-lg font-bold text-brown">
-            {t("title")} ({comments.length})
-          </h2>
-          <button
-            type="button"
-            aria-label={t("close")}
-            onClick={onClose}
-            className="grid size-8 place-items-center rounded-full text-brown-sec hover:bg-card"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        {/* Liste des commentaires */}
-        <div className="flex-1 overflow-y-auto px-5">
-          {loading && comments.length === 0 ? (
-            <div className="grid place-items-center py-12">
-              <Loader2 className="size-5 animate-spin text-brown-sec" />
-            </div>
-          ) : comments.length > 0 ? (
-            comments.map((c) => (
-              <CommentRow
-                key={c.id}
-                comment={c}
-                currentUserId={currentUserId}
-                onReply={(id) => {
-                  setReplyingTo(id);
-                  setInput("");
-                }}
-                onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
-              />
-            ))
-          ) : (
-            <p className="py-12 text-center text-sm text-brown-sec">
-              {t("empty")}
-            </p>
-          )}
-        </div>
-
-        {/* Champ de saisie */}
-        <div className="shrink-0 border-t border-border px-5 py-4">
-          {replyingTo && (
-            <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
-              <CornerDownRight className="size-3" />
-              <span>{t("replyingTo")}</span>
-              <button
-                type="button"
-                onClick={() => setReplyingTo(null)}
-                className="text-gold hover:underline"
+    <Dialog.Root open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-dark/50 backdrop-blur-sm" />
+        <Dialog.Content className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+          <div className="flex max-h-[80dvh] w-full max-w-lg flex-col rounded-card border border-border bg-card shadow-card">
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
+              <Dialog.Title className="font-head text-lg font-bold text-brown">
+                {t("title")} ({comments.length})
+              </Dialog.Title>
+              <Dialog.Close
+                aria-label={t("close")}
+                className="grid size-8 place-items-center rounded-full text-brown-sec hover:bg-card"
               >
-                {t("cancel")}
-              </button>
+                <X className="size-4" />
+              </Dialog.Close>
             </div>
-          )}
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
-              className="min-w-0 flex-1 rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
-            />
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!input.trim() || pending}
-              className="shrink-0 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
-            >
-              {t("send")}
-            </button>
+
+            {/* Liste des commentaires */}
+            <div className="flex-1 overflow-y-auto px-5">
+              {loading && comments.length === 0 ? (
+                <div className="grid place-items-center py-12">
+                  <Loader2 className="size-5 animate-spin text-brown-sec" />
+                </div>
+              ) : comments.length > 0 ? (
+                comments.map((c) => (
+                  <CommentRow
+                    key={c.id}
+                    comment={c}
+                    currentUserId={currentUserId}
+                    onReply={(id) => { setReplyingTo(id); setInput(""); }}
+                    onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
+                  />
+                ))
+              ) : (
+                <p className="py-12 text-center text-sm text-brown-sec">{t("empty")}</p>
+              )}
+            </div>
+
+            {/* Champ de saisie */}
+            <div className="shrink-0 border-t border-border px-5 py-4">
+              {replyingTo && (
+                <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
+                  <CornerDownRight className="size-3" />
+                  <span>{t("replyingTo")}</span>
+                  <button type="button" onClick={() => setReplyingTo(null)} className="text-gold hover:underline">
+                    {t("cancel")}
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
+                  placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
+                  className="min-w-0 flex-1 rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
+                />
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!input.trim() || pending}
+                  className="shrink-0 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+                >
+                  {t("send")}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

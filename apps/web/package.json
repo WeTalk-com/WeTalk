@@ -11,12 +11,19 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@radix-ui/react-alert-dialog": "^1.1.17",
+    "@radix-ui/react-dialog": "^1.1.17",
+    "@radix-ui/react-dropdown-menu": "^2.1.18",
+    "@radix-ui/react-radio-group": "^1.4.1",
+    "@radix-ui/react-tabs": "^1.1.15",
+    "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
     "next": "16.2.0",
     "next-intl": "^4.13.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.6.0",
     "timeago.js": "^4.0.2",
     "use-intl": "^4.13.0"
   },

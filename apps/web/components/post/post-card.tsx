@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon, Trash2, Pencil } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
@@ -12,6 +13,7 @@ import { ReportModal } from "./report-modal";
 import { getComments, deletePost, updatePost } from "@/lib/api";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import type { Post, Comment } from "@/lib/types";
+import { cn } from "@/lib/cn";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
   return (
@@ -33,7 +35,6 @@ function PostMenu({
   onReport,
   onEdit,
   onDelete,
-  onClose,
 }: {
   postId: string;
   locale: string;
@@ -41,7 +42,6 @@ function PostMenu({
   onReport: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onClose: () => void;
 }) {
   const t = useTranslations("app.post");
 
@@ -49,64 +49,63 @@ function PostMenu({
     navigator.clipboard.writeText(
       `${window.location.origin}/${locale}/posts/${postId}`,
     );
-    onClose();
   }
 
   return (
-    <ul
-      role="menu"
-      className="absolute right-0 top-10 z-20 min-w-44 rounded-xl border border-border bg-card py-1 shadow-card"
-    >
-      <li role="none">
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          role="menuitem"
-          onClick={copyLink}
-          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-brown hover:bg-canvas"
+          aria-label={t("more")}
+          className="grid size-9 place-items-center rounded-full text-brown-sec hover:bg-canvas"
         >
-          <LinkIcon className="size-4 text-brown-sec" />
-          {t("copyLink")}
+          <MoreHorizontal className="size-5" />
         </button>
-      </li>
-      {isOwner ? (
-        <>
-          <li role="none">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => { onEdit(); onClose(); }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-brown hover:bg-canvas"
-            >
-              <Pencil className="size-4 text-brown-sec" />
-              {t("edit")}
-            </button>
-          </li>
-          <li role="none">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => { onDelete(); onClose(); }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
-            >
-              <Trash2 className="size-4" />
-              {t("delete")}
-            </button>
-          </li>
-        </>
-      ) : (
-        <li role="none">
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => { onReport(); onClose(); }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={4}
+          className="z-20 min-w-44 rounded-xl border border-border bg-card py-1 shadow-card"
+        >
+          <DropdownMenu.Item
+            onSelect={copyLink}
+            className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-brown outline-none hover:bg-canvas data-[highlighted]:bg-canvas"
           >
-            <Flag className="size-4" />
-            {t("report")}
-          </button>
-        </li>
-      )}
-    </ul>
+            <LinkIcon className="size-4 text-brown-sec" />
+            {t("copyLink")}
+          </DropdownMenu.Item>
+
+          {isOwner ? (
+            <>
+              <DropdownMenu.Item
+                onSelect={onEdit}
+                className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-brown outline-none hover:bg-canvas data-[highlighted]:bg-canvas"
+              >
+                <Pencil className="size-4 text-brown-sec" />
+                {t("edit")}
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onSelect={onDelete}
+                className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none hover:bg-live/5 data-[highlighted]:bg-live/5"
+              >
+                <Trash2 className="size-4" />
+                {t("delete")}
+              </DropdownMenu.Item>
+            </>
+          ) : (
+            <DropdownMenu.Item
+              onSelect={onReport}
+              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none hover:bg-live/5 data-[highlighted]:bg-live/5"
+            >
+              <Flag className="size-4" />
+              {t("report")}
+            </DropdownMenu.Item>
+          )}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 }
 
@@ -120,7 +119,6 @@ export function PostCard({ post }: { post: Post }) {
 
   const MAX_CHARS = 280;
 
-  const [showMenu, setShowMenu] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
@@ -131,18 +129,6 @@ export function PostCard({ post }: { post: Post }) {
   const [editText, setEditText] = useState("");
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showMenu) return;
-    function onOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, [showMenu]);
 
   async function openComments() {
     setShowComments(true);
@@ -212,28 +198,14 @@ export function PostCard({ post }: { post: Post }) {
             <UserChip user={author} subtitle={`@${author.handle} · ${formatTimeAgo(post.createdAt, locale)}`} />
           </Link>
 
-          <div ref={menuRef} className="relative shrink-0">
-            <button
-              type="button"
-              aria-label={t("more")}
-              aria-expanded={showMenu}
-              onClick={() => setShowMenu((v) => !v)}
-              className="grid size-9 place-items-center rounded-full text-brown-sec hover:bg-canvas"
-            >
-              <MoreHorizontal className="size-5" />
-            </button>
-            {showMenu && (
-              <PostMenu
-                postId={post.id}
-                locale={locale}
-                isOwner={isOwner}
-                onEdit={handleStartEdit}
-                onDelete={handleDelete}
-                onReport={() => setShowReport(true)}
-                onClose={() => setShowMenu(false)}
-              />
-            )}
-          </div>
+          <PostMenu
+            postId={post.id}
+            locale={locale}
+            isOwner={isOwner}
+            onEdit={handleStartEdit}
+            onDelete={handleDelete}
+            onReport={() => setShowReport(true)}
+          />
         </div>
 
         {/* Texte / Mode édition */}
@@ -250,7 +222,7 @@ export function PostCard({ post }: { post: Post }) {
                 placeholder={t("editPlaceholder")}
               />
               <div className="mt-1 flex items-center justify-between">
-                <span className={`text-xs ${editText.length >= MAX_CHARS ? "text-live" : "text-brown-sec"}`}>
+                <span className={cn("text-xs", editText.length >= MAX_CHARS ? "text-live" : "text-brown-sec")}>
                   {editText.length}/{MAX_CHARS}
                 </span>
                 {editError && (
