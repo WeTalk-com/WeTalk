@@ -19,8 +19,8 @@ jobs:
       contents: read
       checks: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -46,7 +46,7 @@ jobs:
         name: Test
         run: npm test -- --reporter=default --reporter=junit --outputFile=junit.xml
       - name: Test report
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Vitest report
@@ -89,12 +89,12 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           queries: security-and-quality
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
 
   trivy:
     name: Trivy
@@ -108,7 +108,7 @@ jobs:
       matrix:
         service: [auth-service, user-service, post-service, web, gateway]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build ${{ matrix.service }}
         run: docker build -f apps/${{ matrix.service }}/Dockerfile -t wetalk/${{ matrix.service }} .
       - name: Scan with Trivy
@@ -119,7 +119,7 @@ jobs:
           output: trivy-${{ matrix.service }}.sarif
           severity: HIGH,CRITICAL
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: success() || failure()
         with:
           sarif_file: trivy-${{ matrix.service }}.sarif
@@ -142,7 +142,7 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Scan config (Dockerfiles, compose)
         uses: aquasecurity/trivy-action@v0.35.0
         with:
@@ -152,7 +152,7 @@ jobs:
           output: trivy-config.sarif
           severity: HIGH,CRITICAL
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: success() || failure()
         with:
           sarif_file: trivy-config.sarif
@@ -163,10 +163,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
