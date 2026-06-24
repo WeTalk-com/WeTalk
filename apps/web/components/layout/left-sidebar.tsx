@@ -17,6 +17,7 @@ import type { User as UserModel } from "@/lib/types";
 import { UserChip } from "../ui/user-chip";
 import { CreateButton } from "../create/create-button";
 import { LogoutButton } from "../auth/logout-button";
+import { useUnreadCount } from "@/lib/use-unread-count";
 
 type NavKey = "home" | "explore" | "notifications" | "messages" | "profile" | "settings";
 
@@ -36,19 +37,20 @@ type NavItem = {
   badge?: number;
 };
 
-const NAV: NavItem[] = [
-  { key: "home", Icon: Home, href: "/home" },
-  { key: "explore", Icon: Compass, href: "/explore" },
-  { key: "notifications", Icon: Bell, href: "/notifications", badge: 3 },
-  { key: "messages", Icon: MessageSquare, href: "/messages" },
-  { key: "profile", Icon: User, href: "/profile" },
-  { key: "settings", Icon: Settings, href: "/settings" },
-];
-
 export function LeftSidebar({ user }: { user: UserModel }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const [menuOpen, setMenuOpen] = useState(false);
+  const { count: unreadCount } = useUnreadCount();
+
+  const NAV: NavItem[] = [
+    { key: "home", Icon: Home, href: "/home" },
+    { key: "explore", Icon: Compass, href: "/explore" },
+    { key: "notifications", Icon: Bell, href: "/notifications", badge: unreadCount },
+    { key: "messages", Icon: MessageSquare, href: "/messages" },
+    { key: "profile", Icon: User, href: "/profile" },
+    { key: "settings", Icon: Settings, href: "/settings" },
+  ];
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -4,11 +4,13 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { Home, Compass, Bell, User, MessageSquare } from "lucide-react";
 import { CreateButton } from "../create/create-button";
+import { useUnreadCount } from "@/lib/use-unread-count";
 
 /** Barre de navigation basse, affichee uniquement sous le breakpoint lg. */
 export function MobileNav() {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const { count: unreadCount } = useUnreadCount();
   const cls = (href: string) =>
     `grid place-items-center p-2 ${
       pathname === href ? "text-gold" : "text-brown-sec"
@@ -40,9 +42,14 @@ export function MobileNav() {
         href="/notifications"
         aria-label={t("notifications")}
         aria-current={pathname === "/notifications" ? "page" : undefined}
-        className={cls("/notifications")}
+        className={`${cls("/notifications")} relative`}
       >
         <Bell className="size-6" />
+        {unreadCount > 0 && (
+          <span className="absolute -right-1.5 -top-1 grid size-[14px] place-items-center rounded-full bg-live text-[9px] font-bold text-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
       </Link>
       <Link
         href="/messages"
