@@ -3,9 +3,8 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useTranslations } from "next-intl";
-import { X, CheckCircle } from "lucide-react";
+import { X, Clock } from "lucide-react";
 import type { ReportReason } from "@/lib/types";
-import { reportPost } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -18,27 +17,24 @@ const REASONS: ReportReason[] = [
 ];
 
 export function ReportModal({
-  postId,
   onClose,
 }: {
+  // Conservé pour l'API du composant ; sera transmis au back quand l'endpoint
+  // /posts/:id/report sera disponible.
   postId: string;
   onClose: () => void;
 }) {
   const t = useTranslations("app.report");
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [details, setDetails] = useState("");
-  const [pending, setPending] = useState(false);
+  // L'endpoint de signalement n'est pas encore branché côté back : on affiche
+  // un état "fonctionnalité à venir" plutôt qu'un faux accusé de réception.
   const [done, setDone] = useState(false);
+  const pending = false;
 
-  async function handleSubmit() {
-    if (!reason || pending) return;
-    setPending(true);
-    try {
-      await reportPost(postId, reason, details || undefined);
-      setDone(true);
-    } finally {
-      setPending(false);
-    }
+  function handleSubmit() {
+    if (!reason) return;
+    setDone(true);
   }
 
   return (
@@ -49,9 +45,9 @@ export function ReportModal({
           <div className="w-full max-w-md rounded-card border border-border bg-card p-5 shadow-card">
             {done ? (
               <div className="flex flex-col items-center py-8 text-center">
-                <CheckCircle className="size-12 text-gold" />
-                <p className="mt-4 text-lg font-semibold text-brown">{t("successTitle")}</p>
-                <p className="mt-1 text-sm text-brown-sec">{t("successText")}</p>
+                <Clock className="size-12 text-gold" />
+                <p className="mt-4 text-lg font-semibold text-brown">{t("soonTitle")}</p>
+                <p className="mt-1 text-sm text-brown-sec">{t("soonText")}</p>
                 <Dialog.Close asChild>
                   <Button className="mt-6">{t("close")}</Button>
                 </Dialog.Close>

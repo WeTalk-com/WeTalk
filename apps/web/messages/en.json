@@ -189,7 +189,8 @@
       "editSave": "Save",
       "editCancel": "Cancel",
       "editError": "Failed to save changes. Please try again.",
-      "toastEditSaved": "Post updated"
+      "toastEditSaved": "Post updated",
+      "toastDeleteError": "Couldn't delete the post. Please try again."
     },
     "messages": {
       "title": "Messages",
@@ -228,7 +229,8 @@
       "send": "Send",
       "reply": "Reply",
       "replies": "replies",
-      "delete": "Delete"
+      "delete": "Delete",
+      "deleteError": "Couldn't delete. Please try again."
     },
     "report": {
       "title": "Report",
@@ -243,8 +245,8 @@
       "submit": "Submit",
       "cancel": "Cancel",
       "close": "Close",
-      "successTitle": "Report submitted",
-      "successText": "Thanks, we'll review this shortly."
+      "soonTitle": "Coming soon",
+      "soonText": "Reporting isn't available yet — it'll be enabled shortly."
     },
     "admin": {
       "title": "Moderation",

@@ -7,8 +7,9 @@ import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { createComment, createReply, deleteComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
-import { useCurrentUserId } from "@/components/create/create-modal-provider";
+import { useCurrentUser } from "@/components/create/create-modal-provider";
 import { cn } from "@/lib/cn";
+import { useToast } from "@/components/ui/toast-provider";
 
 function ReplyRow({
   reply,
@@ -22,13 +23,16 @@ function ReplyRow({
   const t = useTranslations("app.comments");
   const [liked, setLiked] = useState(false);
   const locale = useLocale();
+  const toast = useToast();
   const isOwner = currentUserId === reply.author.id;
 
   async function handleDelete() {
     try {
       await deleteComment(reply.id);
       onDelete(reply.id);
-    } catch (_e) { /* silent */ }
+    } catch {
+      toast.error(t("deleteError"));
+    }
   }
 
   return (
@@ -81,6 +85,7 @@ function CommentRow({
 }) {
   const t = useTranslations("app.comments");
   const locale = useLocale();
+  const toast = useToast();
   const [liked, setLiked] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState(comment.replies);
@@ -90,7 +95,9 @@ function CommentRow({
     try {
       await deleteComment(comment.id);
       onDelete(comment.id);
-    } catch (_e) { /* silent */ }
+    } catch {
+      toast.error(t("deleteError"));
+    }
   }
 
   return (
@@ -177,7 +184,8 @@ export function PostDetailComments({
   initialComments: Comment[];
 }) {
   const t = useTranslations("app.comments");
-  const currentUserId = useCurrentUserId();
+  const currentUser = useCurrentUser();
+  const currentUserId = currentUser.id;
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -189,7 +197,7 @@ export function PostDetailComments({
     setPending(true);
     try {
       if (replyingTo) {
-        const reply = await createReply(postId, replyingTo, text);
+        const reply = await createReply(postId, replyingTo, text, currentUser);
         setComments((prev) =>
           prev.map((c) =>
             c.id === replyingTo ? { ...c, replies: [...c.replies, reply] } : c,
@@ -197,7 +205,7 @@ export function PostDetailComments({
         );
         setReplyingTo(null);
       } else {
-        const comment = await createComment(postId, text);
+        const comment = await createComment(postId, text, currentUser);
         setComments((prev) => [...prev, comment]);
       }
       setInput("");

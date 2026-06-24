@@ -8,9 +8,10 @@ import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { createComment, createReply, likeComment, unlikeComment, deleteComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
-import { useCurrentUserId } from "@/components/create/create-modal-provider";
+import { useCurrentUser } from "@/components/create/create-modal-provider";
 import { cn } from "@/lib/cn";
 import { useOptimisticLike } from "@/hooks/use-optimistic-like";
+import { useToast } from "@/components/ui/toast-provider";
 
 // Bouton like d'un commentaire/réponse : optimiste, recalé sur la réponse serveur,
 // rollback si erreur. Même logique que PostActions.
@@ -55,13 +56,16 @@ function ReplyRow({
 }) {
   const t = useTranslations("app.comments");
   const locale = useLocale();
+  const toast = useToast();
   const isOwner = currentUserId === reply.author.id;
 
   async function handleDelete() {
     try {
       await deleteComment(reply.id);
       onDelete(reply.id);
-    } catch (_e) { /* silent */ }
+    } catch {
+      toast.error(t("deleteError"));
+    }
   }
 
   return (
@@ -101,14 +105,18 @@ function CommentRow({
   currentUserId,
   onReply,
   onDelete,
+  onDeleted,
 }: {
   comment: Comment;
   currentUserId: string;
   onReply: (id: string) => void;
   onDelete: (id: string) => void;
+  /** Notifie le parent qu'un commentaire OU une réponse a été supprimé (compteur). */
+  onDeleted: () => void;
 }) {
   const t = useTranslations("app.comments");
   const locale = useLocale();
+  const toast = useToast();
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState(comment.replies);
   const isOwner = currentUserId === comment.author.id;
@@ -117,7 +125,10 @@ function CommentRow({
     try {
       await deleteComment(comment.id);
       onDelete(comment.id);
-    } catch (_e) { /* silent */ }
+      onDeleted();
+    } catch {
+      toast.error(t("deleteError"));
+    }
   }
 
   return (
@@ -186,7 +197,7 @@ function CommentRow({
             key={r.id}
             reply={r}
             currentUserId={currentUserId}
-            onDelete={(id) => setReplies((prev) => prev.filter((x) => x.id !== id))}
+            onDelete={(id) => { setReplies((prev) => prev.filter((x) => x.id !== id)); onDeleted(); }}
           />
         ))}
     </div>
@@ -199,15 +210,18 @@ export function CommentThread({
   loading,
   onClose,
   onCommentAdded,
+  onCommentDeleted,
 }: {
   postId: string;
   initialComments: Comment[];
   loading?: boolean;
   onClose: () => void;
   onCommentAdded?: () => void;
+  onCommentDeleted?: () => void;
 }) {
   const t = useTranslations("app.comments");
-  const currentUserId = useCurrentUserId();
+  const currentUser = useCurrentUser();
+  const currentUserId = currentUser.id;
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -225,7 +239,7 @@ export function CommentThread({
     setPending(true);
     try {
       if (replyingTo) {
-        const reply = await createReply(postId, replyingTo, text);
+        const reply = await createReply(postId, replyingTo, text, currentUser);
         setComments((prev) =>
           prev.map((c) =>
             c.id === replyingTo ? { ...c, replies: [...c.replies, reply] } : c,
@@ -233,7 +247,7 @@ export function CommentThread({
         );
         setReplyingTo(null);
       } else {
-        const comment = await createComment(postId, text);
+        const comment = await createComment(postId, text, currentUser);
         setComments((prev) => [...prev, comment]);
       }
       onCommentAdded?.();
@@ -276,6 +290,7 @@ export function CommentThread({
                     currentUserId={currentUserId}
                     onReply={(id) => { setReplyingTo(id); setInput(""); }}
                     onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
+                    onDeleted={() => onCommentDeleted?.()}
                   />
                 ))
               ) : (

@@ -189,7 +189,8 @@
       "editSave": "Enregistrer",
       "editCancel": "Annuler",
       "editError": "Erreur lors de la modification. Réessayez.",
-      "toastEditSaved": "Post modifié"
+      "toastEditSaved": "Post modifié",
+      "toastDeleteError": "Suppression du post impossible. Réessayez."
     },
     "messages": {
       "title": "Messages",
@@ -228,7 +229,8 @@
       "send": "Envoyer",
       "reply": "Répondre",
       "replies": "réponses",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "deleteError": "Suppression impossible. Réessayez."
     },
     "report": {
       "title": "Signaler",
@@ -243,8 +245,8 @@
       "submit": "Soumettre",
       "cancel": "Annuler",
       "close": "Fermer",
-      "successTitle": "Signalement envoyé",
-      "successText": "Merci, nous allons examiner ça prochainement."
+      "soonTitle": "Bientôt disponible",
+      "soonText": "Le signalement n'est pas encore actif — il arrive très prochainement."
     },
     "admin": {
       "title": "Modération",

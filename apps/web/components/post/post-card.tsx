@@ -177,7 +177,7 @@ export function PostCard({ post }: { post: Post }) {
       await deletePost(post.id);
       router.refresh();
     } catch {
-      // silent — backend returns 403 if not author
+      toast.error(t("toastDeleteError"));
     }
   }
 
@@ -319,6 +319,7 @@ export function PostCard({ post }: { post: Post }) {
           loading={commentsLoading}
           onClose={() => setShowComments(false)}
           onCommentAdded={() => setCommentCount((c) => c + 1)}
+          onCommentDeleted={() => setCommentCount((c) => Math.max(0, c - 1))}
         />
       )}
 

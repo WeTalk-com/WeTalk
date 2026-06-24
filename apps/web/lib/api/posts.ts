@@ -1,6 +1,5 @@
-import type { Post, Comment, Reply, ReportReason } from "@/lib/types";
+import type { Post, Comment, Reply, ReportReason, User } from "@/lib/types";
 import { apiFetch } from "./client";
-import { getCurrentUser } from "./users";
 import { mapPost, mapCommentTree, type BackendPost, type BackendComment } from "./map";
 
 // Reponse brute de creation d'un commentaire (pas encore enrichi auteur/likes).
@@ -76,16 +75,19 @@ export async function getComments(postId: string): Promise<Comment[]> {
   return mapCommentTree(data.comments);
 }
 
-/** Ajoute un commentaire racine ; l'auteur est le lecteur courant. */
-export async function createComment(postId: string, text: string): Promise<Comment> {
+/** Ajoute un commentaire racine ; `author` = lecteur courant (déjà en mémoire). */
+export async function createComment(
+  postId: string,
+  text: string,
+  author: User,
+): Promise<Comment> {
   const { comment } = await apiFetch<{ comment: CreatedComment }>(
     `/posts/${postId}/comments`,
     { method: "POST", body: JSON.stringify({ content: text }) },
   );
-  const me = await getCurrentUser();
   return {
     id: comment._id,
-    author: me,
+    author,
     text: comment.content,
     createdAt: comment.createdAt,
     likes: 0,
@@ -99,15 +101,15 @@ export async function createReply(
   postId: string,
   commentId: string,
   text: string,
+  author: User,
 ): Promise<Reply> {
   const { comment } = await apiFetch<{ comment: CreatedComment }>(
     `/posts/${postId}/comments`,
     { method: "POST", body: JSON.stringify({ content: text, parentId: commentId }) },
   );
-  const me = await getCurrentUser();
   return {
     id: comment._id,
-    author: me,
+    author,
     text: comment.content,
     createdAt: comment.createdAt,
     likes: 0,
