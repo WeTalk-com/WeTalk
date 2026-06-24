@@ -1,6 +1,6 @@
 import type { Notification } from "@/lib/types";
 import { apiFetch } from "./client";
-import { mapNotification, type BackendNotificationListResponse, type BackendNotification } from "./map-notification";
+import { mapNotification, type BackendNotificationListResponse } from "./map-notification";
 
 export async function getNotifications(): Promise<Notification[]> {
   const data = await apiFetch<BackendNotificationListResponse>("/notifications");

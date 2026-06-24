@@ -4,6 +4,7 @@ import { logger } from "../utils/logger.js";
 import type { DefaultEventsMap, ExtendedError, Socket } from "socket.io";
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: JwtPayload;

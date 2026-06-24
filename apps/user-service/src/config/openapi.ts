@@ -1,6 +1,9 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { OpenAPIRegistry, extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import { idParamSchema, updateMeSchema, suspendBodySchema, listUsersQuerySchema, followListQuerySchema } from "../schemas/user.schemas.js";
+
+// Active l'extension .openapi() de Zod (requise par zod-to-openapi avant la génération du doc).
+extendZodWithOpenApi(z);
 
 export const registry = new OpenAPIRegistry();
 
