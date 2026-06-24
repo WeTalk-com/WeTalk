@@ -5,18 +5,15 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { TrendingUp, MoreHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { Post, TrendingTopic, User } from "@/lib/types";
-import { PostCard } from "@/components/post/post-card";
+import type { TrendingTopic, User } from "@/lib/types";
 import { UserChip } from "@/components/ui/user-chip";
 import { FollowButton } from "@/components/ui/follow-button";
 
 export function ExploreContent({
-  posts,
   trending,
   users: initialUsers,
   query = "",
 }: {
-  posts: Post[];
   trending: TrendingTopic[];
   users: User[];
   query?: string;
@@ -28,14 +25,6 @@ export function ExploreContent({
   useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
 
   const q = query.toLowerCase().trim().replace(/^@/, "");
-  const filteredPosts = q
-    ? posts.filter(
-        (p) =>
-          p.text.toLowerCase().includes(q) ||
-          p.tags.some((tag) => tag.toLowerCase().includes(q)) ||
-          p.author.name.toLowerCase().includes(q),
-      )
-    : posts;
   const filteredTrending = q
     ? trending.filter(
         (tp) =>
@@ -45,7 +34,6 @@ export function ExploreContent({
     : trending;
   const tabList = [
     { key: "trending", label: t("tabTrending") },
-    { key: "foryou", label: t("tabForYou") },
     { key: "people", label: t("tabPeople") },
   ] as const;
 
@@ -93,14 +81,7 @@ export function ExploreContent({
         </ul>
       </Tabs.Content>
 
-      {/* Pour vous */}
-      <Tabs.Content value="foryou" className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">
-        {filteredPosts.length > 0
-          ? filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
-          : <p className="py-12 text-center text-sm text-brown-sec">{t("noResults", { query })}</p>}
-      </Tabs.Content>
-
-      {/* Personnes */}
+      {/* Suggestions */}
       <Tabs.Content value="people">
         <ul>
           {users.length > 0 ? (
