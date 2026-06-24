@@ -363,7 +363,7 @@ export function PostDetailComments({
   }
 
   return (
-    <div className="border-t border-border">
+    <div className="rounded-2xl border border-border bg-card px-4">
       <div className="border-b border-border py-3">
         {replyingTo && (
           <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
