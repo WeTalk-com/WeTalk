@@ -130,7 +130,7 @@ export function CreatePostModal({
                 update(e.target.value, e.target.selectionStart);
               }}
               onKeyDown={(e) => {
-                if (mention && e.key === "Enter" && !e.shiftKey) {
+                if (mention && users.length > 0 && e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   const el = textareaRef.current;
                   if (el) {

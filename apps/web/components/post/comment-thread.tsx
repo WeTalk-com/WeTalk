@@ -326,7 +326,7 @@ export function CommentThread({
                       update(e.target.value, e.target.selectionStart ?? 0);
                     }}
                     onKeyDown={(e) => {
-                      if (mention && e.key === "Enter" && !e.shiftKey) {
+                      if (mention && users.length > 0 && e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         const el = inputRef.current;
                         if (el) {
@@ -334,12 +334,11 @@ export function CommentThread({
                           setInput(next);
                           clear();
                         }
-                      }
-                      if (mention && e.key === "Escape") clear();
-                      if (e.key === "Enter" && !e.shiftKey && !mention) {
+                      } else if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         handleSubmit();
                       }
+                      if (mention && e.key === "Escape") clear();
                     }}
                     onClick={() => {
                       const el = inputRef.current;

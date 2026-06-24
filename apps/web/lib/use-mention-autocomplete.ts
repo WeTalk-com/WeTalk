@@ -17,7 +17,9 @@ function getMentionAtCursor(
   const before = value.slice(0, cursorPos);
   const match = before.match(/(?:^|\s)@(\w*)$/);
   if (!match) return null;
-  return { start: match.index! + 1, query: match[1] ?? "" };
+  const query = match[1] ?? "";
+  // start = index juste après le "@" (indépendant de l'espace capturé en tête).
+  return { start: cursorPos - query.length, query };
 }
 
 export function useMentionAutocomplete() {
