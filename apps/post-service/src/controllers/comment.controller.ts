@@ -3,12 +3,17 @@ import { isValidObjectId } from "mongoose";
 import { z } from "zod";
 import { CommentModel } from "../models/comment.js";
 import { PostModel } from "../models/post.js";
-import { forwardAuth, withAuthors, authorPostingBlock, notifyNotificationService, notifyMentions } from "./post.controller.js";
+import { forwardAuth, withAuthors, authorPostingBlock, notifyNotificationService, buildLikers, extractTags } from "./post.controller.js";
+import { likesQuerySchema } from "../schemas/post.schemas.js";
 
 const createSchema = z.object({
   content: z.string().trim().min(1).max(280),
   // parentId présent = réponse à un commentaire existant (1 niveau).
   parentId: z.string().refine(isValidObjectId, "Invalid parentId").optional(),
+});
+
+const updateCommentSchema = z.object({
+  content: z.string().trim().min(1).max(280),
 });
 
 const listQuerySchema = z.object({
@@ -63,6 +68,7 @@ export async function createComment(req: Request, res: Response): Promise<void> 
     postId: id,
     authorId: req.user!.sub,
     content: parsed.data.content,
+    tags: extractTags(parsed.data.content),
     parentId: parsed.data.parentId ?? null,
   });
 
@@ -147,6 +153,35 @@ export async function deleteComment(req: Request, res: Response): Promise<void> 
   res.status(204).send();
 }
 
+// Editer son propre commentaire (ou sa propre réponse).
+export async function updateComment(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid comment id" });
+    return;
+  }
+  const parsed = updateCommentSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const comment = await CommentModel.findById(id);
+  if (!comment) {
+    res.status(404).json({ error: "Comment not found" });
+    return;
+  }
+  if (comment.authorId !== req.user!.sub) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  comment.content = parsed.data.content;
+  comment.tags = extractTags(parsed.data.content); // ré-extraits sinon ?tag= / /tags périmés
+  await comment.save();
+  // Même forme que createComment : document brut, likedBy (ids des likers) jamais exposé.
+  const { likedBy: _likedBy, ...commentOut } = comment.toObject();
+  res.json({ comment: commentOut });
+}
+
 // Like idempotent : $addToSet évite les doublons, re-liker = no-op.
 export async function likeComment(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
@@ -183,4 +218,26 @@ export async function unlikeComment(req: Request, res: Response): Promise<void> 
     return;
   }
   res.json({ likeCount: (comment.likedBy ?? []).length, likedByMe: false });
+}
+
+// Liste paginée des utilisateurs ayant liké le commentaire.
+export async function listCommentLikers(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid comment id" });
+    return;
+  }
+  const parsed = likesQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const comment = await CommentModel.findById(id).select({ likedBy: 1 }).lean();
+  if (!comment) {
+    res.status(404).json({ error: "Comment not found" });
+    return;
+  }
+  const { cursor, limit } = parsed.data;
+  const result = await buildLikers(comment.likedBy ?? [], cursor, limit, req);
+  res.json(result);
 }
