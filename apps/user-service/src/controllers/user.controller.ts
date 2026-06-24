@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Request, Response } from "express";
 import { Op, type WhereOptions } from "sequelize";
 import { env } from "../config/env.js";
@@ -10,6 +11,7 @@ import {
 	followListQuerySchema,
 	suspendBodySchema,
 } from "../schemas/user.schemas.js";
+import {logger} from "../utils/logger.js";
 
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -91,7 +93,7 @@ function escapeLike(term: string): string {
 	return term.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
-// Suspension active = date future. On normalise les dates passées à "non suspendu".
+// Suspension active = date future. On normalise les dates passées à "non suspendues".
 function isSuspended(user: User): boolean {
 	return user.suspendedUntil != null && user.suspendedUntil.getTime() > Date.now();
 }
@@ -232,8 +234,6 @@ export async function getUser(req: Request, res: Response): Promise<void> {
 	res.json({ ...publicUser(user, canSeeModeration(req.user, user.id)), followersCount, followingCount, postsCount });
 }
 
-// export async function updateMe(req: Request, res: Response): Promise<void> {}
-
 export async function updateMe(req: Request, res: Response): Promise<void> {
 	try {
 		// TODO: Est-ce que l'on permet de changer le nom d'utilisateur (handle) ?
@@ -327,6 +327,7 @@ export async function deleteMe(req: Request, res: Response): Promise<void> {
 		await revokeAllRefresh(myId);
 
 		res.json({ message: "Compte supprimé avec succès." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la suppression du compte." });
 	}
@@ -348,6 +349,7 @@ export async function follow(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const [_, created] = await Follow.findOrCreate({
 			where: { followerId: myId, followingId: targetId }
 		});
@@ -358,6 +360,7 @@ export async function follow(req: Request, res: Response): Promise<void> {
 		}
 
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}
@@ -375,6 +378,7 @@ export async function unfollow(req: Request, res: Response): Promise<void> {
 		}
 
 		res.json({ message: "Vous vous êtes désabonné avec succès." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors du désabonnement." });
 	}
@@ -402,10 +406,11 @@ export async function getFollowing(req: Request, res: Response): Promise<void> {
 
 		res.json({
 			data: followRelations.map(f => {
-				// @ts-ignore
+				// @ts-expect-error Unrecognized runtime alias
 				return f.Following;
 			})
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
@@ -433,10 +438,11 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 
 		res.json({
 			data: followRelations.map(f => {
-				// @ts-ignore
+				// @ts-expect-error Unrecognized runtime alias
 				return f.Follower;
 			})
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
@@ -485,6 +491,7 @@ export async function banUser(req: Request, res: Response): Promise<void> {
 		await markAccessBanned(targetId);
 
 		res.json({ message: "Utilisateur banni." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors du bannissement." });
 	}
@@ -503,6 +510,7 @@ export async function unbanUser(req: Request, res: Response): Promise<void> {
 		await clearAccessBanned(targetUser.id);
 
 		res.json({ message: "Utilisateur débanni." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors du débannissement." });
 	}
@@ -542,6 +550,7 @@ export async function suspendUser(req: Request, res: Response): Promise<void> {
 		await targetUser.save();
 
 		res.json({ message: "Utilisateur suspendu.", suspendedUntil: targetUser.suspendedUntil });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la suspension." });
 	}
@@ -559,7 +568,28 @@ export async function unsuspendUser(req: Request, res: Response): Promise<void> 
 		await targetUser.save();
 
 		res.json({ message: "Suspension levée." });
-	} catch (error) {
+	} catch (e) {
+		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la levée de suspension." });
+	}
+}
+
+export async function isUserAvailable(req: Request, res: Response): Promise<void> {
+	try {
+		const identifier = req.params.id as string;
+		
+		// Lookup par UUID si l'identifiant en est un, sinon par username.
+		const targetUser = UUID_RE.test(identifier)
+			? await User.findByPk(identifier)
+			: await User.findOne({ where: { username: identifier } });
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
+			return;
+		}
+		
+		res.json({ userID: targetUser.username, isAvailable: !(isSuspended(targetUser) || targetUser.isBanned) });
+	} catch (e) {
+		logger.error((e as Error).message);
+		res.status(500).json({ error: "Erreur lors de la vérification du status." });
 	}
 }
