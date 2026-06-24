@@ -3,10 +3,12 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useTranslations } from "next-intl";
-import { X, Clock } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import type { ReportReason } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { reportPost } from "@/lib/api/posts";
+import { useToast } from "@/components/ui/toast-provider";
 
 const REASONS: ReportReason[] = [
   "spam",
@@ -16,26 +18,34 @@ const REASONS: ReportReason[] = [
   "other",
 ];
 
+type State = "idle" | "pending" | "success" | "duplicate";
+
 export function ReportModal({
+  postId,
   onClose,
 }: {
-  // Conservé pour l'API du composant ; sera transmis au back quand l'endpoint
-  // /posts/:id/report sera disponible.
   postId: string;
   onClose: () => void;
 }) {
   const t = useTranslations("app.report");
+  const toast = useToast();
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [details, setDetails] = useState("");
-  // L'endpoint de signalement n'est pas encore branché côté back : on affiche
-  // un état "fonctionnalité à venir" plutôt qu'un faux accusé de réception.
-  const [done, setDone] = useState(false);
-  const pending = false;
+  const [state, setState] = useState<State>("idle");
 
-  function handleSubmit() {
-    if (!reason) return;
-    setDone(true);
+  async function handleSubmit() {
+    if (!reason || state === "pending") return;
+    setState("pending");
+    try {
+      const res = await reportPost(postId, reason, details.trim() || undefined);
+      setState(res?.duplicate ? "duplicate" : "success");
+    } catch {
+      toast.error(t("errorText"));
+      setState("idle");
+    }
   }
+
+  const isDone = state === "success" || state === "duplicate";
 
   return (
     <Dialog.Root open onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -43,11 +53,15 @@ export function ReportModal({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-dark/50 backdrop-blur-sm" />
         <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md rounded-card border border-border bg-card p-5 shadow-card">
-            {done ? (
+            {isDone ? (
               <div className="flex flex-col items-center py-8 text-center">
-                <Clock className="size-12 text-gold" />
-                <p className="mt-4 text-lg font-semibold text-brown">{t("soonTitle")}</p>
-                <p className="mt-1 text-sm text-brown-sec">{t("soonText")}</p>
+                <CheckCircle className="size-12 text-green-500" />
+                <p className="mt-4 text-lg font-semibold text-brown">
+                  {state === "duplicate" ? t("duplicateTitle") : t("successTitle")}
+                </p>
+                <p className="mt-1 text-sm text-brown-sec">
+                  {state === "duplicate" ? t("duplicateText") : t("successText")}
+                </p>
                 <Dialog.Close asChild>
                   <Button className="mt-6">{t("close")}</Button>
                 </Dialog.Close>
@@ -76,7 +90,7 @@ export function ReportModal({
                       key={r}
                       className={cn(
                         "flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-colors",
-                        reason === r ? "border-gold bg-gold/10" : "border-border",
+                        reason === r ? "border-gold bg-gold/10" : "border-border hover:bg-canvas",
                       )}
                     >
                       <input
@@ -101,16 +115,20 @@ export function ReportModal({
                     onChange={(e) => setDetails(e.target.value)}
                     placeholder={t("detailsPlaceholder")}
                     rows={3}
+                    maxLength={280}
                     className="mt-3 w-full resize-none rounded-xl border border-border bg-canvas px-3 py-2.5 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
                   />
                 )}
 
                 <div className="mt-5 flex items-center justify-end gap-3">
-                  <Dialog.Close className="text-sm text-brown-sec">
+                  <Dialog.Close className="text-sm text-brown-sec hover:text-brown">
                     {t("cancel")}
                   </Dialog.Close>
-                  <Button disabled={!reason || pending} onClick={handleSubmit}>
-                    {t("submit")}
+                  <Button
+                    disabled={!reason || state === "pending"}
+                    onClick={handleSubmit}
+                  >
+                    {state === "pending" ? t("submitting") : t("submit")}
                   </Button>
                 </div>
               </>
