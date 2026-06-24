@@ -340,8 +340,7 @@ export async function follow(req: Request, res: Response): Promise<void> {
       res.status(404).json({ error: "Utilisateur cible introuvable." });
       return;
     }
-
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	
     const [_, created] = await Follow.findOrCreate({
       where: { followerId: myId, followingId: targetId }
     });
@@ -355,6 +354,7 @@ export async function follow(req: Request, res: Response): Promise<void> {
 
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
 	} catch (error) {
+	  logger.error((error as Error).message);
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}
 }
@@ -450,6 +450,7 @@ export async function followingIds(req: Request, res: Response): Promise<void> {
 		});
 		res.json({ ids: rows.map((r) => r.get("followingId") as string) });
 	} catch (error) {
+		logger.error((error as Error).message);
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
 }

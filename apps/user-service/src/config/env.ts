@@ -40,6 +40,7 @@ export const env = {
   notificationServiceUrl: required("NOTIFICATION_SERVICE_URL", "http://notification-service:4003"),
 
   // Taille max d'une image de profil 5Mo
+  // eslint-disable-next-line turbo/no-undeclared-env-vars
   maxProfileImageBytes: Number(process.env.MAX_PROFILE_IMAGE_BYTES ?? 5 * 1024 * 1024),
 
   // CORS : liste blanche d'origines séparées par des virgules.

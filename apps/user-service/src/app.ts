@@ -8,7 +8,6 @@ import { registry } from "./config/openapi.js";
 import { userRouter } from "./routes/user.routes.js";
 import { apiLimiter } from "./middleware/rateLimit.js";
 import { logger } from "./utils/logger.js";
-import qs from "qs";
 
 export function createApp(): Express {
   const app = express();
@@ -59,7 +58,8 @@ export function createApp(): Express {
 		info: { title: "User Service", version: "1.0.0" },
 		servers: [{ url: "http://localhost:4001" }],
 	});
-	app.use("/api-docs", ...(swaggerUi.serve as any), swaggerUi.setup(openApiDoc) as any);
+	// @ts-expect-error Typescript types
+	app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
 	app.get("/health", (_req: Request, res: Response) => {
 		res.json({ status: "ok", service: "user-service" });
