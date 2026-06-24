@@ -78,8 +78,7 @@ export function socketRequireAuth() {
 		}
 		
 		try {
-			const payload = verifyAccessToken(token);
-			(socket as unknown as Record<string, unknown>).userId = payload.sub;
+			(socket as unknown as Record<string, unknown>).user = verifyAccessToken(token);
 			return next();
 		} catch {
 			return next(new Error("Authentication error: invalid token"));
