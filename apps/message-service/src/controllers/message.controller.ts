@@ -34,10 +34,18 @@ export async function getConversationList(req: Request, res: Response) {
 		// L'interlocuteur est l'autre participant : si je suis l'expéditeur,
 		// c'est le destinataire, sinon c'est l'expéditeur. On déduplique en
 		// gardant l'ordre (messages déjà triés du plus récent au plus ancien).
-		const others = conversations.map(o => (o.senderId === myId ? o.receiverId : o.senderId));
-
+		const conversationIds = [...new Set(conversations.map(o => (o.senderId === myId ? o.receiverId : o.senderId)))];
+		const conversationList = conversationIds.map(async id => ({
+			user: publicUser((await axios.get(`${env.userServiceUrl}/users/${id}`, {
+				// @ts-expect-error "Pas le bon type de headers" typescript doin' it again...
+				headers: { Authorization: req.headers.authorization }
+			})).data),
+			lastMessage: conversations.find(msg => msg.senderId === id || msg.receiverId === id),
+			unread: conversations.filter(msg => ((msg.senderId === myId && msg.receiverId === id) || (msg.senderId === id && msg.receiverId === myId)) && !msg.isRead).length
+		}));
+		
 		res.json({
-			data: [...new Set(others)],
+			data: conversationList,
 		});
 	} catch (e) {
 		logger.error((e as Error).message);
