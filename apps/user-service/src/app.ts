@@ -1,4 +1,4 @@
-import express, {type Request, type Response, type NextFunction, type Express} from "express";
+import express, {type Request, type Response, type NextFunction, type Express, type RequestHandler} from "express";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
@@ -58,8 +58,12 @@ export function createApp(): Express {
 		info: { title: "User Service", version: "1.0.0" },
 		servers: [{ url: "http://localhost:4001" }],
 	});
-	// @ts-expect-error Typescript types
-	app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
+	// Cast nécessaire : swagger-ui-express référence une autre copie de @types/express (doublon de deps).
+	app.use(
+		"/api-docs",
+		swaggerUi.serve as unknown as RequestHandler[],
+		swaggerUi.setup(openApiDoc) as unknown as RequestHandler,
+	);
 
 	app.get("/health", (_req: Request, res: Response) => {
 		res.json({ status: "ok", service: "user-service" });

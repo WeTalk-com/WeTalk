@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { getSocket } from "./socket";
 import { getUnreadCount } from "./api/notifications";
 

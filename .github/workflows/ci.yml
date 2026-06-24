@@ -25,6 +25,19 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Guard — chaque service TS expose lint + check-types
+        run: |
+          fail=0
+          for pkg in apps/*/package.json; do
+            dir=$(dirname "$pkg")
+            [ -f "$dir/tsconfig.json" ] || continue
+            for s in lint check-types; do
+              if ! node -e "process.exit(require('./$pkg').scripts?.['$s']?0:1)"; then
+                echo "::error file=$pkg::script manquant: $s"; fail=1
+              fi
+            done
+          done
+          exit $fail
       - id: lint
         run: npm run lint
       - id: types
@@ -41,7 +54,7 @@ jobs:
           reporter: jest-junit
       - id: build
         name: Build
-        run: npm run build -- --filter=!message-service --filter=!media-service --filter=!notification-service
+        run: npm run build
       - name: Job summary
         if: always()
         run: |

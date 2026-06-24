@@ -4,7 +4,7 @@ import { connectRedis, redis } from "./config/redis.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 import http from "http";
-import { Server, type Socket } from "socket.io";
+import { Server } from "socket.io";
 import { Message } from "./models/Message.js";
 import { socketRequireAuth } from "./middleware/auth.js";
 

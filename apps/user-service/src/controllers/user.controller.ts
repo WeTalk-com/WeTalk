@@ -16,7 +16,7 @@ import {logger} from "../utils/logger.js";
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function notifyFollow(followerId: string, followingId: string, forwardHeaders: Record<string, string>): Promise<void> {
+async function notifyFollow(followingId: string, forwardHeaders: Record<string, string>): Promise<void> {
   try {
     await fetch(`${env.notificationServiceUrl}/notifications/internal`, {
       method: "POST",
@@ -51,10 +51,7 @@ class MediaUploadError extends Error {
 }
 
 // Relaie une image de profil au media-service (pattern proxy)
-async function uploadImageToMediaService(
-	file: Express.Multer.File,
-	headers: Record<string, string>,
-): Promise<{ id: string; url: string }> {
+async function uploadImageToMediaService(file: Express.Multer.File, headers: Record<string, string>): Promise<{ id: string; url: string }> {
 	const form = new FormData();
 	form.append("file", new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname);
 	const res = await fetch(`${env.mediaServiceUrl}/media`, {
@@ -354,7 +351,7 @@ export async function follow(req: Request, res: Response): Promise<void> {
 
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
 	} catch (error) {
-	  logger.error((error as Error).message);
+	  	logger.error((error as Error).message);
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}
 }

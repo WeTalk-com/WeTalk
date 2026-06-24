@@ -147,7 +147,7 @@ async function fetchFollowingIds(userId: string, headers: Record<string, string>
   }
 }
 
-async function fetchAuthors(
+export async function fetchAuthors(
   ids: string[],
   headers: Record<string, string>,
 ): Promise<Map<string, AuthorLite>> {
@@ -379,7 +379,9 @@ export async function deletePost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  if (post.authorId !== req.user!.sub) {
+  // Auteur, ou modérateur/admin (modération de contenu, Fx20).
+  const role = req.user!.role;
+  if (post.authorId !== req.user!.sub && role !== "moderator" && role !== "admin") {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
