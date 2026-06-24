@@ -5,7 +5,7 @@ import { uploadProfileMedia } from "../middleware/upload.js";
 import { validateBody, validateParams } from "../middleware/validate.js";
 import { idParamSchema, userIdentifierParamSchema, updateMeSchema } from "../schemas/user.schemas.js";
 import {
-    me,
+	me,
 	getUsers,
 	getUser,
 	updateMe,
@@ -19,9 +19,10 @@ import {
 	unbanUser,
 	suspendUser,
 	unsuspendUser,
+	isUserAvailable,
 } from "../controllers/user.controller.js";
 
-export const userRouter = Router();
+export const userRouter: Router = Router();
 
 /*
 Profils
@@ -47,6 +48,7 @@ DELETE /users/:id/suspend : Lever la suspension.
 userRouter.get("/", requireAuth, getUsers);
 userRouter.get("/me", requireAuth, me);
 userRouter.get("/:id", requireAuth, validateParams(userIdentifierParamSchema), getUser);
+userRouter.get("/:id/status", requireAuth, validateParams(userIdentifierParamSchema), isUserAvailable);
 userRouter.patch("/me", requireAuth, writeLimiter, uploadProfileMedia, validateBody(updateMeSchema), updateMe);
 userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 
