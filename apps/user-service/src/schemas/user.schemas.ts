@@ -31,6 +31,7 @@ export const listUsersQuerySchema = z.object({
 	cursor: z.coerce.number().int().min(0).optional(),
 	search: z.string().trim().min(1).optional(),
 	ids: z.string().trim().min(1).optional(),
+	sort: z.enum(["latest"]).optional(),
 });
 
 // Query des listes d'abonnements/abonnés.

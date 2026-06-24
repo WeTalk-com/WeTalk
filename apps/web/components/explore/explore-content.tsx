@@ -1,31 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { TrendingUp, MoreHorizontal } from "lucide-react";
+import { TrendingUp, MoreHorizontal, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Post, TrendingTopic, User } from "@/lib/types";
 import { PostCard } from "@/components/post/post-card";
 import { UserChip } from "@/components/ui/user-chip";
 import { FollowButton } from "@/components/ui/follow-button";
+import { searchUsers, getLatestUsers } from "@/lib/api";
 
 export function ExploreContent({
   posts,
   trending,
-  users: initialUsers,
   query = "",
+  currentUserId,
+  followingIds,
 }: {
   posts: Post[];
   trending: TrendingTopic[];
-  users: User[];
   query?: string;
+  currentUserId: string;
+  followingIds: string[];
 }) {
   const t = useTranslations("app.explore");
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(10);
 
-  // Sync avec le serveur quand la prop change (nouveau résultat de recherche)
-  useEffect(() => { setUsers(initialUsers); }, [initialUsers]);
+  const fetchUsers = useCallback(async (q: string) => {
+    setLoading(true);
+    setVisibleCount(10);
+    try {
+      if (q) {
+        const data = await searchUsers(q);
+        setUsers(data.filter((u) => u.id !== currentUserId && !followingIds.includes(u.id)));
+      } else {
+        const { users: data } = await getLatestUsers(25, 0);
+        setUsers(data.filter((u) => u.id !== currentUserId && !followingIds.includes(u.id)));
+      }
+    } catch {
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUserId, followingIds]);
+
+  useEffect(() => {
+    fetchUsers(query);
+  }, [query, fetchUsers]);
+
+  const shownUsers = users.slice(0, visibleCount);
+  const hasMore = visibleCount < users.length;
 
   const q = query.toLowerCase().trim().replace(/^@/, "");
   const filteredPosts = q
@@ -103,18 +130,40 @@ export function ExploreContent({
       {/* Personnes */}
       <Tabs.Content value="people">
         <ul>
-          {users.length > 0 ? (
-            users.map((u) => (
-              <li key={u.id} className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0">
-                <Link href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }} className="min-w-0 flex-1">
-                  <UserChip user={u} />
-                </Link>
-                <FollowButton
-                  userId={u.id}
-                  onFollow={() => setUsers((prev) => prev.filter((x) => x.id !== u.id))}
-                />
-              </li>
-            ))
+          {loading && users.length === 0 ? (
+            <li className="flex justify-center py-12 text-brown-sec">
+              <Loader2 className="size-5 animate-spin" />
+            </li>
+          ) : shownUsers.length > 0 ? (
+            <>
+              {shownUsers.map((u) => (
+                <li key={u.id} className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0">
+                  <Link href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }} className="min-w-0 flex-1">
+                    <UserChip user={u} />
+                  </Link>
+                  <FollowButton
+                    userId={u.id}
+                    onFollow={() => setUsers((prev) => prev.filter((x) => x.id !== u.id))}
+                  />
+                </li>
+              ))}
+              {hasMore && (
+                <li className="px-5 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount(25)}
+                    disabled={loading}
+                    className="w-full rounded-full border border-border py-2 text-sm font-semibold text-brown transition-colors hover:bg-card disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <Loader2 className="mx-auto size-4 animate-spin" />
+                    ) : (
+                      t("loadMore")
+                    )}
+                  </button>
+                </li>
+              )}
+            </>
           ) : (
             <li className="py-12 text-center text-sm text-brown-sec">{t("noResults", { query })}</li>
           )}

@@ -122,7 +122,8 @@
       "catFilm": "Film",
       "catFood": "Food",
       "noResults": "No results for \"{query}\"",
-      "searchResults": "Results for \"{query}\""
+      "searchResults": "Results for \"{query}\"",
+      "loadMore": "Show more"
     },
     "notifications": {
       "title": "Notifications",
