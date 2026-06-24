@@ -48,8 +48,9 @@ export function createApp() {
   const generator = new OpenApiGeneratorV3(registry.definitions);
   const openApiDoc = generator.generateDocument({
     openapi: "3.0.3",
-    info: { title: "Post Service", version: "0.1.0" },
-    servers: [{ url: "http://localhost:4002" }],
+    info: { title: "Post Service", version: "1.0.0" },
+    // URL relative : les requêtes "Try it out" passent par la gateway (origine du navigateur + /api).
+    servers: [{ url: "/api" }],
   });
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
