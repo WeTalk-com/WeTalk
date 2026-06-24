@@ -5,9 +5,8 @@ import { logger } from "../utils/logger.js";
 import type { UserRole } from "../models/user.js";
 
 declare global {
-  
-  // eslint-disable-next-line
-  module Express {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
     interface Request {
       user?: JwtPayload;
     }

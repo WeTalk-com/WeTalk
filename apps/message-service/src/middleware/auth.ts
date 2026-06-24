@@ -24,9 +24,11 @@ const ACCESS_COOKIE = "wetalk_session";
 
 function parseCookie(cookieStr: string, name: string): string | undefined {
 	for (const part of cookieStr.split(";")) {
-		const [key, val] = part.split("=");
-		if (key?.trim() === name)
-			return val?.trim();
+		const idx = part.indexOf("=");
+		if (idx === -1) continue;
+		const key = part.slice(0, idx).trim();
+		if (key === name)
+			return part.slice(idx + 1).trim();
 	}
 	return undefined;
 }
@@ -78,7 +80,7 @@ export function socketRequireAuth() {
 		}
 		
 		try {
-			(socket as unknown as Record<string, unknown>).user = verifyAccessToken(token);
+			socket.user = verifyAccessToken(token);
 			return next();
 		} catch {
 			return next(new Error("Authentication error: invalid token"));
