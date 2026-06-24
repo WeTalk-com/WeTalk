@@ -8,7 +8,6 @@ import type {
   User,
   Post,
   TrendingTopic,
-  Notification,
   Conversation,
   ReportedPost,
 } from "./types";
@@ -122,57 +121,3 @@ export const conversations: Conversation[] = [
 
 /* ----------------------------- Notifications ----------------------------- */
 
-const u = (id: string, name: string, handle: string, initial: string, verified = false): User =>
-  ({ id, name, handle, initial, verified });
-
-export const notifications: Notification[] = [
-  {
-    id: "n1",
-    type: "like",
-    actor: u("u1", "Maya Rivera", "mayarivera", "M", true),
-    text: "liked your post",
-    preview: "Golden hour never misses ☀️ #wetalk",
-    createdAt: ago(12, "m"),
-  },
-  {
-    id: "n2",
-    type: "follow",
-    actor: u("w1", "Jonas Beck", "jonasbeck", "J"),
-    text: "started following you",
-    createdAt: ago(40, "m"),
-  },
-  {
-    id: "n3",
-    type: "mention",
-    actor: u("u3", "Nina Vale", "ninavale", "N"),
-    text: "mentioned you in a post",
-    preview: "shooting the rooftop with @wetalkuser tonight 🎞️",
-    createdAt: ago(2, "h"),
-  },
-  {
-    id: "n4",
-    type: "comment",
-    actor: u("u2", "Theo Lang", "theolang", "T", true),
-    text: "commented on your post",
-    preview: "this palette is unreal, presets when??",
-    createdAt: ago(5, "h"),
-    read: true,
-  },
-  {
-    id: "n5",
-    type: "like",
-    actor: u("w2", "Elif Demir", "elifd", "E"),
-    text: "liked your post",
-    preview: "Slow mornings, warm light.",
-    createdAt: ago(1, "d"),
-    read: true,
-  },
-  {
-    id: "n6",
-    type: "follow",
-    actor: u("w3", "Remy Cole", "remycole", "R"),
-    text: "started following you",
-    createdAt: ago(2, "d"),
-    read: true,
-  },
-];
