@@ -1,26 +1,57 @@
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import type { Locale } from "@/i18n/routing";
-import { getNotifications } from "@/lib/api";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
+import { getNotifications, markNotificationRead } from "@/lib/api/notifications";
+import { getSocket } from "@/lib/socket";
+import type { Notification } from "@/lib/types";
 import { TopBar } from "@/components/layout/top-bar";
 import { NotificationItem } from "@/components/notifications/notification-item";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({
-    locale: locale as Locale,
-    namespace: "metadata",
-  });
-  return { title: t("notifications") };
-}
+export default function NotificationsPage() {
+  const t = useTranslations("app.notifications");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function NotificationsPage() {
-  const t = await getTranslations("app.notifications");
-  const notifications = await getNotifications();
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await getNotifications();
+      setNotifications(data);
+    } catch {
+      // Keep empty list on error
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    function onNewNotification(n: Notification) {
+      setNotifications((prev) => [n, ...prev]);
+    }
+
+    socket.on("notification:new", onNewNotification);
+    socket.connect();
+
+    return () => {
+      socket.off("notification:new", onNewNotification);
+    };
+  }, [fetchNotifications]);
+
+  async function handleMarkRead(id: string) {
+    try {
+      await markNotificationRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      );
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
@@ -32,11 +63,27 @@ export default async function NotificationsPage() {
         </h1>
       </div>
 
-      <ul className="pb-24 lg:pb-10">
-        {notifications.map((n) => (
-          <NotificationItem key={n.id} notification={n} />
-        ))}
-      </ul>
+      {loading ? (
+        <div className="flex justify-center py-12 text-brown-sec">
+          Loading...
+        </div>
+      ) : notifications.length === 0 ? (
+        <div className="flex justify-center py-12 text-brown-sec">
+          No notifications yet
+        </div>
+      ) : (
+        <ul className="pb-24 lg:pb-10">
+          {notifications.map((n) => (
+            <div
+              key={n.id}
+              onClick={() => !n.read && handleMarkRead(n.id)}
+              className={n.read ? "" : "cursor-pointer"}
+            >
+              <NotificationItem notification={n} />
+            </div>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

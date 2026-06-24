@@ -54,7 +54,7 @@ jobs:
           reporter: jest-junit
       - id: build
         name: Build
-        run: npm run build -- --filter=!notification-service
+        run: npm run build
       - name: Job summary
         if: always()
         run: |
