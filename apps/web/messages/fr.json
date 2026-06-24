@@ -204,7 +204,13 @@
       "selectConversation": "Choisissez une conversation pour commencer à discuter.",
       "typeMessage": "Écrivez un message…",
       "send": "Envoyer",
-      "back": "Retour"
+      "back": "Retour",
+      "empty": "Aucun message pour l'instant. Dites bonjour !",
+      "noConversations": "Aucune conversation pour l'instant.",
+      "compose": "Nouveau message",
+      "composeClose": "Fermer",
+      "composePlaceholder": "Rechercher des personnes…",
+      "composeNoResults": "Aucun utilisateur trouvé."
     },
     "create": {
       "title": "Nouveau post",

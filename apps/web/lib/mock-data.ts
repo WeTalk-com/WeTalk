@@ -4,15 +4,7 @@
  * Les types de domaine vivent dans ./types.
  */
 
-import type {
-  TrendingTopic,
-  Conversation,
-} from "./types";
-
-function ago(value: number, unit: "m" | "h" | "d"): string {
-  const ms = { m: 60_000, h: 3_600_000, d: 86_400_000 }[unit];
-  return new Date(Date.now() - value * ms).toISOString();
-}
+import type { TrendingTopic } from "./types";
 
 /* ----------------------------- Tendances ----------------------------- */
 
@@ -22,52 +14,3 @@ export const trending: TrendingTopic[] = [
   { category: "Design", tag: "#warmtones", posts: "12.4K posts" },
   { category: "Travel", tag: "#slowmornings", posts: "9.1K posts" },
 ];
-
-/* ----------------------------- Messages ----------------------------- */
-
-export const conversations: Conversation[] = [
-  {
-    id: "c1",
-    user: { id: "u1", name: "Maya Rivera", handle: "mayarivera", initial: "M", verified: true },
-    lastMessage: "tes photos sont incroyables !",
-    lastMessageAt: ago(12, "m"),
-    unread: 2,
-    messages: [
-      { id: "m1", text: "Hey ! J'ai vu ton dernier post, vraiment magnifique.", createdAt: ago(1, "h"), mine: false },
-      { id: "m2", text: "Merci beaucoup ! C'était un beau coucher de soleil.", createdAt: ago(55, "m"), mine: true },
-      { id: "m3", text: "tes photos sont incroyables !", createdAt: ago(12, "m"), mine: false },
-    ],
-  },
-  {
-    id: "c2",
-    user: { id: "u2", name: "Theo Lang", handle: "theolang", initial: "T", verified: true },
-    lastMessage: "Oui bien sûr, on se retrouve vendredi ?",
-    lastMessageAt: ago(2, "h"),
-    messages: [
-      { id: "m4", text: "Salut ! Tu veux qu'on tourne quelque chose ensemble cette semaine ?", createdAt: ago(3, "h"), mine: false },
-      { id: "m5", text: "Oui bien sûr, on se retrouve vendredi ?", createdAt: ago(2, "h"), mine: true },
-    ],
-  },
-  {
-    id: "c3",
-    user: { id: "u3", name: "Nina Vale", handle: "ninavale", initial: "N" },
-    lastMessage: "J'adore cette palette de couleurs 🎨",
-    lastMessageAt: ago(1, "d"),
-    messages: [
-      { id: "m6", text: "J'adore cette palette de couleurs 🎨", createdAt: ago(1, "d"), mine: false },
-    ],
-  },
-  {
-    id: "c4",
-    user: { id: "w1", name: "Jonas Beck", handle: "jonasbeck", initial: "J" },
-    lastMessage: "Merci pour le follow !",
-    lastMessageAt: ago(2, "d"),
-    messages: [
-      { id: "m7", text: "Merci pour le follow !", createdAt: ago(2, "d"), mine: false },
-      { id: "m8", text: "Avec plaisir, ton feed est superbe.", createdAt: ago(2, "d"), mine: true },
-    ],
-  },
-];
-
-/* ----------------------------- Notifications ----------------------------- */
-

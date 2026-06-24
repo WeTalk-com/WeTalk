@@ -36,15 +36,19 @@ export async function getConversationList(req: Request, res: Response) {
 		// gardant l'ordre (messages déjà triés du plus récent au plus ancien).
 		const conversationIds = [...new Set(conversations.map(o => (o.senderId === myId ? o.receiverId : o.senderId)))];
 		try {
-			const conversationList = await Promise.all(conversationIds.map(async id => ({
-				user: publicUser((await axios.get(`${env.userServiceUrl}/users/${id}`, {
-					// @ts-expect-error "Pas le bon type de headers" typescript doin' it again...
-					headers: { Authorization: req.headers.authorization },
-					timeout: 3000,
-				})).data),
-				lastMessage: conversations.find(msg => msg.senderId === id || msg.receiverId === id),
-				unread: conversations.filter(msg => msg.senderId === id && msg.receiverId === myId && !msg.isRead).length
-			})));
+			const conversationList = await Promise.all(conversationIds.map(async id => {
+				const lastMsg = conversations.find(msg => msg.senderId === id || msg.receiverId === id);
+				return {
+					user: publicUser((await axios.get(`${env.userServiceUrl}/users/${id}`, {
+						// @ts-expect-error "Pas le bon type de headers" typescript doin' it again...
+						headers: { Authorization: req.headers.authorization },
+						timeout: 3000,
+					})).data),
+					lastMessage: lastMsg?.content ?? "",
+					lastMessageAt: lastMsg?.createdAt ?? null,
+					unread: conversations.filter(msg => msg.senderId === id && msg.receiverId === myId && !msg.isRead).length,
+				};
+			}));
 			
 			res.json({
 				data: conversationList,
@@ -108,7 +112,7 @@ export async function getConversation(req: Request, res: Response) {
 				lastMessageAt: messages[0].createdAt,
 				unread: messages.filter(o => !o.isRead).length,
 				// @ts-expect-error Fuck typescript typing
-				messages: messages.map(o => ({text: o.content, createdAt: o.createdAt, mine: o.senderId === myId})),
+				messages: messages.map(o => ({id: String(o._id), text: o.content, createdAt: o.createdAt, mine: o.senderId === myId})),
 			};
 			
 			res.json({

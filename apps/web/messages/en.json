@@ -204,7 +204,13 @@
       "selectConversation": "Choose a conversation to start chatting.",
       "typeMessage": "Write a message…",
       "send": "Send",
-      "back": "Back"
+      "back": "Back",
+      "empty": "No messages yet. Say hello!",
+      "noConversations": "No conversations yet.",
+      "compose": "New message",
+      "composeClose": "Close",
+      "composePlaceholder": "Search people…",
+      "composeNoResults": "No users found."
     },
     "create": {
       "title": "New post",
