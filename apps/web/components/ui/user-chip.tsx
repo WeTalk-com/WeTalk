@@ -1,5 +1,6 @@
 import { Avatar } from "./avatar";
 import { VerifiedBadge } from "../icons/brand";
+import { cn } from "@/lib/cn";
 
 type ChipUser = {
   name: string;
@@ -22,7 +23,7 @@ export function UserChip({
   className?: string;
 }) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={cn("flex items-center gap-3", className)}>
       <Avatar initial={user.initial} src={user.avatarUrl} solid={solid} alt={user.name} />
       <div className="min-w-0 leading-tight">
         <div className="flex items-center gap-1 font-semibold text-brown">

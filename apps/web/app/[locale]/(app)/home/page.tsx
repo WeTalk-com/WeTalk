@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getFeed, getTrending } from "@/lib/api";
+import { getPosts, getTrending } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { RightRail } from "@/components/home/right-rail";
 import { PostCard } from "@/components/post/post-card";
@@ -20,7 +20,7 @@ export async function generateMetadata({
 }
 
 export default async function HomePage() {
-  const [posts, trending] = await Promise.all([getFeed(), getTrending()]);
+  const [posts, trending] = await Promise.all([getPosts(), getTrending()]);
 
   return (
     <>

@@ -1,4 +1,5 @@
 import type { ElementType, ReactNode } from "react";
+import { cn } from "@/lib/cn";
 
 /** Surface "carte" (fond blanc, bordure, coins arrondis). Polymorphe via `as`. */
 export function Card({
@@ -11,7 +12,7 @@ export function Card({
   children: ReactNode;
 }) {
   return (
-    <Tag className={`rounded-2xl border border-border bg-card ${className}`}>
+    <Tag className={cn("rounded-2xl border border-border bg-card", className)}>
       {children}
     </Tag>
   );

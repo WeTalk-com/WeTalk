@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname } from "@/i18n/navigation";
+import { useRouter, usePathname, Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 
@@ -48,8 +48,9 @@ function SearchInput({ placeholder }: { placeholder: string }) {
       placeholder={placeholder}
       aria-label={placeholder}
       defaultValue={query}
+      autoFocus
       onChange={(e) => handleChange(e.target.value)}
-      className="min-w-0 flex-1 bg-transparent text-brown outline-none placeholder:text-placeholder"
+      className="min-w-0 flex-1 bg-transparent text-sm text-brown outline-none placeholder:text-placeholder"
     />
   );
 }
@@ -59,33 +60,45 @@ export function TopBar({ searchPlaceholder, searchable = false }: Props) {
   const t = useTranslations("app.topBar");
   const placeholder = searchPlaceholder ?? t("searchPlaceholder");
 
+  const inner = (
+    <>
+      <Search className="size-5 shrink-0" />
+      {searchable ? (
+        <Suspense
+          fallback={
+            <input
+              type="search"
+              placeholder={placeholder}
+              aria-label={placeholder}
+              className="min-w-0 flex-1 bg-transparent text-sm text-brown outline-none placeholder:text-placeholder"
+            />
+          }
+        >
+          <SearchInput placeholder={placeholder} />
+        </Suspense>
+      ) : (
+        <span className="min-w-0 flex-1 truncate text-sm text-placeholder">
+          {placeholder}
+        </span>
+      )}
+    </>
+  );
+
   return (
     <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-canvas/80 px-4 py-3 backdrop-blur">
-      <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-brown-sec focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
-        <Search className="size-5 shrink-0" />
-        {searchable ? (
-          <Suspense
-            fallback={
-              <input
-                type="search"
-                placeholder={placeholder}
-                aria-label={placeholder}
-                className="min-w-0 flex-1 bg-transparent text-brown outline-none placeholder:text-placeholder"
-              />
-            }
-          >
-            <SearchInput placeholder={placeholder} />
-          </Suspense>
-        ) : (
-          <input
-            type="search"
-            placeholder={placeholder}
-            aria-label={placeholder}
-            readOnly
-            className="min-w-0 flex-1 bg-transparent text-brown outline-none placeholder:text-placeholder"
-          />
-        )}
-      </div>
+      {searchable ? (
+        <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-brown-sec focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
+          {inner}
+        </div>
+      ) : (
+        <Link
+          href="/explore"
+          aria-label={placeholder}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-brown-sec transition-colors hover:border-gold/50"
+        >
+          {inner}
+        </Link>
+      )}
     </div>
   );
 }

@@ -284,6 +284,16 @@ export async function createPost(req: Request, res: Response): Promise<void> {
   res.status(201).json({ post: postOut });
 }
 
+export async function countPosts(req: Request, res: Response): Promise<void> {
+  const { authorId } = req.query;
+  if (!authorId || typeof authorId !== "string") {
+    res.status(400).json({ error: "authorId query param required" });
+    return;
+  }
+  const count = await PostModel.countDocuments({ authorId });
+  res.json({ count });
+}
+
 export async function listPosts(req: Request, res: Response): Promise<void> {
   const parsed = listQuerySchema.safeParse(req.query);
   if (!parsed.success) {

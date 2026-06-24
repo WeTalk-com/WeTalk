@@ -1,13 +1,17 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { X, ImageIcon, Film, Smile, MapPin, Sparkles } from "lucide-react";
+import { useRouter } from "@/i18n/navigation";
+import * as Dialog from "@radix-ui/react-dialog";
+import { X, ImageIcon, Film, Sparkles } from "lucide-react";
 import type { User } from "@/lib/types";
 import { createPost } from "@/lib/api";
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { IconButton } from "../ui/icon-button";
+import { cn } from "@/lib/cn";
+import { useToast } from "@/components/ui/toast-provider";
 
 const MAX_CHARS = 280;
 
@@ -33,34 +37,18 @@ export function CreatePostModal({
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("app.create");
+  const router = useRouter();
 
+  const toast = useToast();
   const remaining = MAX_CHARS - text.length;
   const tags = parseTags(text);
   const canPost = text.trim().length > 0 && remaining >= 0;
 
-  // Refs stables pour le cleanup — évite de révoquer les blob URLs prématurément
-  // si le parent re-rend et change l'identité de onClose.
-  const onCloseRef = useRef(onClose);
-  const imagePreviewRef = useRef(imagePreview);
-  const videoPreviewRef = useRef(videoPreview);
-  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
-  useEffect(() => { imagePreviewRef.current = imagePreview; }, [imagePreview]);
-  useEffect(() => { videoPreviewRef.current = videoPreview; }, [videoPreview]);
-
-  // Fermeture clavier (Échap) + blocage scroll fond + nettoyage blob URLs au démontage
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onCloseRef.current();
-    }
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-      if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
-      if (videoPreviewRef.current) URL.revokeObjectURL(videoPreviewRef.current);
-    };
-  }, []);
+  function handleClose() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    onClose();
+  }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -95,39 +83,34 @@ export function CreatePostModal({
   async function handlePost() {
     setPending(true);
     try {
-      await createPost({
-        text,
-        tags,
-        image: image ?? undefined,
-        video: video ?? undefined,
-      });
+      await createPost({ text, tags, image: image ?? undefined, video: video ?? undefined });
       onClose();
+      toast.success(t("toastSuccess"));
+      router.refresh();
+    } catch {
+      toast.error(t("toastError"));
     } finally {
       setPending(false);
     }
   }
 
-  const hasMedia = imagePreview || videoPreview;
+  const _hasMedia = imagePreview || videoPreview;
 
   return (
-    <div
-      className="fixed inset-0 z-60 flex items-start justify-center bg-dark/50 p-4 pt-20 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("title")}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-card border border-border bg-card p-5 shadow-card"
-      >
+    <Dialog.Root open onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-dark/50 backdrop-blur-sm" />
+        <Dialog.Content className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20">
+      <div className="w-full max-w-lg rounded-card border border-border bg-card p-5 shadow-card">
         <div className="flex items-center justify-between">
-          <h2 className="font-head text-xl font-extrabold text-brown">
+          <Dialog.Title className="font-head text-xl font-extrabold text-brown">
             {t("title")}
-          </h2>
-          <IconButton label={t("close")} onClick={onClose}>
-            <X className="size-5" />
-          </IconButton>
+          </Dialog.Title>
+          <Dialog.Close asChild>
+            <IconButton label={t("close")}>
+              <X className="size-5" />
+            </IconButton>
+          </Dialog.Close>
         </div>
 
         <div className="mt-4 flex gap-3">
@@ -149,7 +132,7 @@ export function CreatePostModal({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imagePreview}
-              alt="Aperçu"
+              alt={t("imagePreviewAlt")}
               className="max-h-64 w-full rounded-2xl object-cover"
             />
             <button
@@ -182,21 +165,6 @@ export function CreatePostModal({
           </div>
         )}
 
-        {/* Zone placeholder si pas de media */}
-        {!hasMedia && (
-          <button
-            type="button"
-            aria-label={t("addImage")}
-            onClick={() => imageRef.current?.click()}
-            className="mt-3 grid aspect-16/10 w-full cursor-pointer place-items-center rounded-2xl border border-dashed border-border bg-gold/10 bg-[repeating-linear-gradient(45deg,transparent,transparent_12px,rgba(186,117,23,0.10)_12px,rgba(186,117,23,0.10)_24px)] transition-colors hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
-          >
-            <span className="flex flex-col items-center gap-1 text-sm text-brown-sec">
-              <ImageIcon className="size-6" />
-              {t("addPhoto")}
-            </span>
-          </button>
-        )}
-
         {/* Inputs fichiers cachés */}
         <input
           ref={imageRef}
@@ -221,25 +189,16 @@ export function CreatePostModal({
           <IconButton label={t("addVideo")} onClick={() => videoRef.current?.click()}>
             <Film className="size-5" />
           </IconButton>
-          <IconButton label={t("addEmoji")}>
-            <Smile className="size-5" />
-          </IconButton>
-          <IconButton label={t("addLocation")}>
-            <MapPin className="size-5" />
-          </IconButton>
-          <IconButton label={t("enhance")}>
+<IconButton label={t("enhance")}>
             <Sparkles className="size-5" />
           </IconButton>
 
           {/* Compteur de caractères */}
           <span
-            className={`ml-auto mr-3 text-sm font-medium tabular-nums ${
-              remaining < 0
-                ? "text-live"
-                : remaining <= 20
-                  ? "text-gold"
-                  : "text-brown-sec"
-            }`}
+            className={cn(
+              "ml-auto mr-3 text-sm font-medium tabular-nums",
+              remaining < 0 ? "text-live" : remaining <= 20 ? "text-gold" : "text-brown-sec",
+            )}
           >
             {remaining}
           </span>
@@ -263,6 +222,8 @@ export function CreatePostModal({
           </div>
         )}
       </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
