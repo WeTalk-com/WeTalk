@@ -16,6 +16,22 @@ import {logger} from "../utils/logger.js";
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+async function notifyFollow(followerId: string, followingId: string, forwardHeaders: Record<string, string>): Promise<void> {
+  try {
+    await fetch(`${env.notificationServiceUrl}/notifications/internal`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...forwardHeaders,
+      },
+      body: JSON.stringify({ type: "follow", recipientId: followingId }),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // best-effort : ne pas bloquer le follow pour une notification ratée
+  }
+}
+
 // Headers d'auth à relayer vers le media-service (cookie front ou Bearer est-ouest).
 function forwardAuth(req: Request): Record<string, string> {
 	const headers: Record<string, string> = {};
@@ -334,33 +350,34 @@ export async function deleteMe(req: Request, res: Response): Promise<void> {
 }
 
 export async function follow(req: Request, res: Response): Promise<void> {
-	try {
-		const targetId = req.params.id as string;
-		const myId = req.user?.sub as string;
+  try {
+    const targetId = req.params.id as string;
+    const myId = req.user?.sub as string;
 
-		if (targetId === myId) {
-			res.status(400).json({ error: "Vous ne pouvez pas vous abonner à vous-même." });
-			return;
-		}
+    if (targetId === myId) {
+      res.status(400).json({ error: "Vous ne pouvez pas vous abonner à vous-même." });
+      return;
+    }
 
-		const targetUser = await User.findByPk(targetId);
-		if (!targetUser) {
-			res.status(404).json({ error: "Utilisateur cible introuvable." });
-			return;
-		}
+    const targetUser = await User.findByPk(targetId);
+    if (!targetUser) {
+      res.status(404).json({ error: "Utilisateur cible introuvable." });
+      return;
+    }
 
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const [_, created] = await Follow.findOrCreate({
-			where: { followerId: myId, followingId: targetId }
-		});
+    const [_, created] = await Follow.findOrCreate({
+      where: { followerId: myId, followingId: targetId }
+    });
 
-		if (!created) {
-			res.status(400).json({ error: "Vous suivez déjà cet utilisateur." });
-			return;
-		}
+    if (!created) {
+      res.status(400).json({ error: "Vous suivez déjà cet utilisateur." });
+      return;
+    }
+
+    notifyFollow(myId, targetId, forwardAuth(req));
 
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}

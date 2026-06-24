@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
 import { isValidObjectId, Types } from "mongoose";
-import { z } from "zod";
 import { PostModel } from "../models/post.js";
 import { CommentModel } from "../models/comment.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
+import { createSchema, updateSchema, listQuerySchema, feedQuerySchema } from "../schemas/post.schemas.js";
 
 // Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
 export function forwardAuth(req: Request): Record<string, string> {
@@ -12,6 +12,31 @@ export function forwardAuth(req: Request): Record<string, string> {
   if (req.headers.authorization) headers.authorization = req.headers.authorization;
   if (req.headers.cookie) headers.cookie = req.headers.cookie;
   return headers;
+}
+
+export async function notifyNotificationService(
+  payload: {
+    type: "like" | "comment";
+    recipientId: string;
+    actorId: string;
+    postId: string;
+    commentId?: string;
+    preview?: string;
+  },
+  headers?: Record<string, string>,
+): Promise<void> {
+  try {
+    await fetch(`${env.notificationServiceUrl}/notifications/internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch (err) {
+    logger.warn("notification service call failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 // Vérifie auprès du user-service si l'auteur peut publier
@@ -92,22 +117,6 @@ async function deleteMediaFromService(id: string, headers: Record<string, string
   }
 }
 
-const createSchema = z.object({
-  content: z.string().trim().min(1).max(280),
-});
-
-const updateSchema = createSchema;
-
-const listQuerySchema = z.object({
-  authorId: z.string().trim().min(1).optional(),
-  cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
-
-const feedQuerySchema = z.object({
-  cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
 
 type AuthorLite = {
   id: string;
@@ -404,6 +413,19 @@ export async function likePost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
+
+  if (post.authorId !== req.user!.sub) {
+    notifyNotificationService(
+      {
+        type: "like",
+        recipientId: post.authorId,
+        actorId: req.user!.sub,
+        postId: id!,
+      },
+      forwardAuth(req),
+    );
+  }
+
   res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: true });
 }
 

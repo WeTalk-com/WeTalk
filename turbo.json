@@ -1,17 +1,38 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "ACCESS_REVOKE_TTL_SECONDS",
+    "API_INTERNAL_URL",
+    "CORS_ORIGIN",
+    "DB_HOST",
+    "DB_NAME",
+    "DB_PASSWORD",
+    "DB_PORT",
+    "DB_USER",
+    "JWT_ACCESS_EXPIRES_IN",
+    "JWT_ACCESS_SECRET",
+    "JWT_REFRESH_SECRET",
+    "NODE_ENV",
+    "PORT",
+    "REDIS_URL",
+    "REFRESH_TTL_SECONDS"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**/*.test.ts"]
     },
     "dev": {
       "cache": false,

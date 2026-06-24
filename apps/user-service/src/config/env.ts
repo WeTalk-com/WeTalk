@@ -39,6 +39,9 @@ export const env = {
   // post-service (pour récupérer le nombre de posts d'un utilisateur)
   postServiceUrl: required("POST_SERVICE_URL", "http://post-service:4002"),
 
+  // notification-service
+  notificationServiceUrl: required("NOTIFICATION_SERVICE_URL", "http://notification-service:4003"),
+
   // Taille max d'une image de profil 5Mo
   maxProfileImageBytes: Number(process.env.MAX_PROFILE_IMAGE_BYTES ?? 5 * 1024 * 1024),
 

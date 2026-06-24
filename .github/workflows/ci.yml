@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality (lint → typecheck → test → build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - id: lint
+        run: npm run lint
+      - id: types
+        run: npm run check-types
+      - id: test
+        name: Test
+        run: npm test -- --reporter=default --reporter=junit --outputFile=junit.xml
+      - name: Test report
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: Vitest report
+          path: junit.xml
+          reporter: jest-junit
+      - id: build
+        name: Build
+        run: npm run build -- --filter=!message-service --filter=!media-service --filter=!notification-service
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f junit.xml ]; then
+            tests=$(grep -oE 'tests="[0-9]+"' junit.xml | head -1 | grep -oE '[0-9]+')
+            failures=$(grep -oE 'failures="[0-9]+"' junit.xml | head -1 | grep -oE '[0-9]+')
+            errors=$(grep -oE 'errors="[0-9]+"' junit.xml | head -1 | grep -oE '[0-9]+')
+            passed=$((tests - failures - errors))
+            testline="**Tests : ${passed}/${tests} passés** (échecs : ${failures}, erreurs : ${errors})"
+          else
+            testline="_junit.xml absent (tests non exécutés)_"
+          fi
+          {
+            echo "## 🧪 Quality — récap"
+            echo ""
+            echo "| Étape | Statut |"
+            echo "|---|---|"
+            echo "| Lint | ${{ steps.lint.outcome }} |"
+            echo "| Types | ${{ steps.types.outcome }} |"
+            echo "| Tests | ${{ steps.test.outcome }} |"
+            echo "| Build | ${{ steps.build.outcome }} |"
+            echo ""
+            echo "$testline"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  codeql:
+    name: CodeQL
+    needs: quality
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v3
+
+  trivy:
+    name: Trivy
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [auth-service, user-service, post-service, web, gateway]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ${{ matrix.service }}
+        run: docker build -f apps/${{ matrix.service }}/Dockerfile -t wetalk/${{ matrix.service }} .
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          image-ref: wetalk/${{ matrix.service }}
+          format: sarif
+          output: trivy-${{ matrix.service }}.sarif
+          severity: HIGH,CRITICAL
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: success() || failure()
+        with:
+          sarif_file: trivy-${{ matrix.service }}.sarif
+          category: trivy-${{ matrix.service }}
+      - name: Trivy gate (fixable HIGH/CRITICAL — report-only)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          image-ref: wetalk/${{ matrix.service }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+  trivy-config:
+    name: Trivy IaC/config
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan config (Dockerfiles, compose)
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-config.sarif
+          severity: HIGH,CRITICAL
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: success() || failure()
+        with:
+          sarif_file: trivy-config.sarif
+          category: trivy-config
+
+  gitleaks:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  notify:
+    name: Discord notification
+    needs: [quality, codeql, trivy, trivy-config, gitleaks]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 'failure' || 'success' }}
+          title: "Pipeline CI"
+          username: WeTalk CI
