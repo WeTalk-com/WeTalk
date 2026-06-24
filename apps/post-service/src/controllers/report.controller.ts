@@ -129,8 +129,10 @@ export async function removeReportedPost(req: Request, res: Response): Promise<v
   }
 
   await PostModel.findByIdAndDelete(report.postId);
-  report.status = "resolved";
-  await report.save();
+  await ReportModel.updateMany(
+    { postId: report.postId, status: "pending" },
+    { status: "resolved" },
+  );
 
   logger.info("reported post removed", {
     id,

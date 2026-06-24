@@ -77,6 +77,10 @@ export function getController(io: SocketServer) {
 
     if (type === "like" || type === "follow") {
       const role = await fetchUserRole(recipientId, forwardAuth(req));
+      if (role === null) {
+        res.status(503).json({ error: "Unable to verify recipient role" });
+        return;
+      }
       if (role === "moderator" || role === "admin") {
         res.status(200).json({ skipped: true });
         return;
