@@ -325,8 +325,7 @@ export async function follow(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const [_, created] = await Follow.findOrCreate({
+		const [, created] = await Follow.findOrCreate({
 			where: { followerId: myId, followingId: targetId }
 		});
 
@@ -432,7 +431,7 @@ export async function followingIds(req: Request, res: Response): Promise<void> {
 			limit: 5000,
 		});
 		res.json({ ids: rows.map((r) => r.get("followingId") as string) });
-	} catch (error) {
+	} catch {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
 }
