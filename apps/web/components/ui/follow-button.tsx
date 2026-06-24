@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Plus, Check } from "lucide-react";
 import { followUser, unfollowUser } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
@@ -17,7 +18,6 @@ type Props = {
 export function FollowButton({ userId, initialFollowing = false, size = "sm", onFollow, onUnfollow }: Props) {
   const t = useTranslations("app.rightRail");
   const [following, setFollowing] = useState(initialFollowing);
-  const [hovered, setHovered] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function toggle() {
@@ -43,28 +43,26 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
     ? "px-4 py-1.5 text-sm"
     : "px-5 py-2 text-base";
 
-  const label = following
-    ? hovered ? t("unfollow") : t("following")
-    : t("follow");
-
+  // Abonné = contour + coche (badge style LinkedIn) ; sinon plein brun + plus.
   const colorClass = following
-    ? hovered
-      ? "border border-live/40 bg-live/10 text-live"
-      : "border border-border bg-card text-brown"
+    ? "border border-border bg-card text-brown"
     : "bg-brown text-canvas";
 
   return (
     <button
       type="button"
       aria-pressed={following}
-      aria-label={label}
+      aria-label={following ? t("unfollow") : t("follow")}
       disabled={pending}
       onClick={toggle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={cn("shrink-0 rounded-full font-semibold transition-colors disabled:opacity-60", sizeClass, colorClass)}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full font-bold transition-colors disabled:opacity-60",
+        sizeClass,
+        colorClass,
+      )}
     >
-      {label}
+      {following ? <Check className="size-4" /> : <Plus className="size-4" />}
+      {following ? t("following") : t("follow")}
     </button>
   );
 }
