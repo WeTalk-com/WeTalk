@@ -49,9 +49,9 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
 
   const colorClass = following
     ? hovered
-      ? "border border-live/40 bg-live/10 text-live hover:bg-live/15"
+      ? "border border-live/40 bg-live/10 text-live"
       : "border border-border bg-card text-brown"
-    : "bg-brown text-canvas hover:bg-brown/90";
+    : "bg-brown text-canvas";
 
   return (
     <button

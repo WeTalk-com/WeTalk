@@ -54,7 +54,7 @@ function PostMenu({
         <button
           type="button"
           aria-label={t("more")}
-          className="grid size-9 place-items-center rounded-full text-brown-sec hover:bg-canvas"
+          className="grid size-9 place-items-center rounded-full text-brown-sec"
         >
           <MoreHorizontal className="size-5" />
         </button>
@@ -68,7 +68,7 @@ function PostMenu({
         >
           <DropdownMenu.Item
             onSelect={copyLink}
-            className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-brown outline-none hover:bg-canvas data-[highlighted]:bg-canvas"
+            className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-brown outline-none data-[highlighted]:bg-canvas"
           >
             <LinkIcon className="size-4 text-brown-sec" />
             {t("copyLink")}
@@ -77,7 +77,7 @@ function PostMenu({
           {isOwner ? (
             <DropdownMenu.Item
               onSelect={onDelete}
-              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none hover:bg-live/5 data-[highlighted]:bg-live/5"
+              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none data-[highlighted]:bg-live/5"
             >
               <Trash2 className="size-4" />
               {t("delete")}
@@ -85,7 +85,7 @@ function PostMenu({
           ) : (
             <DropdownMenu.Item
               onSelect={onReport}
-              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none hover:bg-live/5 data-[highlighted]:bg-live/5"
+              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none data-[highlighted]:bg-live/5"
             >
               <Flag className="size-4" />
               {t("report")}
@@ -129,7 +129,7 @@ export function PostCard({ post }: { post: Post }) {
     <>
       <article
         onClick={handleCardClick}
-        className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-canvas/60"
+        className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors"
       >
         <div className="flex items-center gap-3">
           <UserHoverCard handle={author.handle}>

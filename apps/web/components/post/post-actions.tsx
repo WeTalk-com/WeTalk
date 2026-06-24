@@ -37,7 +37,7 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             type="button"
             aria-label={t("comment")}
             onClick={onComment}
-            className="flex items-center gap-1.5 text-sm transition-colors hover:text-gold"
+            className="flex items-center gap-1.5 text-sm transition-colors"
           >
             <MessageCircle className="size-5.5" />
             <span className="tabular-nums">{formatCount(comments)}</span>
@@ -58,7 +58,7 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             onClick={toggleLike}
             aria-pressed={liked}
             aria-label={t("like")}
-            className={cn("flex items-center gap-1.5 text-sm transition-colors", liked ? "text-live" : "hover:text-live")}
+            className={cn("flex items-center gap-1.5 text-sm transition-colors", liked && "text-live")}
           >
             <Heart className={cn("size-5.5 transition-colors", liked && "fill-live like-pop")} />
             <span className="tabular-nums">{formatCount(likeCount)}</span>

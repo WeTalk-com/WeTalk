@@ -60,7 +60,7 @@ export function ReportModal({
                   </Dialog.Title>
                   <Dialog.Close
                     aria-label={t("close")}
-                    className="grid size-8 place-items-center rounded-full text-brown-sec hover:bg-card"
+                    className="grid size-8 place-items-center rounded-full text-brown-sec"
                   >
                     <X className="size-4" />
                   </Dialog.Close>
@@ -76,7 +76,7 @@ export function ReportModal({
                       key={r}
                       className={cn(
                         "flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-colors",
-                        reason === r ? "border-gold bg-gold/10" : "border-border hover:bg-canvas",
+                        reason === r ? "border-gold bg-gold/10" : "border-border",
                       )}
                     >
                       <input
@@ -106,7 +106,7 @@ export function ReportModal({
                 )}
 
                 <div className="mt-5 flex items-center justify-end gap-3">
-                  <Dialog.Close className="text-sm text-brown-sec hover:text-brown">
+                  <Dialog.Close className="text-sm text-brown-sec">
                     {t("cancel")}
                   </Dialog.Close>
                   <Button disabled={!reason || pending} onClick={handleSubmit}>

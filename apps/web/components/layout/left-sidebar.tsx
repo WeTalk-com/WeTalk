@@ -70,7 +70,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
               aria-current={active ? "page" : undefined}
               className={cn(
               "flex items-center gap-4 rounded-2xl px-4 py-3 text-lg font-semibold transition-colors",
-              active ? "bg-card text-brown shadow-soft" : "text-brown-sec hover:bg-cream",
+              active ? "bg-card text-brown shadow-soft" : "text-brown-sec",
             )}
             >
               <span className="relative">
@@ -91,7 +91,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
 
       {/* Carte utilisateur */}
       <div className="mt-auto flex items-center gap-3 rounded-2xl px-2 py-2">
-        <Link href="/profile" className="min-w-0 flex-1 rounded-xl transition-colors hover:bg-cream">
+        <Link href="/profile" className="min-w-0 flex-1 rounded-xl transition-colors">
           <UserChip user={user} solid />
         </Link>
         <DropdownMenu.Root>
@@ -99,7 +99,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
             <button
               type="button"
               aria-label={t("accountMenu")}
-              className="text-brown-sec transition-colors hover:text-brown"
+              className="text-brown-sec transition-colors"
             >
               <MoreHorizontal className="size-5" />
             </button>

@@ -27,7 +27,7 @@ export function ProfileTabs({ posts }: Props) {
           <Tabs.Trigger
             key={key}
             value={key}
-            className="relative flex-1 pb-3 text-sm font-semibold text-brown-sec transition-colors hover:text-brown data-[state=active]:text-brown"
+            className="relative flex-1 pb-3 text-sm font-semibold text-brown-sec transition-colors data-[state=active]:text-brown"
           >
             {label}
             <span className="absolute bottom-0 left-1/2 h-0.75 w-10 -translate-x-1/2 rounded-full bg-gold opacity-0 transition-opacity data-[state=active]:opacity-100" />

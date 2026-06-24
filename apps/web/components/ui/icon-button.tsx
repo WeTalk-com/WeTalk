@@ -19,7 +19,7 @@ export function IconButton({ label, children, className = "", ...rest }: Props) 
           type="button"
           aria-label={label}
           className={cn(
-            "grid size-10 shrink-0 place-items-center rounded-full text-gold transition-colors hover:bg-cream",
+            "grid size-10 shrink-0 place-items-center rounded-full text-gold transition-colors",
             className,
           )}
           {...rest}

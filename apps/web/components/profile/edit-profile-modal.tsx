@@ -156,7 +156,7 @@ export function EditProfileButton({ profile, autoOpen = false }: { profile: Prof
               </Dialog.Title>
               <Dialog.Close
                 aria-label={t("editCancel")}
-                className="grid size-8 place-items-center rounded-full text-brown-sec transition-colors hover:bg-gold/10 hover:text-gold"
+                className="grid size-8 place-items-center rounded-full text-brown-sec transition-colors"
               >
                 <X className="size-5" />
               </Dialog.Close>

@@ -139,7 +139,7 @@ export function CreatePostModal({
               type="button"
               onClick={removeImage}
               aria-label={t("removeImage")}
-              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors hover:bg-dark"
+              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors"
             >
               <X className="size-4" />
             </button>
@@ -158,7 +158,7 @@ export function CreatePostModal({
               type="button"
               onClick={removeVideo}
               aria-label={t("removeVideo")}
-              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors hover:bg-dark"
+              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors"
             >
               <X className="size-4" />
             </button>

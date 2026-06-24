@@ -80,7 +80,7 @@ export function ModerationQueue({
             <button
               type="button"
               onClick={() => handleDismiss(report.id)}
-              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-brown-sec transition-colors hover:border-brown hover:text-brown"
+              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-brown-sec transition-colors"
             >
               <CheckCheck className="size-3.5" />
               {t("dismiss")}
@@ -88,7 +88,7 @@ export function ModerationQueue({
             <button
               type="button"
               onClick={() => handleRemove(report.id)}
-              className="flex items-center gap-1.5 rounded-full bg-live/10 px-3 py-1.5 text-xs font-medium text-live transition-colors hover:bg-live/20"
+              className="flex items-center gap-1.5 rounded-full bg-live/10 px-3 py-1.5 text-xs font-medium text-live transition-colors"
             >
               <Trash2 className="size-3.5" />
               {t("remove")}

@@ -44,7 +44,7 @@ export function ExploreContent({
           <Tabs.Trigger
             key={key}
             value={key}
-            className="relative flex-1 py-4 text-sm font-semibold text-brown-sec transition-colors hover:text-brown data-[state=active]:text-brown"
+            className="relative flex-1 py-4 text-sm font-semibold text-brown-sec transition-colors data-[state=active]:text-brown"
           >
             {label}
             <span className="absolute bottom-0 left-1/2 h-0.75 w-12 -translate-x-1/2 rounded-full bg-gold opacity-0 transition-opacity data-[state=active]:opacity-100" />
@@ -58,7 +58,7 @@ export function ExploreContent({
           {filteredTrending.map((topic, i) => (
             <li
               key={topic.tag}
-              className="group flex cursor-pointer items-start gap-4 border-b border-border px-5 py-4 transition-colors hover:bg-card last:border-0"
+              className="group flex cursor-pointer items-start gap-4 border-b border-border px-5 py-4 transition-colors last:border-0"
             >
               <span className="mt-0.5 w-5 shrink-0 text-sm font-bold text-brown-sec">{i + 1}</span>
               <div className="min-w-0 flex-1">
@@ -72,7 +72,7 @@ export function ExploreContent({
               <button
                 type="button"
                 aria-label={t("moreOptions")}
-                className="mt-0.5 shrink-0 rounded-full p-1 text-brown-sec opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gold/10 hover:text-gold"
+                className="mt-0.5 shrink-0 rounded-full p-1 text-brown-sec opacity-0 transition-opacity group-hover:opacity-100"
               >
                 <MoreHorizontal className="size-4" />
               </button>

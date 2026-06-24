@@ -32,7 +32,7 @@ export function ThemeSwitcher() {
             value={option.id}
             className={cn(
               "flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition-colors",
-              selected ? "border-gold bg-gold/10 text-brown" : "border-border bg-card text-brown-sec hover:bg-cream",
+              selected ? "border-gold bg-gold/10 text-brown" : "border-border bg-card text-brown-sec",
             )}
           >
             <span

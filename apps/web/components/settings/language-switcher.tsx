@@ -42,7 +42,7 @@ export function LanguageSwitcher() {
             value={locale}
             className={cn(
               "flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium transition-colors disabled:opacity-60",
-              selected ? "border-gold bg-gold/10 text-brown" : "border-border bg-card text-brown-sec hover:bg-cream",
+              selected ? "border-gold bg-gold/10 text-brown" : "border-border bg-card text-brown-sec",
             )}
           >
             {t(LABEL_KEY[locale])}
