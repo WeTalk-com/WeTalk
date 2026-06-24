@@ -32,10 +32,12 @@ export function mapNotification(n: BackendNotification): Notification {
       initial: name.charAt(0).toUpperCase(),
       avatarUrl: actor?.profileImage ?? undefined,
     },
-    text: n.type === "like" ? "liked your post" : n.type === "comment" ? "commented on your post" : n.type === "follow" ? "started following you" : "",
+    text: n.type === "like" ? "liked your post" : n.type === "comment" ? "commented on your post" : n.type === "follow" ? "started following you" : n.type === "mention" ? "mentioned you in a post" : "",
     preview: n.preview,
     createdAt: n.createdAt,
     read: n.read,
+    postId: n.postId,
+    commentId: n.commentId,
   };
 }
 
