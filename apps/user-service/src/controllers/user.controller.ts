@@ -347,15 +347,12 @@ export async function follow(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    await notifyFollow(myId, targetId, forwardAuth(req));
-
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
-<<<<<<<<< Temporary merge branch 1
+
+    // Best-effort notification; don't block the follow response.
+    void notifyFollow(targetId, forwardAuth(req));
 	} catch (error) {
 	  logger.error((error as Error).message);
-=========
-	} catch {
->>>>>>>>> Temporary merge branch 2
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}
 }
