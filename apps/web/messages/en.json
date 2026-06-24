@@ -56,6 +56,8 @@
   "auth": {
     "subtitle": "Talk warmer · Share slower",
     "invalidCredentials": "Invalid credentials",
+    "rateLimited": "Too many attempts. Try again in a few minutes.",
+    "serverError": "Something went wrong. Please try again.",
     "logout": "Log out",
     "toggleLogin": "Log in",
     "toggleSignup": "Sign up",

@@ -188,13 +188,21 @@ function LoginPageContent() {
           case "password_too_short":
             setFieldErrors((e) => ({ ...e, password: t("passwordErrorMin") }));
             break;
-          default:
+          case "rate_limited":
+            setTouched({});
+            setGlobalError(t("rateLimited"));
+            break;
+          case "invalid_credentials":
             setTouched({});
             setGlobalError(t("invalidCredentials"));
+            break;
+          default:
+            setTouched({});
+            setGlobalError(t("serverError"));
         }
       } else {
         setTouched({});
-        setGlobalError(t("invalidCredentials"));
+        setGlobalError(t("serverError"));
       }
       setPending(false);
     }
