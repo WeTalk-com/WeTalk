@@ -288,7 +288,9 @@
     "deleteAccountCancel": "Annuler",
     "deleteAccountError": "Une erreur s'est produite. Réessayez.",
     "toastProfileSaved": "Profil mis à jour",
-    "toastProfileError": "Impossible de mettre à jour le profil."
+    "toastProfileError": "Impossible de mettre à jour le profil.",
+    "toastProfileFormat": "Format non supporté. Utilisez JPG, PNG, WebP ou GIF.",
+    "toastProfileTooLarge": "Image trop volumineuse."
   },
   "theme": {
     "changeTheme": "Changer de thème",

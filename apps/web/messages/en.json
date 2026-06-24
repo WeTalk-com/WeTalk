@@ -288,7 +288,9 @@
     "deleteAccountCancel": "Cancel",
     "deleteAccountError": "An error occurred. Please try again.",
     "toastProfileSaved": "Profile updated",
-    "toastProfileError": "Failed to update profile. Please try again."
+    "toastProfileError": "Failed to update profile. Please try again.",
+    "toastProfileFormat": "Unsupported format. Use JPG, PNG, WebP or GIF.",
+    "toastProfileTooLarge": "Image too large."
   },
   "theme": {
     "changeTheme": "Change theme",

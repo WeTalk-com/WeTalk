@@ -7,6 +7,7 @@ import { X, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Profile } from "@/lib/types";
 import { updateProfile } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -130,8 +131,14 @@ export function EditProfileButton({ profile, autoOpen = false }: { profile: Prof
       setOpen(false);
       toast.success(tSettings("toastProfileSaved"));
       router.refresh();
-    } catch {
-      toast.error(tSettings("toastProfileError"));
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 415) {
+        toast.error(tSettings("toastProfileFormat"));
+      } else if (err instanceof ApiError && err.status === 413) {
+        toast.error(tSettings("toastProfileTooLarge"));
+      } else {
+        toast.error(tSettings("toastProfileError"));
+      }
     } finally {
       setPending(false);
     }
@@ -192,8 +199,8 @@ export function EditProfileButton({ profile, autoOpen = false }: { profile: Prof
               </button>
             </div>
 
-            <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
-            <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={onBannerChange} />
+            <input ref={avatarRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={onAvatarChange} />
+            <input ref={bannerRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={onBannerChange} />
 
             {/* Form */}
             <div className="flex flex-col gap-4 px-5 pb-5 pt-12">
