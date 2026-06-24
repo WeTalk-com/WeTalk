@@ -222,7 +222,6 @@ flowchart TB
 | GET | `/posts/feed` | `getFeed` | ✅ Oui |
 | GET | `/posts/:id` | `getPost` | ✅ Oui |
 | POST | `/posts` | `createPost` | ✅ Oui |
-| PATCH | `/posts/:id` | `updatePost` | ✅ Oui |
 | DELETE | `/posts/:id` | `deletePost` | ✅ Oui |
 | POST | `/posts/:id/like` | `likePost` | ✅ Oui |
 | DELETE | `/posts/:id/like` | `unlikePost` | ✅ Oui |
@@ -231,7 +230,15 @@ flowchart TB
 | DELETE | `/comments/:id` | `deleteComment` | ✅ Oui |
 | POST | `/comments/:id/like` | `likeComment` | ✅ Oui |
 | DELETE | `/comments/:id/like` | `unlikeComment` | ✅ Oui |
+| PATCH | `/comments/:id` | `editComment` | ❌ Non (back prêt) |
+| GET | `/posts?tag=` | `getPostsByTag` | ❌ Non (back prêt) |
+| GET | `/posts/liked` | `getLikedPosts` | ❌ Non (back prêt) |
+| GET | `/posts/:id/likes` | `getPostLikers` | ❌ Non (back prêt) |
+| GET | `/comments/:id/likes` | `getCommentLikers` | ❌ Non (back prêt) |
+| GET | `/tags` | `getPopularTags` | ❌ Non (back prêt) |
 | POST | `/posts/:id/report` | `reportPost` | ❌ Non (stub `TODO`) |
+
+> **Note** : `PATCH /posts/:id` retiré — les posts sont désormais **immuables** (seuls les commentaires sont éditables via `PATCH /comments/:id`).
 
 ### Notifications (`lib/api/notifications.ts`)
 
@@ -262,7 +269,7 @@ flowchart TB
 | :--- | :--- | :--- | :---: |
 | GET | `/trending` | `getTrending` | ❌ Non (mock) |
 
-**Bilan : 28 endpoints intégrés ✅ · 8 non connectés ❌**
+**Bilan : 27 endpoints intégrés ✅ · 14 non connectés ❌**
 
 ## Documentation Swagger
 

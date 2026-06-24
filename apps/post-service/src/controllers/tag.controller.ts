@@ -3,7 +3,9 @@ import { PostModel } from "../models/post.js";
 import { CommentModel } from "../models/comment.js";
 import { tagsQuerySchema } from "../schemas/post.schemas.js";
 
-// GET /tags — tags les plus utilisés (explorer), agrégés sur posts + commentaires.
+// GET /tags — tags tendance (explorer), agrégés sur posts + commentaires.
+// Fenêtre glissante de 7 jours : seul le contenu récent compte vers le "trending".
+const TRENDING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 export async function listPopularTags(req: Request, res: Response): Promise<void> {
   const parsed = tagsQuerySchema.safeParse(req.query);
   if (!parsed.success) {
@@ -12,8 +14,13 @@ export async function listPopularTags(req: Request, res: Response): Promise<void
   }
   const { limit } = parsed.data;
 
-  // Une passe d'agrégation par collection : unwind des tags puis comptage.
-  const pipeline = [{ $unwind: "$tags" }, { $group: { _id: "$tags", count: { $sum: 1 } } }];
+  // $match sur createdAt (7 derniers jours) avant unwind/group → fenêtre tendance + scan borné.
+  const since = new Date(Date.now() - TRENDING_WINDOW_MS);
+  const pipeline = [
+    { $match: { createdAt: { $gte: since } } },
+    { $unwind: "$tags" },
+    { $group: { _id: "$tags", count: { $sum: 1 } } },
+  ];
   const [postTags, commentTags] = await Promise.all([
     PostModel.aggregate<{ _id: string; count: number }>(pipeline),
     CommentModel.aggregate<{ _id: string; count: number }>(pipeline),

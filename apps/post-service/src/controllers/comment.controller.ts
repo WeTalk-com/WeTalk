@@ -175,10 +175,9 @@ export async function updateComment(req: Request, res: Response): Promise<void> 
   comment.content = parsed.data.content;
   comment.tags = extractTags(parsed.data.content); // ré-extraits sinon ?tag= / /tags périmés
   await comment.save();
-  // Forme enrichie identique à listComments : author + likeCount/likedByMe, likedBy jamais exposé.
-  const [authored] = await withAuthors([comment.toObject()], forwardAuth(req));
-  const { likedBy = [], ...rest } = authored!;
-  res.json({ comment: { ...rest, likeCount: likedBy.length, likedByMe: likedBy.includes(req.user!.sub) } });
+  // Même forme que createComment : document brut, likedBy (ids des likers) jamais exposé.
+  const { likedBy: _likedBy, ...commentOut } = comment.toObject();
+  res.json({ comment: commentOut });
 }
 
 // Like idempotent : $addToSet évite les doublons, re-liker = no-op.

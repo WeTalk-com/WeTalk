@@ -25,7 +25,18 @@ const bearerAuth = registry.registerComponent("securitySchemes", "bearerAuth", {
 const errorSchema = z.object({ error: z.string() });
 const postListSchema = z.object({ posts: z.array(postResponseSchema), nextCursor: z.string().nullable() });
 const postSingleSchema = z.object({ post: postResponseSchema });
-const commentSingleSchema = z.object({ comment: postResponseSchema });
+// Forme brute renvoyée par create/updateComment (likedBy jamais exposé).
+const commentResponseSchema = z.object({
+  _id: z.string(),
+  postId: z.string(),
+  authorId: z.string(),
+  content: z.string(),
+  parentId: z.string().nullable(),
+  tags: z.array(z.string()),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+const commentSingleSchema = z.object({ comment: commentResponseSchema });
 const updateCommentSchema = z.object({ content: z.string().min(1).max(280) });
 // cursor = offset numérique dans likedBy, total = nb de likers
 const likersSchema = z.object({

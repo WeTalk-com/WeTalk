@@ -13,7 +13,7 @@ const postSchema = new Schema(
   {
     authorId: { type: String, required: true, index: true },
     content: { type: String, required: true, trim: true, maxlength: 280 },
-    likedBy: { type: [String], default: [] }, // userIds ayant liké — count = longueur, likedByMe = includes(me)
+    likedBy: { type: [String], default: [], index: true }, // userIds ayant liké — count = longueur ; indexé pour GET /posts/liked
     tags: { type: [String], default: [], index: true }, // #hashtags extraits du content à la création, lowercase
     media: { type: mediaSchema, required: false, default: undefined },
   },
