@@ -156,10 +156,12 @@
       "tabPosts": "Posts",
       "tabMedia": "Médias",
       "tabLikes": "J'aime",
+      "tabComments": "Commentaires",
       "handleComingSoon": "Profil de @{handle} — bientôt disponible",
       "postsEmpty": "Aucun post pour l'instant.",
       "mediaEmpty": "Aucun média pour l'instant.",
-      "likesEmpty": "Aucun j'aime pour l'instant."
+      "likesEmpty": "Aucun j'aime pour l'instant.",
+      "commentsEmpty": "Aucun commentaire pour l'instant."
     },
     "rightRail": {
       "whoToFollow": "À suivre",

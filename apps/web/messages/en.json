@@ -156,10 +156,12 @@
       "tabPosts": "Posts",
       "tabMedia": "Media",
       "tabLikes": "Likes",
+      "tabComments": "Comments",
       "handleComingSoon": "Profile of @{handle} — coming soon",
       "postsEmpty": "No posts yet.",
       "mediaEmpty": "No media yet.",
-      "likesEmpty": "No likes yet."
+      "likesEmpty": "No likes yet.",
+      "commentsEmpty": "No comments yet."
     },
     "rightRail": {
       "whoToFollow": "Who to follow",
