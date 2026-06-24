@@ -55,8 +55,10 @@ export function LeftSidebar({ user }: { user: UserModel }) {
     <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col px-4 py-6 lg:flex">
       <Link
         href="/home"
-        className="px-3 font-display text-3xl font-bold italic text-brown"
+        className="flex items-center gap-2 px-3 font-display text-3xl font-bold italic text-brown"
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" aria-hidden className="h-9 w-auto" />
         WeTalk
       </Link>
 

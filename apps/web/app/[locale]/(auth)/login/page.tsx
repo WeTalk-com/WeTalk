@@ -228,6 +228,8 @@ function LoginPageContent() {
       />
 
       <header className="relative z-10 mb-6 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" aria-hidden className="mx-auto mb-2 h-14 w-auto" />
         <h1 className="font-head text-[40px] font-extrabold italic leading-none text-brown">
           WeTalk
         </h1>
