@@ -61,7 +61,7 @@ function ReplyRow({
     try {
       await deleteComment(reply.id);
       onDelete(reply.id);
-    } catch {}
+    } catch (_e) { /* silent */ }
   }
 
   return (
@@ -117,7 +117,7 @@ function CommentRow({
     try {
       await deleteComment(comment.id);
       onDelete(comment.id);
-    } catch {}
+    } catch (_e) { /* silent */ }
   }
 
   return (

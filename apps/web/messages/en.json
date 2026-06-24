@@ -131,7 +131,9 @@
       "actionLike": "liked your post",
       "actionComment": "commented on your post",
       "actionFollow": "started following you",
-      "actionMention": "mentioned you in a post"
+      "actionMention": "mentioned you in a post",
+      "loading": "Loading…",
+      "empty": "No notifications yet"
     },
     "profile": {
       "editProfile": "Edit profile",

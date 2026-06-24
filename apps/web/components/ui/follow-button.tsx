@@ -27,7 +27,7 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
     setFollowing(next);
     try {
       await (next ? followUser(userId) : unfollowUser(userId));
-      next ? onFollow?.() : onUnfollow?.();
+      if (next) onFollow?.(); else onUnfollow?.();
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         // 400 = déjà dans l'état cible — on garde l'UI optimiste.

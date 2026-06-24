@@ -94,7 +94,7 @@ export function CreatePostModal({
     }
   }
 
-  const hasMedia = imagePreview || videoPreview;
+  const _hasMedia = imagePreview || videoPreview;
 
   return (
     <Dialog.Root open onOpenChange={(v) => { if (!v) handleClose(); }}>

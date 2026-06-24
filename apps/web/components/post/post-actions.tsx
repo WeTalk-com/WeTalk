@@ -23,7 +23,7 @@ type Props = {
 
 export function PostActions({ postId, likes, likedByMe, comments, onComment }: Props) {
   const t = useTranslations("app.post");
-  const { liked, count: likeCount, pending, toggle: toggleLike } = useOptimisticLike({
+  const { liked, count: likeCount, toggle: toggleLike } = useOptimisticLike({
     initial: Boolean(likedByMe),
     initialCount: likes,
     onToggle: (next) => next ? likePost(postId) : unlikePost(postId),

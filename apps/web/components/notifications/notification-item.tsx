@@ -43,7 +43,7 @@ export function NotificationItem({
       className={cn("flex gap-3 border-b border-border px-5 py-4 transition-colors hover:bg-cream", !read && "bg-gold/5")}
     >
       <div className="relative shrink-0">
-        <Avatar initial={actor.initial} />
+        <Avatar initial={actor.initial} src={actor.avatarUrl} alt={actor.name} />
         <span
           className={cn("absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full text-white ring-2 ring-canvas", badge)}
         >
