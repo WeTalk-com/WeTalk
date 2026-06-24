@@ -6,7 +6,7 @@ import {
   getUnreadCount,
 } from "../services/notification.service.js";
 import type { Server as SocketServer } from "socket.io";
-import { fetchActorInfo } from "../utils/user-fetch.js";
+import { fetchActorInfo, fetchUserRole } from "../utils/user-fetch.js";
 import { logger } from "../utils/logger.js";
 
 function forwardAuth(req: Request): Record<string, string> {
@@ -73,6 +73,18 @@ export function getController(io: SocketServer) {
     if (recipientId === req.user!.sub) {
       res.status(200).json({ skipped: true });
       return;
+    }
+
+    if (type === "like" || type === "follow") {
+      const role = await fetchUserRole(recipientId, forwardAuth(req));
+      if (role === null) {
+        res.status(503).json({ error: "Unable to verify recipient role" });
+        return;
+      }
+      if (role === "moderator" || role === "admin") {
+        res.status(200).json({ skipped: true });
+        return;
+      }
     }
 
     try {
