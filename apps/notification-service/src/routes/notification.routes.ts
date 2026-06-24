@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { validateBody, validateParams, validateQuery } from "../middleware/validate.js";
-import { apiLimiter, writeLimiter } from "../middleware/rateLimit.js";
+import { writeLimiter } from "../middleware/rateLimit.js";
 import { idParamSchema, listQuerySchema, internalCreateSchema } from "../schemas/notification.schemas.js";
 import type { Server as SocketServer } from "socket.io";
 import { getController } from "../controllers/notification.controller.js";

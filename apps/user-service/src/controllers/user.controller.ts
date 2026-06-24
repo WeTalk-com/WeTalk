@@ -341,10 +341,9 @@ export async function follow(req: Request, res: Response): Promise<void> {
       return;
     }
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, created] = await Follow.findOrCreate({
-      where: { followerId: myId, followingId: targetId }
-    });
+		const [, created] = await Follow.findOrCreate({
+			where: { followerId: myId, followingId: targetId }
+		});
 
     if (!created) {
       res.status(400).json({ error: "Vous suivez déjà cet utilisateur." });
@@ -354,7 +353,7 @@ export async function follow(req: Request, res: Response): Promise<void> {
     notifyFollow(myId, targetId, forwardAuth(req));
 
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
-	} catch (error) {
+	} catch {
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}
 }
@@ -449,7 +448,7 @@ export async function followingIds(req: Request, res: Response): Promise<void> {
 			limit: 5000,
 		});
 		res.json({ ids: rows.map((r) => r.get("followingId") as string) });
-	} catch (error) {
+	} catch {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
 }
