@@ -185,7 +185,8 @@
       "editPlaceholder": "Modifiez votre post…",
       "editSave": "Enregistrer",
       "editCancel": "Annuler",
-      "editError": "Erreur lors de la modification. Réessayez."
+      "editError": "Erreur lors de la modification. Réessayez.",
+      "toastEditSaved": "Post modifié"
     },
     "messages": {
       "title": "Messages",
@@ -209,7 +210,9 @@
       "removeImage": "Supprimer l'image",
       "removeVideo": "Supprimer la vidéo",
       "charCount": "{count}/{max}",
-      "imagePreviewAlt": "Aperçu de l'image"
+      "imagePreviewAlt": "Aperçu de l'image",
+      "toastSuccess": "Post publié !",
+      "toastError": "Impossible de publier. Réessayez."
     },
     "comments": {
       "title": "Commentaires",
@@ -272,13 +275,18 @@
     "deleteAccountPlaceholder": "Tapez SUPPRIMER pour confirmer",
     "deleteAccountSubmit": "Supprimer définitivement",
     "deleteAccountCancel": "Annuler",
-    "deleteAccountError": "Une erreur s'est produite. Réessayez."
+    "deleteAccountError": "Une erreur s'est produite. Réessayez.",
+    "toastProfileSaved": "Profil mis à jour",
+    "toastProfileError": "Impossible de mettre à jour le profil."
   },
   "theme": {
     "changeTheme": "Changer de thème",
     "amber": "Ambre",
     "rose": "Rose",
     "dark": "Sombre"
+  },
+  "ui": {
+    "toastClose": "Fermer la notification"
   },
   "errors": {
     "notFoundLabel": "INTROUVABLE",

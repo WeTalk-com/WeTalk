@@ -14,6 +14,8 @@ import { getComments, deletePost, updatePost } from "@/lib/api";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import type { Post, Comment } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { useToast } from "@/components/ui/toast-provider";
+import { UserHoverCard } from "@/components/ui/user-hover-card";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
   return (
@@ -115,6 +117,7 @@ export function PostCard({ post }: { post: Post }) {
   const locale = useLocale();
   const router = useRouter();
   const currentUserId = useCurrentUserId();
+  const toast = useToast();
   const isOwner = currentUserId === author.id;
 
   const MAX_CHARS = 280;
@@ -161,6 +164,7 @@ export function PostCard({ post }: { post: Post }) {
       await updatePost(post.id, trimmed);
       setCurrentText(trimmed);
       setEditing(false);
+      toast.success(t("toastEditSaved"));
     } catch {
       setEditError(true);
     } finally {
@@ -191,12 +195,14 @@ export function PostCard({ post }: { post: Post }) {
       >
         {/* En-tête */}
         <div className="flex items-center gap-3">
-          <Link
-            href={{ pathname: "/profile/[handle]", params: { handle: author.handle } }}
-            className="min-w-0 flex-1"
-          >
-            <UserChip user={author} subtitle={`@${author.handle} · ${formatTimeAgo(post.createdAt, locale)}`} />
-          </Link>
+          <UserHoverCard handle={author.handle}>
+            <Link
+              href={{ pathname: "/profile/[handle]", params: { handle: author.handle } }}
+              className="min-w-0 flex-1"
+            >
+              <UserChip user={author} subtitle={`@${author.handle} · ${formatTimeAgo(post.createdAt, locale)}`} />
+            </Link>
+          </UserHoverCard>
 
           <PostMenu
             postId={post.id}

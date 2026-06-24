@@ -10,6 +10,7 @@ import { updateProfile } from "@/lib/api";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { useToast } from "@/components/ui/toast-provider";
 
 function Field({
   label,
@@ -60,10 +61,11 @@ function Field({
 
 export function EditProfileButton({ profile, autoOpen = false }: { profile: Profile; autoOpen?: boolean }) {
   const t = useTranslations("app.profile");
+  const tSettings = useTranslations("settings");
+  const toast = useToast();
   const router = useRouter();
   const [open, setOpen] = useState(autoOpen);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: profile.name,
     bio: profile.bio,
@@ -108,7 +110,6 @@ export function EditProfileButton({ profile, autoOpen = false }: { profile: Prof
 
   const handleClose = useCallback(() => {
     setOpen(false);
-    setError(null);
     setForm({ name: profile.name, bio: profile.bio });
     resetMedia();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,7 +117,6 @@ export function EditProfileButton({ profile, autoOpen = false }: { profile: Prof
 
   async function handleSave() {
     setPending(true);
-    setError(null);
     try {
       const displayName = form.name.trim();
       const description = form.bio.trim();
@@ -128,9 +128,10 @@ export function EditProfileButton({ profile, autoOpen = false }: { profile: Prof
       });
       resetMedia();
       setOpen(false);
+      toast.success(tSettings("toastProfileSaved"));
       router.refresh();
     } catch {
-      setError(t("editError"));
+      toast.error(tSettings("toastProfileError"));
     } finally {
       setPending(false);
     }
@@ -199,8 +200,6 @@ export function EditProfileButton({ profile, autoOpen = false }: { profile: Prof
               <Field label={t("editName")} value={form.name} onChange={set("name")} maxLength={50} />
               <Field label={t("editBio")} value={form.bio} onChange={set("bio")} multiline maxLength={160} />
             </div>
-
-            {error && <p className="px-5 pb-1 text-sm text-live" role="alert">{error}</p>}
 
             {/* Actions */}
             <div className="flex justify-end gap-3 border-t border-border px-5 py-4">

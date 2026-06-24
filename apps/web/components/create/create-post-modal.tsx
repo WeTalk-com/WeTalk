@@ -11,6 +11,7 @@ import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { IconButton } from "../ui/icon-button";
 import { cn } from "@/lib/cn";
+import { useToast } from "@/components/ui/toast-provider";
 
 const MAX_CHARS = 280;
 
@@ -38,6 +39,7 @@ export function CreatePostModal({
   const t = useTranslations("app.create");
   const router = useRouter();
 
+  const toast = useToast();
   const remaining = MAX_CHARS - text.length;
   const tags = parseTags(text);
   const canPost = text.trim().length > 0 && remaining >= 0;
@@ -81,14 +83,12 @@ export function CreatePostModal({
   async function handlePost() {
     setPending(true);
     try {
-      await createPost({
-        text,
-        tags,
-        image: image ?? undefined,
-        video: video ?? undefined,
-      });
+      await createPost({ text, tags, image: image ?? undefined, video: video ?? undefined });
       onClose();
+      toast.success(t("toastSuccess"));
       router.refresh();
+    } catch {
+      toast.error(t("toastError"));
     } finally {
       setPending(false);
     }

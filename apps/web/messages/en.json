@@ -185,7 +185,8 @@
       "editPlaceholder": "Edit your post…",
       "editSave": "Save",
       "editCancel": "Cancel",
-      "editError": "Failed to save changes. Please try again."
+      "editError": "Failed to save changes. Please try again.",
+      "toastEditSaved": "Post updated"
     },
     "messages": {
       "title": "Messages",
@@ -209,7 +210,9 @@
       "removeImage": "Remove image",
       "removeVideo": "Remove video",
       "charCount": "{count}/{max}",
-      "imagePreviewAlt": "Image preview"
+      "imagePreviewAlt": "Image preview",
+      "toastSuccess": "Post published!",
+      "toastError": "Failed to publish. Please try again."
     },
     "comments": {
       "title": "Comments",
@@ -272,13 +275,18 @@
     "deleteAccountPlaceholder": "Type DELETE to confirm",
     "deleteAccountSubmit": "Permanently delete",
     "deleteAccountCancel": "Cancel",
-    "deleteAccountError": "An error occurred. Please try again."
+    "deleteAccountError": "An error occurred. Please try again.",
+    "toastProfileSaved": "Profile updated",
+    "toastProfileError": "Failed to update profile. Please try again."
   },
   "theme": {
     "changeTheme": "Change theme",
     "amber": "Amber",
     "rose": "Rose",
     "dark": "Dark"
+  },
+  "ui": {
+    "toastClose": "Close notification"
   },
   "errors": {
     "notFoundLabel": "NOT FOUND",

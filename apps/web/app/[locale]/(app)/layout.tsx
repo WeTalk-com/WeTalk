@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { CreateModalProvider } from "@/components/create/create-modal-provider";
+import { ToastProvider } from "@/components/ui/toast-provider";
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { SessionWatcher } from "@/components/auth/session-watcher";
@@ -24,6 +25,7 @@ export default async function AppLayout({
 
   return (
     <CreateModalProvider user={user}>
+      <ToastProvider>
       <SessionWatcher />
       <div className="min-h-dvh bg-canvas">
         <div className="mx-auto flex w-full max-w-[1240px]">
@@ -32,6 +34,7 @@ export default async function AppLayout({
         </div>
         <MobileNav />
       </div>
+      </ToastProvider>
     </CreateModalProvider>
   );
 }
