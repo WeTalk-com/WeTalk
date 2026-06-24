@@ -30,7 +30,7 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
   });
 
   return (
-    <div className="flex items-center justify-end gap-5 text-brown-sec">
+    <div className="flex items-center gap-8 text-brown-sec">
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
           <button
@@ -39,7 +39,7 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             onClick={onComment}
             className="flex items-center gap-1.5 text-sm transition-colors hover:text-gold"
           >
-            <MessageCircle className="size-4.5" />
+            <MessageCircle className="size-5.5" />
             <span className="tabular-nums">{formatCount(comments)}</span>
           </button>
         </Tooltip.Trigger>
@@ -60,7 +60,7 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             aria-label={t("like")}
             className={cn("flex items-center gap-1.5 text-sm transition-colors", liked ? "text-live" : "hover:text-live")}
           >
-            <Heart className={cn("size-4.5 transition-colors", liked && "fill-live like-pop")} />
+            <Heart className={cn("size-5.5 transition-colors", liked && "fill-live like-pop")} />
             <span className="tabular-nums">{formatCount(likeCount)}</span>
           </button>
         </Tooltip.Trigger>
