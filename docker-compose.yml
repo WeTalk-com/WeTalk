@@ -126,7 +126,7 @@ services:
     environment:
       PORT: 4004
       USER_SERVICE_URL: http://user-service:4001
-      MONGO_URI: ${MONGO_URI_MESSAGE}
+      MONGO_URI: ${MONGO_URI_MESSAGE:-mongodb://mongo:27017/wetalk_message}
     depends_on:
       mongo:
         condition: service_healthy
@@ -154,7 +154,7 @@ services:
     env_file:
       - .env
     environment:
-      MONGO_URI: ${MONGO_URI_POST}
+      MONGO_URI: ${MONGO_URI_POST:-mongodb://mongo:27017/wetalk_posts}
       USER_SERVICE_URL: http://user-service:4001
       MEDIA_SERVICE_URL: http://media-service:4004
     depends_on:
