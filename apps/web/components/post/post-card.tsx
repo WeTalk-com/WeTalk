@@ -13,6 +13,7 @@ import { deletePost } from "@/lib/api";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import type { Post } from "@/lib/types";
 import { UserHoverCard } from "@/components/ui/user-hover-card";
+import { FollowButton } from "@/components/ui/follow-button";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
   return (
@@ -97,7 +98,7 @@ function PostMenu({
   );
 }
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingAuthor?: boolean }) {
   const { author } = post;
   const t = useTranslations("app.post");
   const locale = useLocale();
@@ -140,6 +141,10 @@ export function PostCard({ post }: { post: Post }) {
               <UserChip user={author} subtitle={`@${author.handle} · ${formatTimeAgo(post.createdAt, locale)}`} />
             </Link>
           </UserHoverCard>
+
+          {isFollowingAuthor !== undefined && !isOwner && (
+            <FollowButton userId={author.id} initialFollowing={isFollowingAuthor} size="sm" />
+          )}
 
           <PostMenu
             postId={post.id}
