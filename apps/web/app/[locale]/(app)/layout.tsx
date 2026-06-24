@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { CreateModalProvider } from "@/components/create/create-modal-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
+import { TooltipProvider } from "@/components/ui/tooltip-provider";
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { SessionWatcher } from "@/components/auth/session-watcher";
@@ -24,11 +25,12 @@ export default async function AppLayout({
   }
 
   return (
+    <TooltipProvider>
     <CreateModalProvider user={user}>
       <ToastProvider>
       <SessionWatcher />
       <div className="min-h-dvh bg-canvas">
-        <div className="mx-auto flex w-full max-w-[1240px]">
+        <div className="flex w-full">
           <LeftSidebar user={user} />
           {children}
         </div>
@@ -36,5 +38,6 @@ export default async function AppLayout({
       </div>
       </ToastProvider>
     </CreateModalProvider>
+    </TooltipProvider>
   );
 }

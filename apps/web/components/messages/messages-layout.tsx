@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import * as ScrollArea from "@radix-ui/react-scroll-area";
 import { Send, ArrowLeft } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import type { Conversation } from "@/lib/types";
@@ -19,7 +20,6 @@ function ConversationRow({
   active: boolean;
   onClick: () => void;
 }) {
-  // Langue active, pour formater l'heure de la conversation.
   const locale = useLocale();
   return (
     <button
@@ -56,7 +56,6 @@ function ConversationRow({
 
 export function MessagesLayout({ conversations }: { conversations: Conversation[] }) {
   const t = useTranslations("app.messages");
-  // Langue active, pour formater l'heure des messages.
   const locale = useLocale();
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [input, setInput] = useState("");
@@ -88,17 +87,27 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
         <div className="border-b border-border px-5 py-4">
           <h1 className="font-display text-2xl font-bold text-brown">{t("title")}</h1>
         </div>
-        <ul className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-          {conversations.map((conv) => (
-            <li key={conv.id}>
-              <ConversationRow
-                conv={conv}
-                active={selected?.id === conv.id}
-                onClick={() => selectConv(conv)}
-              />
-            </li>
-          ))}
-        </ul>
+        <ScrollArea.Root className="flex-1 min-h-0">
+          <ScrollArea.Viewport className="h-full">
+            <ul className="pb-24 lg:pb-0">
+              {conversations.map((conv) => (
+                <li key={conv.id}>
+                  <ConversationRow
+                    conv={conv}
+                    active={selected?.id === conv.id}
+                    onClick={() => selectConv(conv)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar
+            orientation="vertical"
+            className="flex w-1.5 touch-none select-none p-px transition-colors"
+          >
+            <ScrollArea.Thumb className="relative flex-1 rounded-full bg-border" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>
       </div>
 
       {/* Zone de chat */}
@@ -128,26 +137,36 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
             </div>
 
             {/* Messages */}
-            <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 pb-4">
-              {selected.messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn("flex", msg.mine ? "justify-end" : "justify-start")}
-                >
-                  <div
-                    className={cn(
-                      "max-w-[72%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                      msg.mine ? "rounded-br-sm bg-gold text-white" : "rounded-bl-sm bg-card text-brown",
-                    )}
-                  >
-                    {msg.text}
-                    <span className={cn("mt-1 block text-[10px]", msg.mine ? "text-white/70" : "text-brown-sec")}>
-                      {formatTimeAgo(msg.createdAt, locale)}
-                    </span>
-                  </div>
+            <ScrollArea.Root className="flex flex-1 min-h-0">
+              <ScrollArea.Viewport className="h-full">
+                <div className="flex flex-col gap-3 px-4 py-4 pb-4">
+                  {selected.messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn("flex", msg.mine ? "justify-end" : "justify-start")}
+                    >
+                      <div
+                        className={cn(
+                          "max-w-[72%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                          msg.mine ? "rounded-br-sm bg-gold text-white" : "rounded-bl-sm bg-card text-brown",
+                        )}
+                      >
+                        {msg.text}
+                        <span className={cn("mt-1 block text-[10px]", msg.mine ? "text-white/70" : "text-brown-sec")}>
+                          {formatTimeAgo(msg.createdAt, locale)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar
+                orientation="vertical"
+                className="flex w-1.5 touch-none select-none p-px transition-colors"
+              >
+                <ScrollArea.Thumb className="relative flex-1 rounded-full bg-border" />
+              </ScrollArea.Scrollbar>
+            </ScrollArea.Root>
 
             {/* Input */}
             <div className="flex items-center gap-3 border-t border-border px-4 py-3 pb-28 lg:pb-3">
