@@ -80,6 +80,8 @@ export type Notification = {
   preview?: string;
   createdAt: string;
   read?: boolean;
+  postId?: string;
+  commentId?: string;
 };
 
 export type Message = {

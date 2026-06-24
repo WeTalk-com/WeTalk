@@ -15,11 +15,12 @@ import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import type { Post, Comment } from "@/lib/types";
 import { useToast } from "@/components/ui/toast-provider";
 import { UserHoverCard } from "@/components/ui/user-hover-card";
+import { MentionText } from "@/components/ui/mention-text";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
   return (
     <p className="break-words text-ink leading-relaxed">
-      {text}{" "}
+      <MentionText text={text} />{" "}
       {tags.map((tag) => (
         <span key={tag} className="font-medium text-gold">
           {tag}{" "}

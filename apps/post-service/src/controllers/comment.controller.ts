@@ -93,6 +93,8 @@ export async function createComment(req: Request, res: Response): Promise<void> 
     notifyNotificationService({ ...commentPayload, recipientId: parentAuthorId }, headers);
   }
 
+  notifyMentions(parsed.data.content, actorId, id!, String(comment._id), headers);
+
   // likedBy (ids des likers) n'est jamais exposé au client.
   const { likedBy: _likedBy, ...commentOut } = comment.toObject();
   res.status(201).json({ comment: commentOut });

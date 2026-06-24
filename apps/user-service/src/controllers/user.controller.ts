@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Request, Response } from "express";
-import { Op, type WhereOptions } from "sequelize";
+import { Op, type WhereOptions, type Order } from "sequelize";
 import { env } from "../config/env.js";
 import { User, Follow } from "../models/index.js";
 import type { UserRole } from "../models/user.js";
@@ -185,7 +185,7 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
 		return;
 	}
-	const { limit, cursor, search, ids } = parsed.data;
+	const { limit, cursor, search, ids, sort } = parsed.data;
 
 	if (ids) {
 		const idList = ids
@@ -215,13 +215,15 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		};
 	}
 
+	const order: Order = sort === "latest"
+		? [["createdAt", "DESC"]]
+		: [["id", "DESC"]];
+
 	const users = await User.findAll({
 		...(where && { where }),
 		limit,
 		...(cursor !== undefined && { offset: cursor }),
-		order: [
-			["id", "DESC"]
-		],
+		order,
 	});
 	const showModeration = req.user?.role === "moderator" || req.user?.role === "admin";
 	res.json(users.map((u) => publicUser(u, showModeration)));

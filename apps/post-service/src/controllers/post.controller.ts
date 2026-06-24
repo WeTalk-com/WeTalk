@@ -16,7 +16,7 @@ export function forwardAuth(req: Request): Record<string, string> {
 
 export async function notifyNotificationService(
   payload: {
-    type: "like" | "comment";
+    type: "like" | "comment" | "mention";
     recipientId: string;
     actorId: string;
     postId: string;
@@ -36,6 +36,56 @@ export async function notifyNotificationService(
     logger.warn("notification service call failed", {
       error: err instanceof Error ? err.message : String(err),
     });
+  }
+}
+
+const MENTION_RE = /(?<!\w)@(\w{3,50})/g;
+
+async function resolveMentionedUsers(
+  content: string,
+  headers: Record<string, string>,
+): Promise<string[]> {
+  const usernames = [...new Set(
+    Array.from(content.matchAll(MENTION_RE), m => m[1]).filter(Boolean),
+  )] as string[];
+  if (usernames.length === 0) return [];
+
+  const userIds: string[] = [];
+  for (const username of usernames) {
+    try {
+      const res = await fetch(`${env.userServiceUrl}/users/${encodeURIComponent(username)}`, {
+        headers,
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const user = (await res.json()) as { id: string };
+        userIds.push(user.id);
+      }
+    } catch {
+      // best-effort
+    }
+  }
+  return userIds;
+}
+
+export async function notifyMentions(
+  content: string,
+  actorId: string,
+  postId?: string,
+  commentId?: string,
+  headers?: Record<string, string>,
+): Promise<void> {
+  const userIds = await resolveMentionedUsers(content, headers ?? {});
+  for (const userId of userIds) {
+    if (userId === actorId) continue;
+    notifyNotificationService({
+      type: "mention",
+      recipientId: userId,
+      actorId,
+      postId: postId ?? "",
+      commentId,
+      preview: content.slice(0, 100),
+    }, headers);
   }
 }
 
@@ -306,6 +356,9 @@ export async function createPost(req: Request, res: Response): Promise<void> {
   }
   // likedBy (ids des likers) n'est jamais exposé au client.
   const { likedBy: _likedBy, ...postOut } = post.toObject();
+
+  notifyMentions(parsed.data.content, req.user!.sub, String(post._id), undefined, forwardAuth(req));
+
   res.status(201).json({ post: postOut });
 }
 
