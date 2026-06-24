@@ -26,7 +26,7 @@ function ConversationRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card",
+        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
         active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : "",
       )}
     >
@@ -122,7 +122,7 @@ export function MessagesLayout({ conversations }: { conversations: Conversation[
                 type="button"
                 aria-label={t("back")}
                 onClick={() => setMobileShowChat(false)}
-                className="lg:hidden shrink-0 rounded-full p-1.5 text-brown-sec hover:bg-card"
+                className="lg:hidden shrink-0 rounded-full p-1.5 text-brown-sec"
               >
                 <ArrowLeft className="size-5" />
               </button>

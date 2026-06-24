@@ -60,8 +60,10 @@ export function LeftSidebar({ user }: { user: UserModel }) {
     <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col px-4 py-6 lg:flex">
       <Link
         href="/home"
-        className="px-3 font-display text-3xl font-bold italic text-brown"
+        className="flex items-center gap-2 px-3 font-display text-3xl font-bold italic text-brown"
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" aria-hidden className="h-9 w-auto" />
         WeTalk
       </Link>
 
@@ -75,7 +77,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
               aria-current={active ? "page" : undefined}
               className={cn(
               "flex items-center gap-4 rounded-2xl px-4 py-3 text-lg font-semibold transition-colors",
-              active ? "bg-card text-brown shadow-soft" : "text-brown-sec hover:bg-cream",
+              active ? "bg-card text-brown shadow-soft" : "text-brown-sec",
             )}
             >
               <span className="relative">
@@ -96,7 +98,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
 
       {/* Carte utilisateur */}
       <div className="mt-auto flex items-center gap-3 rounded-2xl px-2 py-2">
-        <Link href="/profile" className="min-w-0 flex-1 rounded-xl transition-colors hover:bg-cream">
+        <Link href="/profile" className="min-w-0 flex-1 rounded-xl transition-colors">
           <UserChip user={user} solid />
         </Link>
         <DropdownMenu.Root>
@@ -104,7 +106,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
             <button
               type="button"
               aria-label={t("accountMenu")}
-              className="text-brown-sec transition-colors hover:text-brown"
+              className="text-brown-sec transition-colors"
             >
               <MoreHorizontal className="size-5" />
             </button>

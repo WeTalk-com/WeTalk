@@ -57,6 +57,8 @@
   "auth": {
     "subtitle": "Parlez plus chaleureux · Partagez plus lentement",
     "invalidCredentials": "Identifiants invalides",
+    "rateLimited": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "serverError": "Une erreur est survenue. Réessayez.",
     "logout": "Se déconnecter",
     "toggleLogin": "Se connecter",
     "toggleSignup": "S'inscrire",
@@ -112,8 +114,7 @@
       "title": "Explorer",
       "searchPlaceholder": "Rechercher golden hours, personnes, tags…",
       "tabTrending": "Tendances",
-      "tabForYou": "Pour vous",
-      "tabPeople": "Personnes",
+      "tabPeople": "Suggestions",
       "trending": "Tendances",
       "moreOptions": "Plus d'options",
       "catAll": "Tous",
@@ -156,16 +157,18 @@
       "tabPosts": "Posts",
       "tabMedia": "Médias",
       "tabLikes": "J'aime",
+      "tabComments": "Commentaires",
       "handleComingSoon": "Profil de @{handle} — bientôt disponible",
       "postsEmpty": "Aucun post pour l'instant.",
       "mediaEmpty": "Aucun média pour l'instant.",
-      "likesEmpty": "Aucun j'aime pour l'instant."
+      "likesEmpty": "Aucun j'aime pour l'instant.",
+      "commentsEmpty": "Aucun commentaire pour l'instant."
     },
     "rightRail": {
       "whoToFollow": "À suivre",
       "trending": "Tendances",
       "follow": "Suivre",
-      "following": "Suivi",
+      "following": "Abonné",
       "unfollow": "Se désabonner",
       "linkAbout": "À propos",
       "linkHelp": "Aide",
@@ -308,7 +311,9 @@
     "deleteAccountCancel": "Annuler",
     "deleteAccountError": "Une erreur s'est produite. Réessayez.",
     "toastProfileSaved": "Profil mis à jour",
-    "toastProfileError": "Impossible de mettre à jour le profil."
+    "toastProfileError": "Impossible de mettre à jour le profil.",
+    "toastProfileFormat": "Format non supporté. Utilisez JPG, PNG, WebP ou GIF.",
+    "toastProfileTooLarge": "Image trop volumineuse."
   },
   "theme": {
     "changeTheme": "Changer de thème",

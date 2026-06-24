@@ -49,7 +49,7 @@ export default async function PostPage({
         <Link
           href="/home"
           aria-label={t("backLabel")}
-          className="grid size-9 place-items-center rounded-full text-brown transition-colors hover:bg-canvas"
+          className="grid size-9 place-items-center rounded-full text-brown transition-colors"
         >
           <ArrowLeft className="size-5" />
         </Link>

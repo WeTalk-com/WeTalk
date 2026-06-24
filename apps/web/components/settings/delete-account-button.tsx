@@ -39,7 +39,7 @@ export function DeleteAccountButton() {
       <AlertDialog.Trigger asChild>
         <button
           type="button"
-          className="flex items-center gap-2 rounded-full border border-live/40 bg-live/10 px-5 py-2.5 text-sm font-semibold text-live transition-colors hover:bg-live/15"
+          className="flex items-center gap-2 rounded-full border border-live/40 bg-live/10 px-5 py-2.5 text-sm font-semibold text-live transition-colors"
         >
           <Trash2 className="size-4" />
           {t("deleteAccountButton")}
@@ -75,7 +75,7 @@ export function DeleteAccountButton() {
                 <button
                   type="button"
                   disabled={pending}
-                  className="rounded-full px-4 py-2 text-sm text-brown-sec hover:bg-card disabled:opacity-50"
+                  className="rounded-full px-4 py-2 text-sm text-brown-sec disabled:opacity-50"
                 >
                   {t("deleteAccountCancel")}
                 </button>
@@ -84,7 +84,7 @@ export function DeleteAccountButton() {
                 type="button"
                 onClick={handleConfirm}
                 disabled={!confirmed || pending}
-                className="flex items-center gap-2 rounded-full bg-live px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-live/90 disabled:opacity-40"
+                className="flex items-center gap-2 rounded-full bg-live px-5 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-40"
               >
                 {pending ? "…" : t("deleteAccountSubmit")}
               </button>

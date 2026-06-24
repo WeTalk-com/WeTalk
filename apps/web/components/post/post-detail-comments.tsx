@@ -91,7 +91,7 @@ function ReplyRow({
                 type="button"
                 onClick={() => setIsEditing(false)}
                 disabled={saving}
-                className="rounded-full px-3 py-1 text-xs text-brown-sec hover:bg-canvas disabled:opacity-50"
+                className="rounded-full px-3 py-1 text-xs text-brown-sec disabled:opacity-50"
               >
                 {t("cancel")}
               </button>
@@ -99,7 +99,7 @@ function ReplyRow({
                 type="button"
                 onClick={saveEdit}
                 disabled={saving || !editText.trim()}
-                className="rounded-full bg-brown px-3 py-1 text-xs font-semibold text-canvas hover:bg-brown/90 disabled:opacity-50"
+                className="rounded-full bg-brown px-3 py-1 text-xs font-semibold text-canvas disabled:opacity-50"
               >
                 {t("editSave")}
               </button>
@@ -115,7 +115,7 @@ function ReplyRow({
               type="button"
               onClick={toggle}
               aria-pressed={liked}
-              className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
+              className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec")}
             >
               <Heart className={cn("size-3", liked && "fill-live")} />
               {count}
@@ -125,7 +125,7 @@ function ReplyRow({
                 <button
                   type="button"
                   onClick={startEdit}
-                  className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-brown"
+                  className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
                   aria-label={t("edit")}
                 >
                   <Pencil className="size-3" />
@@ -133,7 +133,7 @@ function ReplyRow({
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
+                  className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
                   aria-label={t("delete")}
                 >
                   <Trash2 className="size-3" />
@@ -231,7 +231,7 @@ function CommentRow({
                   type="button"
                   onClick={() => setIsEditing(false)}
                   disabled={saving}
-                  className="rounded-full px-3 py-1 text-xs text-brown-sec hover:bg-canvas disabled:opacity-50"
+                  className="rounded-full px-3 py-1 text-xs text-brown-sec disabled:opacity-50"
                 >
                   {t("cancel")}
                 </button>
@@ -239,7 +239,7 @@ function CommentRow({
                   type="button"
                   onClick={saveEdit}
                   disabled={saving || !editText.trim()}
-                  className="rounded-full bg-brown px-3 py-1 text-xs font-semibold text-canvas hover:bg-brown/90 disabled:opacity-50"
+                  className="rounded-full bg-brown px-3 py-1 text-xs font-semibold text-canvas disabled:opacity-50"
                 >
                   {t("editSave")}
                 </button>
@@ -255,7 +255,7 @@ function CommentRow({
                 type="button"
                 onClick={toggle}
                 aria-pressed={liked}
-                className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
+                className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec")}
               >
                 <Heart className={cn("size-3.5", liked && "fill-live")} />
                 {count}
@@ -264,7 +264,7 @@ function CommentRow({
               <button
                 type="button"
                 onClick={() => onReply(comment.id)}
-                className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-brown"
+                className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
               >
                 <CornerDownRight className="size-3.5" />
                 {t("reply")}
@@ -275,7 +275,7 @@ function CommentRow({
                   <button
                     type="button"
                     onClick={startEdit}
-                    className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-brown"
+                    className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
                     aria-label={t("edit")}
                   >
                     <Pencil className="size-3.5" />
@@ -283,7 +283,7 @@ function CommentRow({
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
+                    className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
                     aria-label={t("delete")}
                   >
                     <Trash2 className="size-3.5" />
@@ -363,7 +363,7 @@ export function PostDetailComments({
   }
 
   return (
-    <div className="border-t border-border">
+    <div className="rounded-2xl border border-border bg-card px-4">
       <div className="border-b border-border py-3">
         {replyingTo && (
           <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">

@@ -57,6 +57,8 @@
   "auth": {
     "subtitle": "Talk warmer · Share slower",
     "invalidCredentials": "Invalid credentials",
+    "rateLimited": "Too many attempts. Try again in a few minutes.",
+    "serverError": "Something went wrong. Please try again.",
     "logout": "Log out",
     "toggleLogin": "Log in",
     "toggleSignup": "Sign up",
@@ -112,8 +114,7 @@
       "title": "Explore",
       "searchPlaceholder": "Search golden hours, people, tags…",
       "tabTrending": "Trending",
-      "tabForYou": "For you",
-      "tabPeople": "People",
+      "tabPeople": "Suggestions",
       "trending": "Trending",
       "moreOptions": "More options",
       "catAll": "All",
@@ -156,10 +157,12 @@
       "tabPosts": "Posts",
       "tabMedia": "Media",
       "tabLikes": "Likes",
+      "tabComments": "Comments",
       "handleComingSoon": "Profile of @{handle} — coming soon",
       "postsEmpty": "No posts yet.",
       "mediaEmpty": "No media yet.",
-      "likesEmpty": "No likes yet."
+      "likesEmpty": "No likes yet.",
+      "commentsEmpty": "No comments yet."
     },
     "rightRail": {
       "whoToFollow": "Who to follow",
@@ -308,7 +311,9 @@
     "deleteAccountCancel": "Cancel",
     "deleteAccountError": "An error occurred. Please try again.",
     "toastProfileSaved": "Profile updated",
-    "toastProfileError": "Failed to update profile. Please try again."
+    "toastProfileError": "Failed to update profile. Please try again.",
+    "toastProfileFormat": "Unsupported format. Use JPG, PNG, WebP or GIF.",
+    "toastProfileTooLarge": "Image too large."
   },
   "theme": {
     "changeTheme": "Change theme",

@@ -12,6 +12,7 @@ export type AuthErrorCode =
   | "username_taken"
   | "email_taken"
   | "password_too_short"
+  | "rate_limited"
   | "unknown";
 
 export class AuthError extends Error {
@@ -22,6 +23,7 @@ export class AuthError extends Error {
 
 function mapRegisterError(err: unknown): never {
   if (err instanceof ApiError) {
+    if (err.status === 429) throw new AuthError("rate_limited");
     const msg = String((err.body as { error?: string }).error ?? "").toLowerCase();
     if (err.status === 409) {
       if (msg.includes("username")) throw new AuthError("username_taken");
@@ -39,8 +41,9 @@ function mapRegisterError(err: unknown): never {
 }
 
 function mapLoginError(err: unknown): never {
-  if (err instanceof ApiError && err.status === 401) {
-    throw new AuthError("invalid_credentials");
+  if (err instanceof ApiError) {
+    if (err.status === 429) throw new AuthError("rate_limited");
+    if (err.status === 401) throw new AuthError("invalid_credentials");
   }
   throw new AuthError("unknown");
 }
