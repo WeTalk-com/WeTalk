@@ -3,4 +3,5 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
 COPY provision.mjs ./
+COPY data ./data
 CMD ["node", "provision.mjs"]

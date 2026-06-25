@@ -1,7 +1,10 @@
-import express, {type Request, type Response, type NextFunction, type Express} from "express";
+import express, {type Request, type Response, type NextFunction, type Express, type RequestHandler} from "express";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { env } from "./config/env.js";
+import { registry } from "./config/openapi.js";
 import { messageRouter } from "./routes/message.routes.js";
 import { apiLimiter } from "./middleware/rateLimit.js";
 import { logger } from "./utils/logger.js";
@@ -49,6 +52,20 @@ export function createApp(): Express {
 		next();
 	});
 	
+	const generator = new OpenApiGeneratorV3(registry.definitions);
+	const openApiDoc = generator.generateDocument({
+		openapi: "3.0.3",
+		info: { title: "Message Service", version: "1.0.0" },
+		// URL relative : les requêtes "Try it out" passent par la gateway (origine du navigateur + /api).
+		servers: [{ url: "/api" }],
+	});
+	// Cast nécessaire : swagger-ui-express référence une autre copie de @types/express (doublon de deps).
+	app.use(
+		"/api-docs",
+		swaggerUi.serve as unknown as RequestHandler[],
+		swaggerUi.setup(openApiDoc) as unknown as RequestHandler,
+	);
+
 	app.get("/health", (_req: Request, res: Response) => {
 		res.json({ status: "ok", service: "message-service" });
 	});

@@ -56,7 +56,8 @@ export function createApp(): Express {
 	const openApiDoc = generator.generateDocument({
 		openapi: "3.0.3",
 		info: { title: "User Service", version: "1.0.0" },
-		servers: [{ url: "http://localhost:4001" }],
+		// URL relative : les requêtes "Try it out" passent par la gateway (origine du navigateur + /api).
+		servers: [{ url: "/api" }],
 	});
 	// Cast nécessaire : swagger-ui-express référence une autre copie de @types/express (doublon de deps).
 	app.use(

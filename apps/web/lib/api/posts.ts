@@ -126,14 +126,6 @@ export function unlikeComment(commentId: string): Promise<LikeState> {
   return apiFetch<LikeState>(`/comments/${encodeURIComponent(commentId)}/like`, { method: "DELETE" });
 }
 
-/** Modifie le texte d'un post (auteur uniquement, vérifié côté back). */
-export function updatePost(postId: string, text: string): Promise<void> {
-  return apiFetch(`/posts/${encodeURIComponent(postId)}`, {
-    method: "PATCH",
-    body: JSON.stringify({ content: text }),
-  });
-}
-
 /** Supprime un post (auteur uniquement, vérifié côté back). */
 export function deletePost(postId: string): Promise<void> {
   return apiFetch(`/posts/${encodeURIComponent(postId)}`, { method: "DELETE" });
