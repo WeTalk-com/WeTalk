@@ -23,7 +23,7 @@ export function MentionText({ text }: { text: string }) {
           return (
             <Link
               key={i}
-              href={{ pathname: "/explore", query: { q: part.slice(1).toLowerCase() } }}
+              href={{ pathname: "/explore", query: { tag: part.slice(1).toLowerCase() } }}
               className="font-medium text-gold hover:underline"
             >
               {part}

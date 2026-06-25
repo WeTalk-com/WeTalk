@@ -25,6 +25,15 @@ export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
   return data.posts.map(mapPost);
 }
 
+/** Posts portant un #hashtag */
+export async function getPostsByTag(tag: string): Promise<Post[]> {
+  const clean = tag.replace(/^#/, "").toLowerCase();
+  const data = await apiFetch<{ posts: BackendPost[] }>(
+    `/posts?tag=${encodeURIComponent(clean)}`,
+  );
+  return data.posts.map(mapPost);
+}
+
 export type CreatePostInput = {
   text: string;
   /** Hashtags extraits du texte (ex: ["#wetalk", "#photo"]) */
