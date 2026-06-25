@@ -37,13 +37,21 @@ function parseCookie(cookieStr: string, name: string): string | undefined {
 // Ce secret étant partagé entre tous les microservices, ce middleware est
 // copiable tel quel dans chaque service : pas d'appel réseau à auth-service.
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+	// Accepte le token depuis le header Authorization: Bearer OU depuis le cookie
+	// wetalk_session (envoyé automatiquement par le navigateur via apiFetch).
+	let token: string | undefined;
 	const header = req.headers.authorization;
-	if (!header?.startsWith("Bearer ")) {
-		res.status(401).json({ error: "Missing or malformed Authorization header" });
+	if (header?.startsWith("Bearer ")) {
+		token = header.slice("Bearer ".length);
+	} else {
+		token = parseCookie(req.headers.cookie ?? "", ACCESS_COOKIE);
+	}
+
+	if (!token) {
+		res.status(401).json({ error: "Authentication required" });
 		return;
 	}
-	
-	const token = header.slice("Bearer ".length);
+
 	try {
 		req.user = verifyAccessToken(token);
 	} catch {

@@ -4,9 +4,17 @@ import { env } from "../config/env.js";
 import axios from "axios";
 import { logger } from "../utils/logger.js";
 import type { Conversation, User } from "../schemas/types.js";
+import { getIo } from "../config/io.js";
+
+function forwardAuth(req: Request): Record<string, string> {
+	const headers: Record<string, string> = {};
+	if (req.headers.authorization) headers.Authorization = req.headers.authorization;
+	if (req.headers.cookie) headers.cookie = req.headers.cookie;
+	return headers;
+}
 
 function publicUser(user: User): { id: string; name: string; handle: string; initial: string; verified: boolean; } {
-	return  {
+	return {
 		id: user.id,
 		name: user.displayName || user.username,
 		handle: user.username,
@@ -40,8 +48,7 @@ export async function getConversationList(req: Request, res: Response) {
 				const lastMsg = conversations.find(msg => msg.senderId === id || msg.receiverId === id);
 				return {
 					user: publicUser((await axios.get(`${env.userServiceUrl}/users/${id}`, {
-						// @ts-expect-error "Pas le bon type de headers" typescript doin' it again...
-						headers: { Authorization: req.headers.authorization },
+						headers: forwardAuth(req),
 						timeout: 3000,
 					})).data),
 					lastMessage: lastMsg?.content ?? "",
@@ -103,8 +110,7 @@ export async function getConversation(req: Request, res: Response) {
 			const conversation: Conversation = {
 				// user: publicUser(await axios.get(`${env.userServiceUrl}/users/${targetId}`)),
 				user: publicUser((await axios.get(`${env.userServiceUrl}/users/${targetId}`, {
-					// @ts-expect-error "Pas le bon type de headers" typescript doin' it again...
-					headers: { Authorization: req.headers.authorization }
+					headers: forwardAuth(req)
 				})).data),
 				// @ts-expect-error Object messages possibly undefined
 				lastMessage: messages[0].content,
@@ -150,12 +156,10 @@ export async function sendMessage(req: Request, res: Response){
 			
 			const results = await Promise.allSettled([
 				axios.get(`${env.userServiceUrl}/users/${senderId}/status`, {
-					// @ts-expect-error Conflicting sources
-					headers: { Authorization: req.headers.authorization }
+					headers: forwardAuth(req)
 				}),
 				axios.get(`${env.userServiceUrl}/users/${receiverId}/status`, {
-					// @ts-expect-error Conflicting sources
-					headers: { Authorization: req.headers.authorization }
+					headers: forwardAuth(req)
 				})
 			]);
 			
@@ -176,7 +180,15 @@ export async function sendMessage(req: Request, res: Response){
 			receiverId,
 			content: content.trim()
 		});
-		
+
+		getIo()?.to(receiverId).emit("receive_private_message", {
+			_id: String(newMessage._id),
+			senderId,
+			receiverId,
+			content: content.trim(),
+			createdAt: newMessage.createdAt,
+		});
+
 		res.status(201).json({
 			success: true,
 			data: newMessage

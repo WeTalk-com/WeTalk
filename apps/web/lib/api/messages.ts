@@ -38,10 +38,12 @@ export async function getConversations(): Promise<Conversation[]> {
 
 /** Messages d'une conversation avec un utilisateur (par son UUID). */
 export async function getConversationMessages(userId: string): Promise<Message[]> {
+  // silent: true — un 404 (conversation vide) ne doit pas déclencher wetalk:unauthorized.
   const data = await apiFetch<{ data: BackendConversation }>(
     `/messages/${encodeURIComponent(userId)}`,
-  );
-  return (data.data?.messages ?? []).reverse();
+    { silent: true },
+  ).catch(() => null);
+  return (data?.data?.messages ?? []).reverse();
 }
 
 /** Envoie un message à un utilisateur (userId = UUID du destinataire). */

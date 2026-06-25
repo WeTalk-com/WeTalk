@@ -210,7 +210,9 @@
       "compose": "New message",
       "composeClose": "Close",
       "composePlaceholder": "Search people…",
-      "composeNoResults": "No users found."
+      "composeNoResults": "No users found.",
+      "today": "Today",
+      "yesterday": "Yesterday"
     },
     "create": {
       "title": "New post",

@@ -7,6 +7,7 @@ import http from "http";
 import { Server } from "socket.io";
 import { Message } from "./models/Message.js";
 import { socketRequireAuth } from "./middleware/auth.js";
+import { setIo } from "./config/io.js";
 
 async function main(): Promise<void> {
 	await connectDb();
@@ -34,6 +35,7 @@ async function main(): Promise<void> {
 	});
 	
 	io.use(socketRequireAuth());
+	setIo(io);
 	
 	// 3. Gestion des connexions WebSockets
 	io.on("connection", (socket) => {

@@ -1,16 +1,164 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { io } from "socket.io-client";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Send, ArrowLeft, Loader2, SquarePen, Search, X } from "lucide-react";
+import { Send, ArrowLeft, Loader2, SquarePen, Search, X, Smile } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import type { Conversation, User } from "@/lib/types";
+import type { Conversation, Message, User } from "@/lib/types";
 import { sendMessage, getConversationMessages, markConversationRead, searchUsers } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 import { Avatar } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/icons/brand";
 import { cn } from "@/lib/cn";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type MessagePosition = "single" | "first" | "middle" | "last";
+
+type RenderItem =
+  | { type: "separator"; key: string; label: string }
+  | { type: "group"; key: string; mine: boolean; messages: Message[] };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function dayKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function formatDay(
+  iso: string,
+  locale: string,
+  todayLabel: string,
+  yesterdayLabel: string,
+): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const key = dayKey(iso);
+  if (key === dayKey(now.toISOString())) return todayLabel;
+  if (key === dayKey(new Date(now.getTime() - 86_400_000).toISOString())) return yesterdayLabel;
+  return date.toLocaleDateString(locale === "fr" ? "fr-FR" : "en-US", {
+    day: "numeric",
+    month: "long",
+    ...(date.getFullYear() !== now.getFullYear() && { year: "numeric" }),
+  });
+}
+
+function formatMessageTime(iso: string, locale: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleTimeString(locale === "fr" ? "fr-FR" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function buildRenderItems(
+  messages: Message[],
+  locale: string,
+  todayLabel: string,
+  yesterdayLabel: string,
+): RenderItem[] {
+  const items: RenderItem[] = [];
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    if (!msg) continue;
+    const prev = i > 0 ? messages[i - 1] : undefined;
+    // Insert date separator on calendar day change.
+    if (!prev || dayKey(msg.createdAt) !== dayKey(prev.createdAt)) {
+      items.push({
+        type: "separator",
+        key: `sep-${i}`,
+        label: formatDay(msg.createdAt, locale, todayLabel, yesterdayLabel),
+      });
+    }
+    // Group with previous if same sender, same day, within 5 min.
+    const timeDiff = prev
+      ? (new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime()) / 60_000
+      : Infinity;
+    const canGroup =
+      prev !== undefined &&
+      prev.mine === msg.mine &&
+      timeDiff < 5 &&
+      dayKey(msg.createdAt) === dayKey(prev.createdAt);
+    if (canGroup) {
+      const last = items[items.length - 1];
+      if (last && last.type === "group") {
+        last.messages.push(msg);
+        last.key = msg.id;
+        continue;
+      }
+    }
+    items.push({ type: "group", key: msg.id, mine: msg.mine, messages: [msg] });
+  }
+  return items;
+}
+
+// Tail at the TOP corner of the first message in a group (WhatsApp style).
+function bubbleRadius(mine: boolean, position: MessagePosition): string {
+  if (mine) {
+    if (position === "single" || position === "first") return "rounded-2xl rounded-tr-sm";
+    if (position === "middle") return "rounded-2xl rounded-r-sm";
+    return "rounded-2xl";
+  }
+  if (position === "single" || position === "first") return "rounded-2xl rounded-tl-sm";
+  if (position === "middle") return "rounded-2xl rounded-l-sm";
+  return "rounded-2xl";
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function DateSeparator({ label }: { label: string }) {
+  return (
+    <div className="flex justify-center py-3">
+      <span className="rounded-full bg-border/80 px-3.5 py-1 text-[11px] font-medium text-brown-sec">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function MessageGroup({
+  mine,
+  messages,
+  locale,
+}: {
+  mine: boolean;
+  messages: Message[];
+  locale: string;
+}) {
+  const total = messages.length;
+  return (
+    <div className={cn("flex w-full flex-col gap-0.5", mine ? "items-end" : "items-start")}>
+      {messages.map((msg, i) => {
+        const position: MessagePosition =
+          total === 1 ? "single" : i === 0 ? "first" : i === total - 1 ? "last" : "middle";
+        return (
+          <div
+            key={msg.id}
+            className={cn(
+              "flex min-w-14 max-w-[75%] flex-col px-3.5 py-2 text-sm",
+              bubbleRadius(mine, position),
+              mine ? "bg-gold text-white" : "bg-cream text-brown",
+            )}
+          >
+            <span className="leading-[1.45]">{msg.text}</span>
+            <span
+              className={cn(
+                "mt-0.5 self-end text-[10px]",
+                mine ? "text-white/55" : "text-brown-sec",
+              )}
+            >
+              {formatMessageTime(msg.createdAt, locale)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function ConversationRow({
   conv,
@@ -28,7 +176,7 @@ function ConversationRow({
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : "",
+        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : "hover:bg-canvas/50",
       )}
     >
       <div className="relative shrink-0">
@@ -41,13 +189,20 @@ function ConversationRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1 font-semibold text-brown truncate">
+          <span className="flex items-center gap-1 truncate font-semibold text-brown">
             {conv.user.name}
             {conv.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
           </span>
-          <span className="shrink-0 text-xs text-brown-sec">{formatTimeAgo(conv.lastMessageAt, locale)}</span>
+          <span className="shrink-0 text-xs text-brown-sec">
+            {formatTimeAgo(conv.lastMessageAt, locale)}
+          </span>
         </div>
-        <p className={cn("truncate text-sm", (conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec")}>
+        <p
+          className={cn(
+            "truncate text-sm",
+            (conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec",
+          )}
+        >
           {conv.lastMessage}
         </p>
       </div>
@@ -73,7 +228,10 @@ function ComposeModal({
   function handleQueryChange(value: string) {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!value.trim()) { setResults([]); return; }
+    if (!value.trim()) {
+      setResults([]);
+      return;
+    }
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
@@ -94,7 +252,7 @@ function ComposeModal({
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+    <Dialog.Root open={open} onOpenChange={(v: boolean) => { if (!v) handleClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-dark/50 backdrop-blur-sm" />
         <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -127,13 +285,18 @@ function ComposeModal({
 
             <ul className="max-h-72 overflow-y-auto">
               {results.length === 0 && query.trim() && !searching ? (
-                <li className="py-8 text-center text-sm text-brown-sec">{t("composeNoResults")}</li>
+                <li className="py-8 text-center text-sm text-brown-sec">
+                  {t("composeNoResults")}
+                </li>
               ) : (
                 results.map((u) => (
                   <li key={u.id}>
                     <button
                       type="button"
-                      onClick={() => { onSelectUser(u); handleClose(); }}
+                      onClick={() => {
+                        onSelectUser(u);
+                        handleClose();
+                      }}
                       className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-canvas"
                     >
                       <Avatar initial={u.initial} src={u.avatarUrl} size={40} />
@@ -156,6 +319,8 @@ function ComposeModal({
   );
 }
 
+// ─── Main layout ──────────────────────────────────────────────────────────────
+
 export function MessagesLayout({ conversations: initial }: { conversations: Conversation[] }) {
   const t = useTranslations("app.messages");
   const locale = useLocale();
@@ -166,21 +331,68 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [showCompose, setShowCompose] = useState(false);
 
+  const selectedRef = useRef<Conversation | null>(null);
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selected?.messages.length]);
+
+  // Real-time incoming messages via Socket.io.
+  useEffect(() => {
+    const socket = io({ path: "/api/socket.io/messages/", withCredentials: true });
+
+    socket.on(
+      "receive_private_message",
+      (data: { _id: string; senderId: string; content: string; createdAt: string }) => {
+        const msg: Message = {
+          id: data._id,
+          text: data.content,
+          createdAt: data.createdAt,
+          mine: false,
+        };
+        setSelected((prev) =>
+          prev?.id === data.senderId ? { ...prev, messages: [...prev.messages, msg] } : prev,
+        );
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === data.senderId
+              ? {
+                  ...c,
+                  lastMessage: data.content,
+                  lastMessageAt: data.createdAt,
+                  unread:
+                    selectedRef.current?.id === data.senderId ? 0 : (c.unread ?? 0) + 1,
+                }
+              : c,
+          ),
+        );
+      },
+    );
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   async function selectConv(conv: Conversation) {
     setSelected({ ...conv, messages: [] });
     setMobileShowChat(true);
     setLoadingMessages(true);
     try {
       const messages = await getConversationMessages(conv.id);
-      setSelected((prev) => prev ? { ...prev, messages } : prev);
+      setSelected((prev) => (prev ? { ...prev, messages } : prev));
       if ((conv.unread ?? 0) > 0) {
         setConversations((prev) =>
-          prev.map((c) => c.id === conv.id ? { ...c, unread: 0 } : c),
+          prev.map((c) => (c.id === conv.id ? { ...c, unread: 0 } : c)),
         );
         void markConversationRead(conv.id).catch(() => {});
       }
     } catch {
-      // messages restent vides
+      // messages stay empty
     } finally {
       setLoadingMessages(false);
     }
@@ -214,7 +426,9 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
       );
       setConversations((prev) =>
         prev.map((c) =>
-          c.id === selected.id ? { ...c, lastMessage: text, lastMessageAt: msg.createdAt } : c,
+          c.id === selected.id
+            ? { ...c, lastMessage: text, lastMessageAt: msg.createdAt }
+            : c,
         ),
       );
     } catch {
@@ -231,9 +445,12 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
       />
 
       <div className="flex min-h-0 flex-1">
-        {/* Liste des conversations */}
+        {/* Conversation list */}
         <div
-          className={cn("flex w-full flex-col border-r border-border lg:w-85 lg:shrink-0", mobileShowChat ? "hidden lg:flex" : "flex")}
+          className={cn(
+            "flex w-full flex-col border-r border-border lg:w-85 lg:shrink-0",
+            mobileShowChat ? "hidden lg:flex" : "flex",
+          )}
         >
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <h1 className="font-display text-2xl font-bold text-brown">{t("title")}</h1>
@@ -246,11 +463,13 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
               <SquarePen className="size-5" />
             </button>
           </div>
-          <ScrollArea.Root className="flex-1 min-h-0">
+          <ScrollArea.Root className="min-h-0 flex-1">
             <ScrollArea.Viewport className="h-full">
               <ul className="pb-24 lg:pb-0">
                 {conversations.length === 0 ? (
-                  <li className="py-12 text-center text-sm text-brown-sec">{t("noConversations")}</li>
+                  <li className="py-12 text-center text-sm text-brown-sec">
+                    {t("noConversations")}
+                  </li>
                 ) : (
                   conversations.map((conv) => (
                     <li key={conv.id}>
@@ -273,13 +492,16 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
           </ScrollArea.Root>
         </div>
 
-        {/* Zone de chat */}
+        {/* Chat area */}
         <div
-          className={cn("flex min-w-0 flex-1 flex-col", mobileShowChat ? "flex" : "hidden lg:flex")}
+          className={cn(
+            "flex min-w-0 flex-1 flex-col",
+            mobileShowChat ? "flex" : "hidden lg:flex",
+          )}
         >
           {selected ? (
             <>
-              {/* Header chat */}
+              {/* Chat header */}
               <div className="flex items-center gap-3 border-b border-border px-4 py-3">
                 <button
                   type="button"
@@ -289,9 +511,9 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
                 >
                   <ArrowLeft className="size-5" />
                 </button>
-                <Avatar initial={selected.user.initial} size={36} />
-                <div className="min-w-0">
-                  <p className="flex items-center gap-1 font-semibold text-brown leading-tight">
+                <Avatar initial={selected.user.initial} size={40} />
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1 font-semibold leading-tight text-brown">
                     {selected.user.name}
                     {selected.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
                   </p>
@@ -300,9 +522,9 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
               </div>
 
               {/* Messages */}
-              <ScrollArea.Root className="flex flex-1 min-h-0">
-                <ScrollArea.Viewport className="h-full">
-                  <div className="flex flex-col gap-3 px-4 py-4 pb-4">
+              <ScrollArea.Root className="flex min-h-0 flex-1">
+                <ScrollArea.Viewport className="h-full w-full">
+                  <div className="flex w-full flex-col gap-2 px-4 py-5">
                     {loadingMessages ? (
                       <div className="flex justify-center py-8">
                         <Loader2 className="size-5 animate-spin text-brown-sec" />
@@ -310,25 +532,25 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
                     ) : selected.messages.length === 0 ? (
                       <p className="py-8 text-center text-sm text-brown-sec">{t("empty")}</p>
                     ) : (
-                      selected.messages.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={cn("flex", msg.mine ? "justify-end" : "justify-start")}
-                        >
-                          <div
-                            className={cn(
-                              "max-w-[72%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                              msg.mine ? "rounded-br-sm bg-gold text-white" : "rounded-bl-sm bg-card text-brown",
-                            )}
-                          >
-                            {msg.text}
-                            <span className={cn("mt-1 block text-[10px]", msg.mine ? "text-white/70" : "text-brown-sec")}>
-                              {formatTimeAgo(msg.createdAt, locale)}
-                            </span>
-                          </div>
-                        </div>
-                      ))
+                      buildRenderItems(
+                        selected.messages,
+                        locale,
+                        t("today"),
+                        t("yesterday"),
+                      ).map((item) =>
+                        item.type === "separator" ? (
+                          <DateSeparator key={item.key} label={item.label} />
+                        ) : (
+                          <MessageGroup
+                            key={item.key}
+                            mine={item.mine}
+                            messages={item.messages}
+                            locale={locale}
+                          />
+                        ),
+                      )
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
                 </ScrollArea.Viewport>
                 <ScrollArea.Scrollbar
@@ -340,7 +562,14 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
               </ScrollArea.Root>
 
               {/* Input */}
-              <div className="flex items-center gap-3 border-t border-border px-4 py-3 pb-28 lg:pb-3">
+              <div className="flex items-center gap-2 border-t border-border px-3 py-3 pb-28 lg:pb-3">
+                <button
+                  type="button"
+                  aria-label="Emoji"
+                  className="grid size-9 shrink-0 place-items-center rounded-full text-brown-sec transition-colors hover:bg-canvas hover:text-brown"
+                >
+                  <Smile className="size-5" />
+                </button>
                 <input
                   type="text"
                   value={input}
@@ -349,7 +578,7 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
                     if (e.key === "Enter") void handleSend();
                   }}
                   placeholder={t("typeMessage")}
-                  className="min-w-0 flex-1 rounded-full border border-border bg-card px-4 py-2.5 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
+                  className="min-w-0 flex-1 rounded-full border border-border bg-canvas px-4 py-2.5 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
                 />
                 <button
                   type="button"
@@ -363,7 +592,7 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
               </div>
             </>
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center px-8">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
               <div className="grid size-16 place-items-center rounded-full bg-gold/10">
                 <Send className="size-7 text-gold" />
               </div>
