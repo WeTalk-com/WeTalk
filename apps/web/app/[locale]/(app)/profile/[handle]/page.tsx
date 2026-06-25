@@ -6,6 +6,8 @@ import {
   getCurrentUser,
   getFollowingIds,
   getPostsByAuthor,
+  getLikedPosts,
+  getUserComments,
 } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { ProfileInteractive } from "@/components/profile/profile-interactive";
@@ -49,8 +51,10 @@ export default async function UserProfilePage({
     );
   }
 
-  const [posts, viewerFollowingIds] = await Promise.all([
+  const [posts, likedPosts, comments, viewerFollowingIds] = await Promise.all([
     getPostsByAuthor(profile.id),
+    getLikedPosts(profile.id),
+    getUserComments(profile.id),
     isSelf ? Promise.resolve<string[]>([]) : getFollowingIds(me.id),
   ]);
   const isFollowing = viewerFollowingIds.includes(profile.id);
@@ -74,7 +78,7 @@ export default async function UserProfilePage({
         initialFollowing={isFollowing}
       />
 
-      <ProfileTabs posts={posts} />
+      <ProfileTabs posts={posts} likedPosts={likedPosts} comments={comments} />
     </main>
   );
 }

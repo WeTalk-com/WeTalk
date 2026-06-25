@@ -1,6 +1,6 @@
 import type { Post, Comment, Reply, ReportReason, User } from "@/lib/types";
 import { apiFetch } from "./client";
-import { mapPost, mapCommentTree, type BackendPost, type BackendComment } from "./map";
+import { mapPost, mapCommentTree, mapReply, type BackendPost, type BackendComment } from "./map";
 
 // Reponse brute de creation d'un commentaire (pas encore enrichi auteur/likes).
 type CreatedComment = { _id: string; content: string; createdAt: string };
@@ -23,6 +23,22 @@ export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
     `/posts?authorId=${encodeURIComponent(authorId)}`,
   );
   return data.posts.map(mapPost);
+}
+
+/** Posts likés par un utilisateur (onglet profil "J'aime"). */
+export async function getLikedPosts(userId: string): Promise<Post[]> {
+  const data = await apiFetch<{ posts: BackendPost[] }>(
+    `/posts/liked?userId=${encodeURIComponent(userId)}`,
+  );
+  return data.posts.map(mapPost);
+}
+
+/** Commentaires écrits par un utilisateur (onglet profil "Commentaires"), liste plate. */
+export async function getUserComments(userId: string): Promise<Comment[]> {
+  const data = await apiFetch<{ comments: BackendComment[] }>(
+    `/comments?userId=${encodeURIComponent(userId)}`,
+  );
+  return data.comments.map((c) => ({ ...mapReply(c), replies: [] }));
 }
 
 export type CreatePostInput = {
