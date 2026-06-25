@@ -140,10 +140,8 @@ export function ExploreContent({
                   <Link href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }} className="min-w-0 flex-1">
                     <UserChip user={u} />
                   </Link>
-                  <FollowButton
-                    userId={u.id}
-                    onFollow={() => setUsers((prev) => prev.filter((x) => x.id !== u.id))}
-                  />
+                  {/* La suggestion reste visible jusqu'au refresh (le serveur re-filtre au chargement). */}
+                  <FollowButton userId={u.id} />
                 </li>
               ))}
               {hasMore && (
