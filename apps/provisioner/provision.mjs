@@ -27,6 +27,9 @@ const MONGO_URI_NOTIF = process.env.MONGO_URI_NOTIFICATIONS || 'mongodb://mongo:
 const PASSWORD = 'Password123!';
 const TOTAL_RANDOM = 95; // 5 team + 95 = 100 utilisateurs
 
+// Mock data injecté uniquement si MOCK_DATA=true (sinon le provisioner ne fait rien).
+const MOCK_DATA = process.env.MOCK_DATA === 'true';
+
 // L'équipe : au moins 1 admin + 1 modérateur parmi les 5.
 const TEAM = [
   { username: 'rayane',  displayName: 'Rayane',  role: 'user',     description: "wewedz" },
@@ -180,6 +183,11 @@ async function fetchPicsum(seed, w = 600, h = 400) {
 
 async function main() {
   console.log('=== WeTalk Provisioner ===\n');
+
+  if (!MOCK_DATA) {
+    console.log('[INFO] MOCK_DATA != "true", aucun mock data injecté (skip)');
+    return;
+  }
 
   // ---- Connexions ----
   const pool = new pg.Pool(DB_CONFIG);
