@@ -20,6 +20,7 @@ import {
 	suspendUser,
 	unsuspendUser,
 	isUserAvailable,
+	getLastRegisteredUsers,
 } from "../controllers/user.controller.js";
 
 export const userRouter: Router = Router();
@@ -46,6 +47,7 @@ DELETE /users/:id/suspend : Lever la suspension.
 
 // Profils
 userRouter.get("/", requireAuth, getUsers);
+userRouter.get("/latest", requireAuth, getLastRegisteredUsers);
 userRouter.get("/me", requireAuth, me);
 userRouter.get("/:id", requireAuth, validateParams(userIdentifierParamSchema), getUser);
 userRouter.get("/:id/status", requireAuth, validateParams(userIdentifierParamSchema), isUserAvailable);

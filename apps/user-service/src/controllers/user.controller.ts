@@ -611,3 +611,16 @@ export async function isUserAvailable(req: Request, res: Response): Promise<void
 		res.status(500).json({ error: "Erreur lors de la vérification du status." });
 	}
 }
+
+export async function getLastRegisteredUsers(req: Request, res: Response): Promise<void> {
+	try {
+		const users = await User.findAll({
+			limit: 50,
+			order: [["createdAt", "DESC"]],
+		});
+		const showModeration = req.user?.role === "moderator" || req.user?.role === "admin";
+		res.json(users.map((u) => publicUser(u, showModeration)));
+	} catch {
+		res.status(500).json({ error: "Erreur lors de la récupération des derniers utilisateurs inscrits." });
+	}
+}
