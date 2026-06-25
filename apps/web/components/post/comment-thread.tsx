@@ -73,7 +73,7 @@ function ReplyRow({
 
   return (
     <div className="ml-11 mt-2 flex gap-2.5">
-      <Avatar initial={reply.author.initial} size={28} />
+      <Avatar initial={reply.author.initial} src={reply.author.avatarUrl} alt={reply.author.name} size={28} />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-brown">
           {reply.author.name}{" "}
@@ -137,7 +137,7 @@ function CommentRow({
   return (
     <div className="border-b border-border py-3 last:border-0">
       <div className="flex gap-3">
-        <Avatar initial={comment.author.initial} size={36} />
+        <Avatar initial={comment.author.initial} src={comment.author.avatarUrl} alt={comment.author.name} size={36} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-brown">
             {comment.author.name}{" "}
