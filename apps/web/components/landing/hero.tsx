@@ -48,7 +48,7 @@ export function Hero() {
           {/* CTA */}
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Button href="/login" size="lg">
-              {t("ctaCreate")}
+              {t("cta")}
             </Button>
           </div>
 
