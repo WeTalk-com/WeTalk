@@ -4,7 +4,9 @@ import { Link } from "@/i18n/navigation";
 
 export function MentionText({ text }: { text: string }) {
   // Découpe sur les @mentions (profil) et les #hashtags (recherche explore).
-  const parts = text.split(/(?<!\w)(@\w{3,50}|#[\p{L}\p{N}_]+)/gu);
+  // Le username accepte lettres accentées et points internes (ex. @alexandre.françois),
+  // sans avaler un point final de phrase (segments séparés par un point unique).
+  const parts = text.split(/(?<!\w)(@[\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*|#[\p{L}\p{N}_]+)/gu);
   return (
     <>
       {parts.map((part, i) => {
