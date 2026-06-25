@@ -17,15 +17,12 @@ import { useToast } from "@/components/ui/toast-provider";
 import { UserHoverCard } from "@/components/ui/user-hover-card";
 import { MentionText } from "@/components/ui/mention-text";
 
-function PostText({ text, tags }: { text: string; tags: string[] }) {
+function PostText({ text }: { text: string }) {
+  // Les #hashtags sont déjà inline dans le contenu : MentionText les met en
+  // valeur (avec les @mentions). Pas de chips séparés pour éviter les doublons.
   return (
     <p className="break-words text-ink leading-relaxed">
-      <MentionText text={text} />{" "}
-      {tags.map((tag) => (
-        <span key={tag} className="font-medium text-gold">
-          {tag}{" "}
-        </span>
-      ))}
+      <MentionText text={text} />
     </p>
   );
 }
@@ -171,7 +168,7 @@ export function PostCard({ post }: { post: Post }) {
 
         {/* Texte — posts immuables, pas d'édition */}
         <div className="mt-3">
-          <PostText text={post.text} tags={post.tags} />
+          <PostText text={post.text} />
         </div>
 
         {/* Image (Fx18) — réelle si URL, sinon placeholder design (mocks) */}

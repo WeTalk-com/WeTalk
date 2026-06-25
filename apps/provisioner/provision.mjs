@@ -129,8 +129,34 @@ const LOCATIONS = [
   "à la maison", "chez des amis",
 ];
 
+// Pool de hashtags
+const HASHTAGS = [
+  "#WeTalk", "#GoldenHour", "#Maroc", "#Foot", "#Rap", "#Photo",
+  "#Voyage", "#Food", "#Tech", "#Dev", "#Plage", "#Bonheur",
+  "#Casablanca", "#Marrakech", "#Musique", "#Sport", "#Lecture", "#Café",
+];
+
 function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+const TAG_RE = /#([\p{L}\p{N}_]+)/gu;
+function extractTags(content) {
+  const tags = new Set();
+  for (const match of content.matchAll(TAG_RE)) {
+    const tag = match[1]?.toLowerCase();
+    if (tag && tag.length <= 50) tags.add(tag);
+    if (tags.size >= 10) break;
+  }
+  return [...tags];
+}
+
+function randomHashtags() {
+  if (Math.random() < 0.2) return ""; // ~20% sans tag
+  const n = 1 + (Math.random() < 0.4 ? 1 : 0);
+  const picked = new Set();
+  while (picked.size < n) picked.add(randomItem(HASHTAGS));
+  return " " + [...picked].join(" ");
 }
 
 const usedUsernames = new Set();
@@ -156,13 +182,15 @@ function generateUsername(firstName, lastName) {
 
 function generatePostContent() {
   const fmt = Math.floor(Math.random() * 3);
+  let base;
   if (fmt === 0) {
-    return `${randomItem(OPENERS)} ${randomItem(ACTIVITIES)}, ${randomItem(COMMENTARIES)}`;
+    base = `${randomItem(OPENERS)} ${randomItem(ACTIVITIES)}, ${randomItem(COMMENTARIES)}`;
+  } else if (fmt === 1) {
+    base = `${randomItem(OPENERS)} ${randomItem(LOCATIONS)} ${randomItem(ACTIVITIES)}. ${randomItem(COMMENTARIES)}`;
+  } else {
+    base = `${randomItem(COMMENTARIES).slice(0, -1)} après avoir ${randomItem(ACTIVITIES)} ${randomItem(LOCATIONS)}. ${randomItem(OPENERS).toLowerCase()} !`;
   }
-  if (fmt === 1) {
-    return `${randomItem(OPENERS)} ${randomItem(LOCATIONS)} ${randomItem(ACTIVITIES)}. ${randomItem(COMMENTARIES)}`;
-  }
-  return `${randomItem(COMMENTARIES).slice(0, -1)} après avoir ${randomItem(ACTIVITIES)} ${randomItem(LOCATIONS)}. ${randomItem(OPENERS).toLowerCase()} !`;
+  return (base + randomHashtags()).slice(0, 280);
 }
 
 // ─── Schémas Mongoose (alignés sur les microservices) ──────
@@ -176,6 +204,7 @@ const postSchema = new mongoose.Schema({
   authorId: { type: String, required: true, index: true },
   content: { type: String, required: true },
   likedBy: { type: [String], default: [] },
+  tags: { type: [String], default: [], index: true },
   media: { type: mediaSubSchema, required: false },
 }, { timestamps: true });
 
@@ -185,6 +214,7 @@ const commentSchema = new mongoose.Schema({
   content: { type: String, required: true },
   parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment', default: null, index: true },
   likedBy: { type: [String], default: [] },
+  tags: { type: [String], default: [], index: true },
 }, { timestamps: true });
 
 const messageSchema = new mongoose.Schema({
@@ -461,7 +491,9 @@ async function main() {
     }
   }
 
-  const createdPosts = await Post.insertMany(posts);
+  const createdPosts = await Post.insertMany(
+    posts.map((p) => ({ ...p, tags: extractTags(p.content) }))
+  );
   console.log(`  ✓ ${createdPosts.length} publications créées`);
 
   const teamPosts = createdPosts.filter(p => teamIds.includes(p.authorId));
@@ -527,7 +559,9 @@ async function main() {
     });
   }
 
-  const createdComments = await Comment.insertMany(comments);
+  const createdComments = await Comment.insertMany(
+    comments.map((c) => ({ ...c, tags: extractTags(c.content) }))
+  );
   console.log(`  ✓ ${createdComments.length} commentaires créés`);
 
   // Réponses
@@ -541,7 +575,9 @@ async function main() {
       parentId: parent._id, likedBy: [],
     });
   }
-  if (replies.length > 0) await Comment.insertMany(replies);
+  if (replies.length > 0) await Comment.insertMany(
+    replies.map((r) => ({ ...r, tags: extractTags(r.content) }))
+  );
   console.log(`  ✓ ${replies.length} réponses ajoutées`);
 
   // Notifications de commentaire pour l'équipe
@@ -574,7 +610,7 @@ async function main() {
     }
   }
   const createdMentions = await Post.insertMany(
-    mentionPosts.map(({ _recipient, ...p }) => p)
+    mentionPosts.map(({ _recipient, ...p }) => ({ ...p, tags: extractTags(p.content) }))
   );
   createdMentions.forEach((p, idx) => {
     const { authorId, _recipient } = mentionPosts[idx];

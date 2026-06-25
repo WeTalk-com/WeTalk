@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { TrendingUp, MoreHorizontal, Loader2 } from "lucide-react";
+import { TrendingUp, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Post, TrendingTopic, User } from "@/lib/types";
@@ -15,12 +15,14 @@ export function ExploreContent({
   posts,
   trending,
   query = "",
+  activeTag = "",
   currentUserId,
   followingIds,
 }: {
   posts: Post[];
   trending: TrendingTopic[];
   query?: string;
+  activeTag?: string;
   currentUserId: string;
   followingIds: string[];
 }) {
@@ -28,6 +30,10 @@ export function ExploreContent({
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [tab, setTab] = useState(activeTag ? "foryou" : "trending");
+  useEffect(() => {
+    if (activeTag) setTab("foryou");
+  }, [activeTag]);
 
   const fetchUsers = useCallback(async (q: string) => {
     setLoading(true);
@@ -64,12 +70,9 @@ export function ExploreContent({
       )
     : posts;
   const filteredTrending = q
-    ? trending.filter(
-        (tp) =>
-          tp.tag.toLowerCase().includes(q) ||
-          tp.category.toLowerCase().includes(q),
-      )
+    ? trending.filter((tp) => tp.tag.toLowerCase().includes(q))
     : trending;
+  const searchLabel = activeTag ? `#${activeTag}` : query;
   const tabList = [
     { key: "trending", label: t("tabTrending") },
     { key: "foryou", label: t("tabForYou") },
@@ -77,7 +80,7 @@ export function ExploreContent({
   ] as const;
 
   return (
-    <Tabs.Root defaultValue="trending">
+    <Tabs.Root value={tab} onValueChange={setTab}>
       <Tabs.List className="flex border-b border-border">
         {tabList.map(({ key, label }) => (
           <Tabs.Trigger
@@ -95,26 +98,21 @@ export function ExploreContent({
       <Tabs.Content value="trending">
         <ul>
           {filteredTrending.map((topic, i) => (
-            <li
-              key={topic.tag}
-              className="group flex cursor-pointer items-start gap-4 border-b border-border px-5 py-4 transition-colors hover:bg-card last:border-0"
-            >
-              <span className="mt-0.5 w-5 shrink-0 text-sm font-bold text-brown-sec">{i + 1}</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-brown-sec">{topic.category} · {t("trending")}</p>
-                <p className="flex items-center gap-1.5 font-bold text-brown">
-                  <TrendingUp className="size-4 shrink-0 text-gold" />
-                  {topic.tag}
-                </p>
-                <p className="mt-0.5 text-xs text-brown-sec">{topic.posts}</p>
-              </div>
-              <button
-                type="button"
-                aria-label={t("moreOptions")}
-                className="mt-0.5 shrink-0 rounded-full p-1 text-brown-sec opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gold/10 hover:text-gold"
+            <li key={topic.tag} className="border-b border-border last:border-0">
+              <Link
+                href={{ pathname: "/explore", query: { tag: topic.tag } }}
+                className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-card"
               >
-                <MoreHorizontal className="size-4" />
-              </button>
+                <span className="mt-0.5 w-5 shrink-0 text-sm font-bold text-brown-sec">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-brown-sec">{t("trending")}</p>
+                  <p className="flex items-center gap-1.5 font-bold text-brown">
+                    <TrendingUp className="size-4 shrink-0 text-gold" />
+                    #{topic.tag}
+                  </p>
+                  <p className="mt-0.5 text-xs text-brown-sec">{t("postCount", { count: topic.count })}</p>
+                </div>
+              </Link>
             </li>
           ))}
         </ul>
@@ -124,7 +122,7 @@ export function ExploreContent({
       <Tabs.Content value="foryou" className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">
         {filteredPosts.length > 0
           ? filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
-          : <p className="py-12 text-center text-sm text-brown-sec">{t("noResults", { query })}</p>}
+          : <p className="py-12 text-center text-sm text-brown-sec">{t("noResults", { query: searchLabel })}</p>}
       </Tabs.Content>
 
       {/* Personnes */}

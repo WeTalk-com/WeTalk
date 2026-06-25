@@ -114,6 +114,7 @@
       "tabForYou": "For you",
       "tabPeople": "People",
       "trending": "Trending",
+      "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "moreOptions": "More options",
       "catAll": "All",
       "catPhoto": "Photo",
@@ -164,6 +165,7 @@
     "rightRail": {
       "whoToFollow": "Who to follow",
       "trending": "Trending",
+      "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "follow": "Follow",
       "following": "Following",
       "unfollow": "Unfollow",

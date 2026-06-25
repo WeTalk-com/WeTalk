@@ -4,4 +4,5 @@ import { listPopularTags } from "../controllers/tag.controller.js";
 
 export const tagRouter = Router();
 
-tagRouter.get("/", requireAuth, listPopularTags);
+// Tags tendance
+tagRouter.get("/trending", requireAuth, listPopularTags);

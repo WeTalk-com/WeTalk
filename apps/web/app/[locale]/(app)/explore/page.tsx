@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getCurrentUser, getFollowingIds, getTrending, getPosts } from "@/lib/api";
+import { getCurrentUser, getFollowingIds, getTrendingExplore, getPosts, getPostsByTag } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { ExploreContent } from "@/components/explore/explore-content";
 
@@ -21,14 +21,14 @@ export async function generateMetadata({
 export default async function ExplorePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; tag?: string }>;
 }) {
   const t = await getTranslations("app.explore");
-  const { q } = await searchParams;
+  const { q, tag } = await searchParams;
   const me = await getCurrentUser();
   const [trending, posts, followingIds] = await Promise.all([
-    getTrending(),
-    getPosts(),
+    getTrendingExplore(),
+    tag ? getPostsByTag(tag) : getPosts(),
     getFollowingIds(me.id),
   ]);
 
@@ -39,6 +39,7 @@ export default async function ExplorePage({
         trending={trending}
         posts={posts}
         query={q ?? ""}
+        activeTag={tag ?? ""}
         currentUserId={me.id}
         followingIds={followingIds}
       />
