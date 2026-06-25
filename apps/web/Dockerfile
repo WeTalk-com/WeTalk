@@ -1,6 +1,8 @@
 # Build context
 FROM node:20-alpine AS base
 WORKDIR /app
+# libc6-compat : requis pour charger le binaire natif SWC de Next sur Alpine/musl (sinon "Failed to load SWC binary").
+RUN apk add --no-cache libc6-compat
 
 # Dependencies + build
 FROM base AS builder
