@@ -23,6 +23,9 @@ COPY packages/typescript-config ./packages/typescript-config
 COPY apps/web ./apps/web
 # NEXT_PUBLIC_* doit etre present au build : Next l'inline dans le bundle client.
 ENV NEXT_PUBLIC_API_URL=/api
+# Cle Giphy (publique cote client) passee en build-arg depuis .env via compose.
+ARG NEXT_PUBLIC_GIPHY_KEY
+ENV NEXT_PUBLIC_GIPHY_KEY=$NEXT_PUBLIC_GIPHY_KEY
 RUN npm run build --workspace=web
 
 # Runtime avec next standalone
