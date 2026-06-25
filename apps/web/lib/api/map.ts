@@ -1,6 +1,5 @@
 /**
  * Traduction des formes backend -> modeles de domaine front (lib/types).
- * Le back ne fournit pas tags/likes/medias : valeurs neutres en attendant P2.
  */
 import type { Post, User, Profile, Comment, Reply } from "@/lib/types";
 
@@ -39,6 +38,7 @@ export type BackendPost = {
   likedByMe: boolean;
   commentCount: number;
   media?: BackendMedia | null;
+  tags?: string[]
 };
 
 export function mapUser(u: BackendUser): User {
@@ -67,7 +67,7 @@ export function mapPost(p: BackendPost): Post {
     author,
     createdAt,
     text: p.content ?? "",
-    tags: [],
+    tags: (p.tags ?? []).map((t) => `#${t}`),
     likes: p.likeCount,
     likedByMe: p.likedByMe,
     comments: p.commentCount,

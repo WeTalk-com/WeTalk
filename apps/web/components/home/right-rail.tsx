@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import type { TrendingTopic } from "@/lib/types";
+import { Link } from "@/i18n/navigation";
 import { Card } from "../ui/card";
 
 function Section({
@@ -33,9 +34,13 @@ export function RightRail({ topics }: { topics: TrendingTopic[] }) {
         <ul className="flex flex-col gap-4">
           {topics.map((topic) => (
             <li key={topic.tag}>
-              <p className="text-sm text-brown-sec">{topic.category}</p>
-              <p className="font-semibold text-gold">{topic.tag}</p>
-              <p className="text-sm text-brown-sec">{topic.posts}</p>
+              <Link
+                href={{ pathname: "/explore", query: { tag: topic.tag } }}
+                className="block rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-card"
+              >
+                <p className="font-semibold text-gold">#{topic.tag}</p>
+                <p className="text-sm text-brown-sec">{t("postCount", { count: topic.count })}</p>
+              </Link>
             </li>
           ))}
         </ul>

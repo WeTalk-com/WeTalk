@@ -56,9 +56,8 @@ export type Comment = {
 };
 
 export type TrendingTopic = {
-  category: string;
-  tag: string;
-  posts: string; // "48.2K posts"
+  tag: string; 
+  count: number;
 };
 
 export type Profile = User & {

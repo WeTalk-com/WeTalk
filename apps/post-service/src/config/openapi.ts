@@ -190,8 +190,8 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/tags",
-  summary: "List most-used tags (posts + comments)",
+  path: "/tags/trending",
+  summary: "List 7 days trending tags",
   security: [{ [bearerAuth.name]: [] }],
   tags: ["Tags"],
   request: { query: tagsQuerySchema },

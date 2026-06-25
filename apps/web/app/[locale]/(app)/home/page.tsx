@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getPosts, getTrending, getCurrentUser, getFollowingIds } from "@/lib/api";
+import { getPosts, getTrendingHome, getCurrentUser, getFollowingIds } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { RightRail } from "@/components/home/right-rail";
 import { PostCard } from "@/components/post/post-card";
@@ -23,7 +23,7 @@ export default async function HomePage() {
   const me = await getCurrentUser();
   const [posts, trending, followingIds] = await Promise.all([
     getPosts(),
-    getTrending(),
+    getTrendingHome(),
     getFollowingIds(me.id),
   ]);
 

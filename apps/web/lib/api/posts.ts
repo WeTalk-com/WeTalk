@@ -41,6 +41,15 @@ export async function getUserComments(userId: string): Promise<Comment[]> {
   return data.comments.map((c) => ({ ...mapReply(c), replies: [] }));
 }
 
+/** Posts portant un #hashtag */
+export async function getPostsByTag(tag: string): Promise<Post[]> {
+  const clean = tag.replace(/^#/, "").toLowerCase();
+  const data = await apiFetch<{ posts: BackendPost[] }>(
+    `/posts?tag=${encodeURIComponent(clean)}`,
+  );
+  return data.posts.map(mapPost);
+}
+
 export type CreatePostInput = {
   text: string;
   /** Hashtags extraits du texte (ex: ["#wetalk", "#photo"]) */

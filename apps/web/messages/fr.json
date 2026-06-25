@@ -116,6 +116,7 @@
       "tabTrending": "Tendances",
       "tabPeople": "Suggestions",
       "trending": "Tendances",
+      "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "moreOptions": "Plus d'options",
       "catAll": "Tous",
       "catPhoto": "Photo",
@@ -170,6 +171,7 @@
     "rightRail": {
       "whoToFollow": "À suivre",
       "trending": "Tendances",
+      "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "follow": "Suivre",
       "following": "Abonné",
       "unfollow": "Se désabonner",
