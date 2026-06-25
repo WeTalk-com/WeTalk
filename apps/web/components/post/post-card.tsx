@@ -8,17 +8,20 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
+import { CommentThread } from "./comment-thread";
 import { ReportModal } from "./report-modal";
-import { deletePost } from "@/lib/api";
+import { getComments, deletePost } from "@/lib/api";
 import { useCurrentUserId } from "@/components/create/create-modal-provider";
-import type { Post } from "@/lib/types";
+import type { Post, Comment } from "@/lib/types";
+import { useToast } from "@/components/ui/toast-provider";
 import { UserHoverCard } from "@/components/ui/user-hover-card";
+import { MentionText } from "@/components/ui/mention-text";
 import { FollowButton } from "@/components/ui/follow-button";
 
 function PostText({ text, tags }: { text: string; tags: string[] }) {
   return (
     <p className="break-words text-ink leading-relaxed">
-      {text}{" "}
+      <MentionText text={text} />{" "}
       {tags.map((tag) => (
         <span key={tag} className="font-medium text-gold">
           {tag}{" "}
@@ -104,25 +107,40 @@ export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingA
   const locale = useLocale();
   const router = useRouter();
   const currentUserId = useCurrentUserId();
+  const toast = useToast();
   const isOwner = currentUserId === author.id;
 
   const [showReport, setShowReport] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<Comment[] | null>(null);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments);
+
+  async function openComments() {
+    setShowComments(true);
+    if (comments === null) {
+      setCommentsLoading(true);
+      try {
+        const data = await getComments(post.id);
+        setComments(data);
+      } finally {
+        setCommentsLoading(false);
+      }
+    }
+  }
 
   async function handleDelete() {
     try {
       await deletePost(post.id);
       router.refresh();
     } catch {
-      // silent — backend returns 403 if not author
+      toast.error(t("toastDeleteError"));
     }
   }
 
   function handleCardClick(e: React.MouseEvent<HTMLElement>) {
-    if ((e.target as HTMLElement).closest("a, button, [role='menu']")) return;
-    router.push({ pathname: "/posts/[id]", params: { id: post.id } });
-  }
-
-  function handleComment() {
+    // Ne pas naviguer si le clic provient d'un bouton, d'un lien, du champ commentaire ou du menu.
+    if ((e.target as HTMLElement).closest("a, button, textarea, [role='menu']")) return;
     router.push({ pathname: "/posts/[id]", params: { id: post.id } });
   }
 
@@ -132,6 +150,7 @@ export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingA
         onClick={handleCardClick}
         className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors"
       >
+        {/* En-tête */}
         <div className="flex items-center gap-3">
           <UserHoverCard handle={author.handle}>
             <Link
@@ -155,10 +174,12 @@ export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingA
           />
         </div>
 
+        {/* Texte — posts immuables, pas d'édition */}
         <div className="mt-3">
           <PostText text={post.text} tags={post.tags} />
         </div>
 
+        {/* Image (Fx18) — réelle si URL, sinon placeholder design (mocks) */}
         {post.imageUrl ? (
           <div className="mt-3 overflow-hidden rounded-xl border border-border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -179,6 +200,7 @@ export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingA
           )
         )}
 
+        {/* Vidéo (Fx19) — réelle si URL, sinon placeholder design (mocks) */}
         {post.videoUrl ? (
           <div className="mt-3 overflow-hidden rounded-xl border border-border">
             <video
@@ -198,16 +220,28 @@ export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingA
           )
         )}
 
+        {/* Actions */}
         <div className="mt-4">
           <PostActions
             postId={post.id}
             likes={post.likes}
             likedByMe={post.likedByMe}
-            comments={post.comments}
-            onComment={handleComment}
+            comments={commentCount}
+            onComment={openComments}
           />
         </div>
       </article>
+
+      {showComments && (
+        <CommentThread
+          postId={post.id}
+          initialComments={comments ?? []}
+          loading={commentsLoading}
+          onClose={() => setShowComments(false)}
+          onCommentAdded={() => setCommentCount((c) => c + 1)}
+          onCommentDeleted={() => setCommentCount((c) => Math.max(0, c - 1))}
+        />
+      )}
 
       {showReport && (
         <ReportModal postId={post.id} onClose={() => setShowReport(false)} />

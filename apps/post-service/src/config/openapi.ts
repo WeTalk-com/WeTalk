@@ -1,6 +1,16 @@
 import { OpenAPIRegistry, extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { createSchema, updateSchema, listQuerySchema, feedQuerySchema, postResponseSchema } from "../schemas/post.schemas.js";
+import {
+  createSchema,
+  listQuerySchema,
+  feedQuerySchema,
+  likesQuerySchema,
+  likedQuerySchema,
+  userCommentsQuerySchema,
+  tagsQuerySchema,
+  postResponseSchema,
+  authorLiteSchema,
+} from "../schemas/post.schemas.js";
 
 // Active l'extension .openapi() de Zod (requise par zod-to-openapi avant la génération du doc).
 extendZodWithOpenApi(z);
@@ -16,6 +26,34 @@ const bearerAuth = registry.registerComponent("securitySchemes", "bearerAuth", {
 const errorSchema = z.object({ error: z.string() });
 const postListSchema = z.object({ posts: z.array(postResponseSchema), nextCursor: z.string().nullable() });
 const postSingleSchema = z.object({ post: postResponseSchema });
+// Forme brute renvoyée par create/updateComment (likedBy jamais exposé).
+const commentResponseSchema = z.object({
+  _id: z.string(),
+  postId: z.string(),
+  authorId: z.string(),
+  content: z.string(),
+  parentId: z.string().nullable(),
+  tags: z.array(z.string()),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+const commentSingleSchema = z.object({ comment: commentResponseSchema });
+const commentEnrichedSchema = commentResponseSchema.extend({
+  content: z.string().nullable(), // masqué (null) si l'auteur est banni, comme withAuthors
+  author: authorLiteSchema.nullable(),
+  authorBanned: z.boolean(),
+  likeCount: z.number(),
+  likedByMe: z.boolean(),
+});
+const commentListSchema = z.object({ comments: z.array(commentEnrichedSchema), nextCursor: z.string().nullable() });
+const updateCommentSchema = z.object({ content: z.string().min(1).max(280) });
+// cursor = offset numérique dans likedBy, total = nb de likers
+const likersSchema = z.object({
+  likers: z.array(authorLiteSchema),
+  nextCursor: z.number().nullable(),
+  total: z.number(),
+});
+const tagsSchema = z.object({ tags: z.array(z.object({ tag: z.string(), count: z.number() })) });
 
 registry.registerPath({
   method: "post",
@@ -68,20 +106,6 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: "patch",
-  path: "/posts/{id}",
-  summary: "Update own post",
-  security: [{ [bearerAuth.name]: [] }],
-  tags: ["Posts"],
-  request: { params: z.object({ id: z.string() }), body: { content: { "application/json": { schema: updateSchema } } } },
-  responses: {
-    200: { description: "Post updated", content: { "application/json": { schema: postSingleSchema } } },
-    403: { description: "Forbidden (not author)", content: { "application/json": { schema: errorSchema } } },
-    404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
-  },
-});
-
-registry.registerPath({
   method: "delete",
   path: "/posts/{id}",
   summary: "Delete own post",
@@ -92,5 +116,86 @@ registry.registerPath({
     204: { description: "Post deleted" },
     403: { description: "Forbidden (not author)", content: { "application/json": { schema: errorSchema } } },
     404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
+  },
+});
+
+// Note : GET /posts?tag= est déjà couvert par GET /posts (filtre `tag` ajouté à listQuerySchema).
+
+registry.registerPath({
+  method: "get",
+  path: "/posts/liked",
+  summary: "List posts liked by a user (current user if userId omitted)",
+  security: [{ [bearerAuth.name]: [] }],
+  tags: ["Posts"],
+  request: { query: likedQuerySchema },
+  responses: {
+    200: { description: "Paginated liked posts", content: { "application/json": { schema: postListSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/posts/{id}/likes",
+  summary: "List users who liked a post (paginated)",
+  security: [{ [bearerAuth.name]: [] }],
+  tags: ["Posts"],
+  request: { params: z.object({ id: z.string() }), query: likesQuerySchema },
+  responses: {
+    200: { description: "Paginated likers", content: { "application/json": { schema: likersSchema } } },
+    404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/comments",
+  summary: "List comments authored by a user (current user if userId omitted)",
+  security: [{ [bearerAuth.name]: [] }],
+  tags: ["Comments"],
+  request: { query: userCommentsQuerySchema },
+  responses: {
+    200: { description: "Paginated comments", content: { "application/json": { schema: commentListSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "patch",
+  path: "/comments/{id}",
+  summary: "Edit own comment or reply",
+  security: [{ [bearerAuth.name]: [] }],
+  tags: ["Comments"],
+  request: {
+    params: z.object({ id: z.string() }),
+    body: { content: { "application/json": { schema: updateCommentSchema } } },
+  },
+  responses: {
+    200: { description: "Comment updated", content: { "application/json": { schema: commentSingleSchema } } },
+    403: { description: "Forbidden (not author)", content: { "application/json": { schema: errorSchema } } },
+    404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/comments/{id}/likes",
+  summary: "List users who liked a comment (paginated)",
+  security: [{ [bearerAuth.name]: [] }],
+  tags: ["Comments"],
+  request: { params: z.object({ id: z.string() }), query: likesQuerySchema },
+  responses: {
+    200: { description: "Paginated likers", content: { "application/json": { schema: likersSchema } } },
+    404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/tags",
+  summary: "List most-used tags (posts + comments)",
+  security: [{ [bearerAuth.name]: [] }],
+  tags: ["Tags"],
+  request: { query: tagsQuerySchema },
+  responses: {
+    200: { description: "Top tags by usage", content: { "application/json": { schema: tagsSchema } } },
   },
 });

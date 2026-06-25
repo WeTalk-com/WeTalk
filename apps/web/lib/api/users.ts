@@ -87,3 +87,17 @@ export async function searchUsers(query?: string): Promise<User[]> {
   return data.map(mapUser);
 }
 
+/** Derniers inscrits, triés par date de création (paginated). */
+export async function getLatestUsers(
+  limit = 25,
+  offset = 0,
+): Promise<{ users: User[]; nextOffset: number | null }> {
+  const data = await apiFetch<BackendUser[]>(
+    `/users?sort=latest&limit=${limit}&cursor=${offset}`,
+  );
+  return {
+    users: data.map(mapUser),
+    nextOffset: data.length === limit ? offset + limit : null,
+  };
+}
+

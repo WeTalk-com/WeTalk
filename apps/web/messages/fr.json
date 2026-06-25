@@ -124,7 +124,8 @@
       "catFilm": "Film",
       "catFood": "Cuisine",
       "noResults": "Aucun résultat pour « {query} »",
-      "searchResults": "Résultats pour « {query} »"
+      "searchResults": "Résultats pour « {query} »",
+      "loadMore": "Voir plus"
     },
     "notifications": {
       "title": "Notifications",

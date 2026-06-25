@@ -1,6 +1,6 @@
 import mongoose, { type Document, type Model, type SchemaTimestampsConfig } from "mongoose";
 
-export type NotificationType = "like" | "comment" | "follow";
+export type NotificationType = "like" | "comment" | "follow" | "mention";
 
 export interface INotification extends Document, SchemaTimestampsConfig {
   recipientId: string;
@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema<INotification>(
   {
     recipientId: { type: String, required: true, index: true },
     actorId: { type: String, required: true },
-    type: { type: String, enum: ["like", "comment", "follow"], required: true },
+    type: { type: String, enum: ["like", "comment", "follow", "mention"], required: true },
     postId: String,
     commentId: String,
     preview: String,

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { getNotifications, markNotificationRead } from "@/lib/api/notifications";
 import { getSocket } from "@/lib/socket";
 import type { Notification } from "@/lib/types";
@@ -40,6 +41,8 @@ export default function NotificationsPage() {
     };
   }, [fetchNotifications]);
 
+  const router = useRouter();
+
   async function handleMarkRead(id: string) {
     try {
       await markNotificationRead(id);
@@ -47,6 +50,15 @@ export default function NotificationsPage() {
         prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
     } catch { /* silent */ }
+  }
+
+  function handleClick(n: Notification) {
+    if (!n.read) handleMarkRead(n.id);
+    if (n.postId) {
+      router.push({ pathname: "/posts/[id]", params: { id: n.postId } });
+    } else if (n.type === "follow" && n.actor.handle) {
+      router.push({ pathname: "/profile/[handle]", params: { handle: n.actor.handle } });
+    }
   }
 
   return (
@@ -73,7 +85,7 @@ export default function NotificationsPage() {
             <button
               key={n.id}
               type="button"
-              onClick={() => !n.read && handleMarkRead(n.id)}
+              onClick={() => handleClick(n)}
               className="w-full text-left"
             >
               <NotificationItem notification={n} />

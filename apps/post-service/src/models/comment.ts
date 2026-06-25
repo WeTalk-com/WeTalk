@@ -8,6 +8,7 @@ const commentSchema = new Schema(
     content: { type: String, required: true, trim: true, maxlength: 280 },
     parentId: { type: Schema.Types.ObjectId, ref: "Comment", default: null, index: true },
     likedBy: { type: [String], default: [] }, // mêmes sémantiques que sur le post
+    tags: { type: [String], default: [], index: true }, // #hashtags extraits du content à la création, lowercase
   },
   { timestamps: true },
 );

@@ -12,6 +12,8 @@ import { Button } from "../ui/button";
 import { IconButton } from "../ui/icon-button";
 import { cn } from "@/lib/cn";
 import { useToast } from "@/components/ui/toast-provider";
+import { MentionDropdown } from "@/components/ui/mention-dropdown";
+import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
 
 const MAX_CHARS = 280;
 
@@ -34,8 +36,11 @@ export function CreatePostModal({
   const [video, setVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
+  const { users, mention, loading, update, insertMention, clear } =
+    useMentionAutocomplete();
   const t = useTranslations("app.create");
   const router = useRouter();
 
@@ -113,17 +118,57 @@ export function CreatePostModal({
           </Dialog.Close>
         </div>
 
-        <div className="mt-4 flex gap-3">
+        <div className="relative mt-4 flex gap-3">
           <Avatar initial={user.initial} src={user.avatarUrl} solid />
-          <textarea
-            autoFocus
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t("placeholder")}
-            rows={4}
-            maxLength={MAX_CHARS + 20}
-            className="min-h-28 flex-1 resize-none bg-transparent text-lg text-brown outline-none placeholder:text-placeholder"
-          />
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              autoFocus
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                update(e.target.value, e.target.selectionStart);
+              }}
+              onKeyDown={(e) => {
+                if (mention && users.length > 0 && e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  const el = textareaRef.current;
+                  if (el) {
+                    const next = insertMention(users[0]?.username ?? "", text, el.selectionStart);
+                    setText(next);
+                    clear();
+                  }
+                }
+                if (mention && e.key === "Escape") clear();
+              }}
+              onClick={() => {
+                const el = textareaRef.current;
+                if (el) update(text, el.selectionStart);
+              }}
+              onKeyUp={() => {
+                const el = textareaRef.current;
+                if (el) update(text, el.selectionStart);
+              }}
+              placeholder={t("placeholder")}
+              rows={4}
+              maxLength={MAX_CHARS + 20}
+              className="min-h-28 w-full resize-none bg-transparent text-lg text-brown outline-none placeholder:text-placeholder"
+            />
+            <MentionDropdown
+              users={users}
+              loading={loading}
+              mention={mention}
+              onSelect={(username) => {
+                const el = textareaRef.current;
+                if (el) {
+                  const next = insertMention(username, text, el.selectionStart);
+                  setText(next);
+                  clear();
+                  el.focus();
+                }
+              }}
+            />
+          </div>
         </div>
 
         {/* Aperçu image */}

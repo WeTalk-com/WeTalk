@@ -4,7 +4,7 @@ import { PostModel } from "../models/post.js";
 import { CommentModel } from "../models/comment.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
-import { createSchema, updateSchema, listQuerySchema, feedQuerySchema } from "../schemas/post.schemas.js";
+import { createSchema, listQuerySchema, feedQuerySchema, likesQuerySchema, likedQuerySchema } from "../schemas/post.schemas.js";
 
 // Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
 export function forwardAuth(req: Request): Record<string, string> {
@@ -16,7 +16,7 @@ export function forwardAuth(req: Request): Record<string, string> {
 
 export async function notifyNotificationService(
   payload: {
-    type: "like" | "comment";
+    type: "like" | "comment" | "mention";
     recipientId: string;
     actorId: string;
     postId: string;
@@ -36,6 +36,56 @@ export async function notifyNotificationService(
     logger.warn("notification service call failed", {
       error: err instanceof Error ? err.message : String(err),
     });
+  }
+}
+
+const MENTION_RE = /(?<!\w)@(\w{3,50})/g;
+
+async function resolveMentionedUsers(
+  content: string,
+  headers: Record<string, string>,
+): Promise<string[]> {
+  const usernames = [...new Set(
+    Array.from(content.matchAll(MENTION_RE), m => m[1]).filter(Boolean),
+  )] as string[];
+  if (usernames.length === 0) return [];
+
+  const userIds: string[] = [];
+  for (const username of usernames) {
+    try {
+      const res = await fetch(`${env.userServiceUrl}/users/${encodeURIComponent(username)}`, {
+        headers,
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const user = (await res.json()) as { id: string };
+        userIds.push(user.id);
+      }
+    } catch {
+      // best-effort
+    }
+  }
+  return userIds;
+}
+
+export async function notifyMentions(
+  content: string,
+  actorId: string,
+  postId?: string,
+  commentId?: string,
+  headers?: Record<string, string>,
+): Promise<void> {
+  const userIds = await resolveMentionedUsers(content, headers ?? {});
+  for (const userId of userIds) {
+    if (userId === actorId) continue;
+    notifyNotificationService({
+      type: "mention",
+      recipientId: userId,
+      actorId,
+      postId: postId ?? "",
+      commentId,
+      preview: content.slice(0, 100),
+    }, headers);
   }
 }
 
@@ -238,6 +288,30 @@ async function enrichForViewer<T extends { _id: unknown; authorId: string; liked
   });
 }
 
+// Extraction des #hashtags du contenu, cap à 10 tags
+const TAG_RE = /#([\p{L}\p{N}_]+)/gu;
+export function extractTags(content: string): string[] {
+  const tags = new Set<string>();
+  for (const match of content.matchAll(TAG_RE)) {
+    const tag = match[1]?.toLowerCase();
+    if (tag && tag.length <= 50) tags.add(tag);
+    if (tags.size >= 10) break;
+  }
+  return [...tags];
+}
+
+export async function buildLikers(likedBy: string[], cursor: number, limit: number, req: Request): Promise<{ likers: AuthorLite[]; nextCursor: number | null; total: number }> {
+  const total = likedBy.length;
+  const slice = likedBy.slice(cursor, cursor + limit);
+  const authors = await fetchAuthors(slice, forwardAuth(req));
+  const likers = slice
+    .map((uid) => authors.get(uid) ?? null)
+    .filter((a): a is AuthorLite => a !== null)
+    .map((a) => (a.isBanned ? { ...a, displayName: "Utilisateur banni", profileImage: null } : a));
+  const nextCursor = cursor + limit < total ? cursor + limit : null;
+  return { likers, nextCursor, total };
+}
+
 export async function createPost(req: Request, res: Response): Promise<void> {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -275,6 +349,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     post = await PostModel.create({
       authorId: req.user!.sub,
       content: parsed.data.content,
+      tags: extractTags(parsed.data.content),
       ...(media ? { media: { url: media.url, type: media.type } } : {}),
     });
   } catch (err) {
@@ -283,6 +358,9 @@ export async function createPost(req: Request, res: Response): Promise<void> {
   }
   // likedBy (ids des likers) n'est jamais exposé au client.
   const { likedBy: _likedBy, ...postOut } = post.toObject();
+
+  notifyMentions(parsed.data.content, req.user!.sub, String(post._id), undefined, forwardAuth(req));
+
   res.status(201).json({ post: postOut });
 }
 
@@ -313,10 +391,11 @@ export async function listPosts(req: Request, res: Response): Promise<void> {
     res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
     return;
   }
-  const { authorId, cursor, limit } = parsed.data;
+  const { authorId, tag, cursor, limit } = parsed.data;
 
   const filter: Record<string, unknown> = {};
   if (authorId) filter.authorId = authorId;
+  if (tag) filter.tags = tag.toLowerCase(); // tags stockés en lowercase
   // _id décroissant ≈ createdAt décroissant (ObjectId monotone), curseur stable.
   if (cursor) filter._id = { $lt: cursor };
 
@@ -364,31 +443,6 @@ export async function getPost(req: Request, res: Response): Promise<void> {
   }
   const [enriched] = await enrichForViewer([post], req);
   res.json({ post: enriched });
-}
-
-export async function updatePost(req: Request, res: Response): Promise<void> {
-  const { id } = req.params;
-  if (!isValidObjectId(id)) {
-    res.status(400).json({ error: "Invalid post id" });
-    return;
-  }
-  const parsed = updateSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
-    return;
-  }
-  const post = await PostModel.findById(id);
-  if (!post) {
-    res.status(404).json({ error: "Post not found" });
-    return;
-  }
-  if (post.authorId !== req.user!.sub) {
-    res.status(403).json({ error: "Forbidden" });
-    return;
-  }
-  post.content = parsed.data.content;
-  await post.save();
-  res.json({ post });
 }
 
 export async function deletePost(req: Request, res: Response): Promise<void> {
@@ -461,4 +515,47 @@ export async function unlikePost(req: Request, res: Response): Promise<void> {
     return;
   }
   res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: false });
+}
+
+// liste paginée des utilisateurs ayant liké le post.
+export async function listPostLikers(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const parsed = likesQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const post = await PostModel.findById(id).select({ likedBy: 1 }).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  const { cursor, limit } = parsed.data;
+  const result = await buildLikers(post.likedBy ?? [], cursor, limit, req);
+  res.json(result);
+}
+
+// Posts likés par un user (userId absent = user courant).
+export async function listLikedPosts(req: Request, res: Response): Promise<void> {
+  const parsed = likedQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const { userId, cursor, limit } = parsed.data;
+  const target = userId ?? req.user!.sub;
+
+  const filter: Record<string, unknown> = { likedBy: target };
+  if (cursor) filter._id = { $lt: cursor };
+
+  const posts = await PostModel.find(filter).sort({ _id: -1 }).limit(limit).lean();
+  const last = posts[posts.length - 1];
+  const nextCursor = posts.length === limit && last ? String(last._id) : null;
+
+  const enriched = await enrichForViewer(posts, req);
+  res.json({ posts: enriched, nextCursor });
 }

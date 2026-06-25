@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Request, Response } from "express";
-import { Op, type WhereOptions } from "sequelize";
+import { Op, type WhereOptions, type Order } from "sequelize";
 import { env } from "../config/env.js";
 import { User, Follow } from "../models/index.js";
 import type { UserRole } from "../models/user.js";
@@ -186,7 +186,7 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
 		return;
 	}
-	const { limit, cursor, search, ids } = parsed.data;
+	const { limit, cursor, search, ids, sort } = parsed.data;
 
 	if (ids) {
 		const idList = ids
@@ -218,13 +218,15 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		};
 	}
 
+	const order: Order = sort === "latest"
+		? [["createdAt", "DESC"]]
+		: [["id", "DESC"]];
+
 	const users = await User.findAll({
 		where,
 		limit,
 		...(cursor !== undefined && { offset: cursor }),
-		order: [
-			["id", "DESC"]
-		],
+		order,
 	});
 	const showModeration = req.user?.role === "moderator" || req.user?.role === "admin";
 	res.json(users.map((u) => publicUser(u, showModeration)));
@@ -610,5 +612,18 @@ export async function isUserAvailable(req: Request, res: Response): Promise<void
 	} catch (e) {
 		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la vérification du status." });
+	}
+}
+
+export async function getLastRegisteredUsers(req: Request, res: Response): Promise<void> {
+	try {
+		const users = await User.findAll({
+			limit: 50,
+			order: [["createdAt", "DESC"]],
+		});
+		const showModeration = req.user?.role === "moderator" || req.user?.role === "admin";
+		res.json(users.map((u) => publicUser(u, showModeration)));
+	} catch {
+		res.status(500).json({ error: "Erreur lors de la récupération des derniers utilisateurs inscrits." });
 	}
 }

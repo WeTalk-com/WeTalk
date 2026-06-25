@@ -11,7 +11,7 @@ export const listQuerySchema = z.object({
 });
 
 export const internalCreateSchema = z.object({
-  type: z.enum(["like", "comment", "follow"]),
+  type: z.enum(["like", "comment", "follow", "mention"]),
   recipientId: z.string().min(1),
   postId: z.string().optional(),
   commentId: z.string().optional(),
