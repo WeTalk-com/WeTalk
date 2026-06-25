@@ -627,3 +627,30 @@ export async function getLastRegisteredUsers(req: Request, res: Response): Promi
 		res.status(500).json({ error: "Erreur lors de la récupération des derniers utilisateurs inscrits." });
 	}
 }
+
+export async function getLastFollowedUsers(req: Request, res: Response): Promise<void> {
+	try {
+		if (req.params.id !== req.user?.sub) {
+			res.status(403).json({ error: "Accès interdit." });
+			return;
+		}
+
+		const followRelations = await Follow.findAll({
+			where: { followerId: req.params.id },
+			limit: 5,
+			order: [['createdAt', 'DESC'], ['followingId', 'DESC']],
+			// On inclut le modèle User lié pour récupérer les infos du compte suivi
+			include: [{ model: User, as: 'Following', attributes: ['id', 'username'] }]
+		});
+		
+		res.json({
+			data: followRelations.map(f => {
+				// @ts-expect-error Unrecognized runtime alias
+				return f.Following;
+			})
+		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
+	}
+}
