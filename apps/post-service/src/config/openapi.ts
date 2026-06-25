@@ -6,6 +6,7 @@ import {
   feedQuerySchema,
   likesQuerySchema,
   likedQuerySchema,
+  userCommentsQuerySchema,
   tagsQuerySchema,
   postResponseSchema,
   authorLiteSchema,
@@ -37,6 +38,14 @@ const commentResponseSchema = z.object({
   updatedAt: z.string(),
 });
 const commentSingleSchema = z.object({ comment: commentResponseSchema });
+const commentEnrichedSchema = commentResponseSchema.extend({
+  content: z.string().nullable(), // masqué (null) si l'auteur est banni, comme withAuthors
+  author: authorLiteSchema.nullable(),
+  authorBanned: z.boolean(),
+  likeCount: z.number(),
+  likedByMe: z.boolean(),
+});
+const commentListSchema = z.object({ comments: z.array(commentEnrichedSchema), nextCursor: z.string().nullable() });
 const updateCommentSchema = z.object({ content: z.string().min(1).max(280) });
 // cursor = offset numérique dans likedBy, total = nb de likers
 const likersSchema = z.object({
@@ -134,6 +143,18 @@ registry.registerPath({
   responses: {
     200: { description: "Paginated likers", content: { "application/json": { schema: likersSchema } } },
     404: { description: "Not found", content: { "application/json": { schema: errorSchema } } },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/comments",
+  summary: "List comments authored by a user (current user if userId omitted)",
+  security: [{ [bearerAuth.name]: [] }],
+  tags: ["Comments"],
+  request: { query: userCommentsQuerySchema },
+  responses: {
+    200: { description: "Paginated comments", content: { "application/json": { schema: commentListSchema } } },
   },
 });
 
