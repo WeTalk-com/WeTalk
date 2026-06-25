@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { getNotifications, markNotificationRead } from "@/lib/api/notifications";
+import { refreshUnreadCount } from "@/lib/use-unread-count";
 import { getSocket } from "@/lib/socket";
 import type { Notification } from "@/lib/types";
 import { TopBar } from "@/components/layout/top-bar";
@@ -49,6 +50,8 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
+      // Met à jour la pastille (sidebar + mobile-nav) après lecture.
+      refreshUnreadCount();
     } catch { /* silent */ }
   }
 
