@@ -13,12 +13,13 @@ function forwardAuth(req: Request): Record<string, string> {
 	return headers;
 }
 
-function publicUser(user: User): { id: string; name: string; handle: string; initial: string; verified: boolean; } {
+function publicUser(user: User): { id: string; name: string; handle: string; initial: string; profileImage: string | null; verified: boolean; } {
 	return {
 		id: user.id,
 		name: user.displayName || user.username,
 		handle: user.username,
 		initial: (user.displayName || user.username).substring(0, 1).toUpperCase(),
+		profileImage: user.profileImage ?? null,
 		verified: false
 	};
 }

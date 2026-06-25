@@ -17,7 +17,7 @@ export type Message = {
 };
 
 export type Conversation = {
-	user: { id: string; name: string; handle: string; initial: string; verified: boolean; };
+	user: { id: string; name: string; handle: string; initial: string; profileImage: string | null; verified: boolean; };
 	lastMessage: string;
 	lastMessageAt: string;
 	unread?: number;
