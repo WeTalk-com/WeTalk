@@ -39,6 +39,47 @@ const TEAM = [
   { username: 'tim',     displayName: 'Tim',     role: 'admin',      description: "wetalk together" },
 ];
 
+const FIRST_NAMES = [
+  "Alexandre", "Maxime", "Clara", "Lucas", "Léa", "Hugo", "Manon", "Thomas", "Camille", "Nathan",
+  "Sarah", "Quentin", "Emma", "Antoine", "Julie", "Romain", "Chloé", "Julien", "Océane", "Pierre",
+  "Laura", "Nicolas", "Marine", "Florian", "Élodie", "Jérémy", "Anaïs", "Adrien", "Justine", "Kévin",
+  "Sophie", "Vincent", "Aurélie", "Guillaume", "Mathilde", "Damien", "Lucie", "Axel", "Margot", "Raphaël",
+  "Inès", "Benoît", "Léna", "Valentin", "Pauline", "Étienne", "Mélanie", "Cédric", "Myriam", "Jonathan",
+  "Caroline", "Loïc", "Audrey", "Sébastien", "Élise", "Jérôme", "Coralie", "Olivier", "Sandrine", "Rémi",
+];
+
+const LAST_NAMES = [
+  "Martin", "Bernard", "Dubois", "Thomas", "Robert", "Richard", "Petit", "Durand", "Leroy", "Moreau",
+  "Simon", "Laurent", "Lefebvre", "Michel", "Garcia", "David", "Bertrand", "Roux", "Vincent", "Fournier",
+  "Morel", "Girard", "André", "Lefèvre", "Mercier", "Dupont", "Lambert", "Bonnet", "François", "Martinez",
+  "Legrand", "Garnier", "Faure", "Rousseau", "Blanc", "Guerin", "Muller", "Henry", "Roussel", "Nicolas",
+  "Perrin", "Morin", "Mathieu", "Clément", "Gauthier", "Dumont", "Lopez", "Fontaine", "Chevalier", "Robin",
+  "Masson", "Sanchez", "Gerard", "Boyer", "Fernandez", "Colin", "Perez", "Baron", "Marchand", "Duval",
+];
+
+const BIO_TEMPLATES = [
+  "Passionné de voyage et de photo 📸",
+  "Dev web en reconversion 🚀",
+  "Fan de sport et de nature 🌿",
+  "Musicien dans l'âme 🎸",
+  "Gourmand invétéré 🍝",
+  "Lecteur assidu 📚",
+  "Cinéphile du dimanche 🎬",
+  "Geek dans l'âme 💻",
+  "Amoureux des animaux 🐱",
+  "Fitness et bien-être 💪",
+  "Photographe amateur 📷",
+  "Artiste en herbe 🎨",
+  "Fou de football ⚽",
+  "Passion running 🏃",
+  "Casual gamer 🎮",
+  "Streamer du soir 📺",
+  null,
+  null,
+  null,
+  null,
+];
+
 // ─── Templates de posts ───────────────────────────────────
 
 const OPENERS = [
@@ -116,6 +157,27 @@ function randomHashtags() {
   const picked = new Set();
   while (picked.size < n) picked.add(randomItem(HASHTAGS));
   return " " + [...picked].join(" ");
+}
+
+const usedUsernames = new Set();
+
+function slugify(str) {
+  return str
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-]/g, '')
+    .toLowerCase();
+}
+
+function generateUsername(firstName, lastName) {
+  let base = `${slugify(firstName)}.${slugify(lastName)}`;
+  if (!usedUsernames.has(base)) {
+    usedUsernames.add(base);
+    return base;
+  }
+  let suffix = 2;
+  while (usedUsernames.has(`${base}_${suffix}`)) suffix++;
+  usedUsernames.add(`${base}_${suffix}`);
+  return `${base}_${suffix}`;
 }
 
 function generatePostContent() {
@@ -295,21 +357,24 @@ async function main() {
     const batch = [];
     for (let j = i; j < Math.min(i + batchSize, TOTAL_RANDOM + 1); j++) {
       const id = crypto.randomUUID();
-      const username = `user_${j}`;
-      const displayName = `Utilisateur ${j}`;
+      const firstName = randomItem(FIRST_NAMES);
+      const lastName = randomItem(LAST_NAMES);
+      const displayName = `${firstName} ${lastName}`;
+      const username = generateUsername(firstName, lastName);
+      const bio = randomItem(BIO_TEMPLATES) || null;
       allUsers.push({ id, username, displayName, role: 'user' });
-      batch.push({ id, username, displayName, email: `${username}@wetalk.local` });
+      batch.push({ id, username, displayName, email: `${username}@wetalk.local`, description: bio });
     }
 
     const values = batch.map((u, idx) => {
-      const off = idx * 5;
-      return `($${off + 1},$${off + 2},$${off + 3},$${off + 4},$${off + 5},'user',NOW(),NOW())`;
+      const off = idx * 6;
+      return `($${off + 1},$${off + 2},$${off + 3},$${off + 4},$${off + 5},'user',$${off + 6},NOW(),NOW())`;
     }).join(',');
 
-    const params = batch.flatMap(u => [u.id, u.username, u.displayName, u.email, hash]);
+    const params = batch.flatMap(u => [u.id, u.username, u.displayName, u.email, hash, u.description]);
 
     await pool.query(
-      `INSERT INTO users (id, username, "displayName", email, "passwordHash", role, "createdAt", "updatedAt")
+      `INSERT INTO users (id, username, "displayName", email, "passwordHash", role, description, "createdAt", "updatedAt")
        VALUES ${values}`,
       params
     );
@@ -565,44 +630,109 @@ async function main() {
   // ━━━ 9. Messages privés ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   console.log('--- Messages privés ---');
 
-  const msgTemplates = [
-    "Salut, ça va ?", "T'as vu mon dernier post ?", "On se cale un truc ce week-end ?",
-    "Haha t'es sérieux 😂", "Carrément d'accord", "Je te rappelle plus tard",
-    "T'as avancé sur le projet ?", "Faut qu'on parle de WeTalk", "Bien ouej pour hier !",
-    "Tu viens demain ?", "J'ai une idée de ouf à te montrer", "Merci pour le coup de main 🙏",
-    "Ça marche, à plus !", "Trop bien ton idée", "On en reparle de vive voix",
+  const SCRIPTED_CONVOS = [
+    {
+      aIdx: 0, bIdx: 1, // Rayane -> Mattéo : nouveau design
+      msgs: [
+        "T'as vu ma nouvelle maquette pour la page d'accueil ?",
+        "Ouais je viens de checker, c'est propre ! J'aime bien le choix des couleurs",
+        "Merci ! J'ai essayé de suivre ce qu'on avait dit sur le dark mode",
+        "Franchement ça rend trop bien. Par contre faudrait revoir les marges sur mobile",
+        "Ah oui t'as raison j'avais pas testé en responsive. Je corrige ça",
+        "Tu montres ça à Tim aussi, il va kiffer",
+        "Ouais carrément, je lui fais une demo demain aprem",
+      ],
+    },
+    {
+      aIdx: 3, bIdx: 2, // Gabynou -> Yanis : modération
+      msgs: [
+        "Yanis, j'ai signalé un commentaire sur le post de Tim, tu peux checker ?",
+        "Je regarde ça tout de suite, c'est quoi le souci ?",
+        "Du spam, un compte qui fait la pub d'un site louche",
+        "Vu, je viens de ban le compte. Merci d'avoir signalé !",
+        "Nickel, il commençait à spammer partout",
+        "Oui j'ai vu, bien joué d'avoir réagi vite",
+      ],
+    },
+    {
+      aIdx: 4, bIdx: 0, // Tim -> Rayane : hackathon week-end
+      msgs: [
+        "Rayane, on organise un hackathon ce week-end pour la nouvelle feature ?",
+        "Grave bonne idée ! On fait ça samedi ou dimanche ?",
+        "Je dirais samedi toute la journée, avec une pause dej ensemble",
+        "Parfait pour moi. Je préviens Mattéo et Yanis ?",
+        "Oui carrément, et on se fait un call vendredi soir pour préparer le planning",
+        "OK je crée un groupe. On commande des pizzas aussi ? 😂",
+        "Évidemment, c'est la règle ! 🍕",
+      ],
+    },
+    {
+      aIdx: 2, bIdx: 3, // Yanis -> Gabynou : bug page profil
+      msgs: [
+        "Gabynou, t'as vu le bug sur la page profil ? La photo de couverture dépasse sur mobile",
+        "Oui je l'ai remarqué, c'est un souci de CSS avec le margin négatif",
+        "Tu veux que je regarde ou t'as déjà une idée de la correction ?",
+        "J'ai déjà commencé à corriger, je push avant ce soir",
+        "Parfait merci ! Dis-moi si t'as besoin d'un coup de main",
+        "Ça marche, merci 🙏",
+      ],
+    },
+    {
+      aIdx: 1, bIdx: 4, // Mattéo -> Tim : avis sur design
+      msgs: [
+        "Tim, tu peux me donner ton avis sur le nouveau composant Card que j'ai fait ?",
+        "Bien sûr, tu me montres ça ?",
+        "Je t'ai envoyé une capture sur le channel design",
+        "Vu ! Franchement c'est top. J'aurais juste mis un border-radius un peu plus petit",
+        "Ok je test et je te redis. Merci pour le feedback !",
+        "De rien, bon boulot ! Continue comme ça",
+      ],
+    },
   ];
-
-  const conversations = [];
-  // Toutes les paires de l'équipe discutent
-  for (let a = 0; a < teamIds.length; a++) {
-    for (let b = a + 1; b < teamIds.length; b++) {
-      conversations.push([teamIds[a], teamIds[b]]);
-    }
-  }
-  // Quelques randoms écrivent à l'équipe
-  for (const tid of teamIds) {
-    for (let k = 0; k < 2; k++) conversations.push([randomItem(randomIds), tid]);
-  }
 
   const messages = [];
   const now = Date.now();
-  for (const [u1, u2] of conversations) {
-    const count = 4 + Math.floor(Math.random() * 6);
-    for (let i = 0; i < count; i++) {
-      const sender = i % 2 === 0 ? u1 : u2;
-      const receiver = i % 2 === 0 ? u2 : u1;
-      const ts = new Date(now - (count - i) * 3600 * 1000 - Math.floor(Math.random() * 1800000));
+
+  // Conversations scénarisées entre membres de l'équipe
+  for (const convo of SCRIPTED_CONVOS) {
+    const aId = teamUsers[convo.aIdx].id;
+    const bId = teamUsers[convo.bIdx].id;
+    for (let i = 0; i < convo.msgs.length; i++) {
+      const sender = i % 2 === 0 ? aId : bId;
+      const receiver = i % 2 === 0 ? bId : aId;
+      const ts = new Date(now - (convo.msgs.length - i) * 3600 * 1000 - Math.floor(Math.random() * 600000));
       messages.push({
         senderId: sender, receiverId: receiver,
-        content: randomItem(msgTemplates),
-        isRead: i < count - 1, // dernier message non lu
+        content: convo.msgs[i],
+        isRead: true,
         createdAt: ts, updatedAt: ts,
       });
     }
   }
+
+  // Messages de bienvenue de randoms vers l'équipe
+  for (const tid of teamIds) {
+    for (let k = 0; k < 2; k++) {
+      const randomUser = randomItem(randomIds);
+      const ts = new Date(now - (3 + k) * 86400 * 1000);
+      messages.push({
+        senderId: randomUser, receiverId: tid,
+        content: "Salut, je viens de découvrir WeTalk, super plateforme ! 👋",
+        isRead: true,
+        createdAt: ts, updatedAt: ts,
+      });
+      messages.push({
+        senderId: tid, receiverId: randomUser,
+        content: "Merci bienvenue à toi ! N'hésite pas si t'as des questions 🙌",
+        isRead: Math.random() < 0.5,
+        createdAt: new Date(ts.getTime() + 1800000),
+        updatedAt: new Date(ts.getTime() + 1800000),
+      });
+    }
+  }
+
   const createdMessages = await Message.insertMany(messages);
-  console.log(`  ✓ ${createdMessages.length} messages privés créés (${conversations.length} conversations)\n`);
+  console.log(`  ✓ ${createdMessages.length} messages privés créés (${SCRIPTED_CONVOS.length} conversations scriptées + ${teamIds.length * 2} contacts aléatoires)\n`);
 
   // ━━━ Fin ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   await closeAll();

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { CommentModel } from "../models/comment.js";
 import { PostModel } from "../models/post.js";
 import { forwardAuth, withAuthors, authorPostingBlock, notifyNotificationService, notifyMentions, buildLikers, extractTags } from "./post.controller.js";
-import { likesQuerySchema } from "../schemas/post.schemas.js";
+import { likesQuerySchema, userCommentsQuerySchema } from "../schemas/post.schemas.js";
 
 const createSchema = z.object({
   content: z.string().trim().min(1).max(280),
@@ -125,6 +125,31 @@ export async function listComments(req: Request, res: Response): Promise<void> {
   const me = req.user!.sub;
   const enriched = authored.map((c) => {
     // likedBy peut manquer sur d'anciens commentaires : default Mongoose non appliqué en lecture.
+    const { likedBy = [], ...rest } = c;
+    return { ...rest, likeCount: likedBy.length, likedByMe: likedBy.includes(me) };
+  });
+  res.json({ comments: enriched, nextCursor });
+}
+
+// Commentaires d'un compte
+export async function listUserComments(req: Request, res: Response): Promise<void> {
+  const parsed = userCommentsQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const { userId, cursor, limit } = parsed.data;
+  const target = userId ?? req.user!.sub;
+
+  const filter: Record<string, unknown> = { authorId: target };
+  if (cursor) filter._id = { $lt: cursor };
+  const comments = await CommentModel.find(filter).sort({ _id: -1 }).limit(limit).lean();
+  const last = comments.at(-1);
+  const nextCursor = comments.length === limit && last ? String(last._id) : null;
+
+  const authored = await withAuthors(comments, forwardAuth(req));
+  const me = req.user!.sub;
+  const enriched = authored.map((c) => {
     const { likedBy = [], ...rest } = c;
     return { ...rest, likeCount: likedBy.length, likedByMe: likedBy.includes(me) };
   });
