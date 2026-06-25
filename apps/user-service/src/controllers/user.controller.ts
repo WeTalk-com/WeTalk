@@ -630,6 +630,11 @@ export async function getLastRegisteredUsers(req: Request, res: Response): Promi
 
 export async function getLastFollowedUsers(req: Request, res: Response): Promise<void> {
 	try {
+		if (req.params.id !== req.user?.sub) {
+			res.status(403).json({ error: "Accès interdit." });
+			return;
+		}
+
 		const followRelations = await Follow.findAll({
 			where: { followerId: req.params.id },
 			limit: 5,

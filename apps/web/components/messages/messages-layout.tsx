@@ -251,7 +251,10 @@ function ComposeModal({
 
   // Suggestions par défaut : les 5 derniers comptes suivis (chargés à l'ouverture).
   useEffect(() => {
-    if (!open || !currentUserId) return;
+    if (!open || !currentUserId) {
+     setSuggestions([]);
+     return;
+    }
     let cancelled = false;
     getLatestFollowing(currentUserId)
       .then((users) => { if (!cancelled) setSuggestions(users); })
@@ -282,6 +285,7 @@ function ComposeModal({
   function handleClose() {
     setQuery("");
     setResults([]);
+    setSuggestions([]);
     onClose();
   }
 
