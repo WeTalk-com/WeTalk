@@ -21,6 +21,7 @@ import {
 	unsuspendUser,
 	isUserAvailable,
 	getLastRegisteredUsers,
+	getLastFollowedUsers,
 } from "../controllers/user.controller.js";
 
 export const userRouter: Router = Router();
@@ -57,6 +58,7 @@ userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 // Abonnements
 userRouter.get("/:id/following", requireAuth, validateParams(idParamSchema), getFollowing);
 userRouter.get("/:id/following/ids", requireAuth, validateParams(idParamSchema), followingIds);
+userRouter.get("/:id/following/latest", requireAuth, validateParams(idParamSchema), getLastFollowedUsers);
 userRouter.get("/:id/followers", requireAuth, validateParams(idParamSchema), getFollowers);
 userRouter.post("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), follow);
 userRouter.delete("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), unfollow);
