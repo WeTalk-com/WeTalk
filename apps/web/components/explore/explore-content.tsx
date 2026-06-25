@@ -64,11 +64,7 @@ export function ExploreContent({
       )
     : posts;
   const filteredTrending = q
-    ? trending.filter(
-        (tp) =>
-          tp.tag.toLowerCase().includes(q) ||
-          tp.category.toLowerCase().includes(q),
-      )
+    ? trending.filter((tp) => tp.tag.toLowerCase().includes(q))
     : trending;
   const tabList = [
     { key: "trending", label: t("tabTrending") },
@@ -101,12 +97,12 @@ export function ExploreContent({
             >
               <span className="mt-0.5 w-5 shrink-0 text-sm font-bold text-brown-sec">{i + 1}</span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-brown-sec">{topic.category} · {t("trending")}</p>
+                <p className="text-xs text-brown-sec">{t("trending")}</p>
                 <p className="flex items-center gap-1.5 font-bold text-brown">
                   <TrendingUp className="size-4 shrink-0 text-gold" />
-                  {topic.tag}
+                  #{topic.tag}
                 </p>
-                <p className="mt-0.5 text-xs text-brown-sec">{topic.posts}</p>
+                <p className="mt-0.5 text-xs text-brown-sec">{t("postCount", { count: topic.count })}</p>
               </div>
               <button
                 type="button"

@@ -33,9 +33,8 @@ export function RightRail({ topics }: { topics: TrendingTopic[] }) {
         <ul className="flex flex-col gap-4">
           {topics.map((topic) => (
             <li key={topic.tag}>
-              <p className="text-sm text-brown-sec">{topic.category}</p>
-              <p className="font-semibold text-gold">{topic.tag}</p>
-              <p className="text-sm text-brown-sec">{topic.posts}</p>
+              <p className="font-semibold text-gold">#{topic.tag}</p>
+              <p className="text-sm text-brown-sec">{t("postCount", { count: topic.count })}</p>
             </li>
           ))}
         </ul>

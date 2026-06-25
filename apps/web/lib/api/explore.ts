@@ -1,8 +1,8 @@
 import type { TrendingTopic } from "@/lib/types";
-import { trending } from "@/lib/mock-data";
+import { apiFetch } from "./client";
 
 /** Sujets tendance. */
 export async function getTrending(): Promise<TrendingTopic[]> {
-  // TODO(api): return apiFetch<TrendingTopic[]>("/trending");
-  return structuredClone(trending);
+  const data = await apiFetch<{ tags: TrendingTopic[] }>("/tags/trending");
+  return data.tags;
 }

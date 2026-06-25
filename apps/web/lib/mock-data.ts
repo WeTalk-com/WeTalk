@@ -6,7 +6,6 @@
 
 import type {
   Post,
-  TrendingTopic,
   Conversation,
   ReportedPost,
 } from "./types";
@@ -16,14 +15,6 @@ function ago(value: number, unit: "m" | "h" | "d"): string {
   return new Date(Date.now() - value * ms).toISOString();
 }
 
-/* ----------------------------- Tendances ----------------------------- */
-
-export const trending: TrendingTopic[] = [
-  { category: "Photography", tag: "#goldenhour", posts: "48.2K posts" },
-  { category: "Trending", tag: "#wetalk", posts: "31.9K posts" },
-  { category: "Design", tag: "#warmtones", posts: "12.4K posts" },
-  { category: "Travel", tag: "#slowmornings", posts: "9.1K posts" },
-];
 
 /* ----------------------------- Signalements ----------------------------- */
 
