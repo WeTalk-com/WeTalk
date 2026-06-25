@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { useTranslations } from "next-intl";
-import { Film, Loader2, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { searchGifs, gifToFile, type Gif } from "@/lib/api/giphy";
 import { IconButton } from "./icon-button";
 
@@ -78,7 +78,7 @@ export function GifPicker({ onSelect, label }: { onSelect: (file: File) => void;
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <IconButton label={label}>
-          <Film className="size-5" />
+          <span className="text-[11px] font-extrabold tracking-tight">GIF</span>
         </IconButton>
       </Popover.Trigger>
       <Popover.Portal>

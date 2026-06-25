@@ -17,7 +17,7 @@ function PickerMount({ onSelect }: { onSelect: (native: string) => void }) {
   useEffect(() => {
     const picker = new Picker({
       data,
-      set: "apple",
+      set: "native", // emojis natifs de l'OS : pas de chargement d'images (évite les "#").
       theme: "light",
       locale: "fr",
       previewPosition: "none",

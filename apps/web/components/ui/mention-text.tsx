@@ -1,30 +1,6 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { tokenizeEmoji } from "@/lib/emoji";
-
-// Rend un fragment de texte en remplaçant les emojis par leur image Apple (tous OS).
-function EmojiText({ text }: { text: string }) {
-  return (
-    <>
-      {tokenizeEmoji(text).map((tok, i) =>
-        tok.type === "emoji" ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={i}
-            src={tok.url}
-            alt={tok.value}
-            className="inline-block size-[1.2em] align-[-0.2em]"
-            loading="lazy"
-            draggable={false}
-          />
-        ) : (
-          <span key={i}>{tok.value}</span>
-        ),
-      )}
-    </>
-  );
-}
 
 export function MentionText({ text }: { text: string }) {
   // Découpe sur les @mentions (profil) et les #hashtags (recherche explore).
@@ -54,7 +30,7 @@ export function MentionText({ text }: { text: string }) {
             </Link>
           );
         }
-        return <EmojiText key={i} text={part} />;
+        return part;
       })}
     </>
   );
