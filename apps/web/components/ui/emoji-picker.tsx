@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import * as Popover from "@radix-ui/react-popover";
 import { Smile } from "lucide-react";
 import data from "@emoji-mart/data";
@@ -10,6 +11,7 @@ import { IconButton } from "./icon-button";
 // Monte le Picker vanilla emoji-mart (set Apple) dans un conteneur React.
 function PickerMount({ onSelect }: { onSelect: (native: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const locale = useLocale();
   // Callback dans une ref : le picker n'est monté qu'une fois, sans dépendre de onSelect.
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
@@ -19,7 +21,7 @@ function PickerMount({ onSelect }: { onSelect: (native: string) => void }) {
       data,
       set: "native", // emojis natifs de l'OS : pas de chargement d'images (évite les "#").
       theme: "light",
-      locale: "fr",
+      locale,
       previewPosition: "none",
       skinTonePosition: "search",
       onEmojiSelect: (e: { native: string }) => onSelectRef.current(e.native),
@@ -29,7 +31,7 @@ function PickerMount({ onSelect }: { onSelect: (native: string) => void }) {
     return () => {
       el?.replaceChildren();
     };
-  }, []);
+  }, [locale]);
 
   return <div ref={ref} />;
 }
