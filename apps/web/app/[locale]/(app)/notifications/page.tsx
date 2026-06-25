@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { getNotifications, markNotificationRead } from "@/lib/api/notifications";
+import {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from "@/lib/api/notifications";
 import { refreshUnreadCount } from "@/lib/use-unread-count";
 import { getSocket } from "@/lib/socket";
 import type { Notification } from "@/lib/types";
@@ -13,22 +17,28 @@ import { NotificationItem } from "@/components/notifications/notification-item";
 export default function NotificationsPage() {
   const t = useTranslations("app.notifications");
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const data = await getNotifications();
-      setNotifications(data);
-    } catch { /* silent */ } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    fetchNotifications();
+    let cancelled = false;
+    (async () => {
+      try {
+        const { notifications: data, nextCursor: cursor } = await getNotifications();
+        if (cancelled) return;
+        setNotifications(data);
+        setNextCursor(cursor);
+        // Ouvrir la page = tout marquer lu → on remet la pastille à zéro.
+        await markAllNotificationsRead();
+        refreshUnreadCount();
+      } catch { /* silent */ } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
 
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) return () => { cancelled = true; };
 
     function onNewNotification(n: Notification) {
       setNotifications((prev) => [n, ...prev]);
@@ -38,9 +48,22 @@ export default function NotificationsPage() {
     socket.connect();
 
     return () => {
+      cancelled = true;
       socket.off("notification:new", onNewNotification);
     };
-  }, [fetchNotifications]);
+  }, []);
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { notifications: more, nextCursor: cursor } = await getNotifications(nextCursor);
+      setNotifications((prev) => [...prev, ...more]);
+      setNextCursor(cursor);
+    } catch { /* silent */ } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, loadingMore]);
 
   const router = useRouter();
 
@@ -94,6 +117,18 @@ export default function NotificationsPage() {
               <NotificationItem notification={n} />
             </button>
           ))}
+          {nextCursor && (
+            <li className="flex justify-center py-4">
+              <button
+                type="button"
+                onClick={() => void loadMore()}
+                disabled={loadingMore}
+                className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-brown-sec transition-colors hover:bg-canvas disabled:opacity-50"
+              >
+                {loadingMore ? t("loading") : t("loadMore")}
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </main>
