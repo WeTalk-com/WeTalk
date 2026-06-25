@@ -180,7 +180,7 @@ function ConversationRow({
       )}
     >
       <div className="relative shrink-0">
-        <Avatar initial={conv.user.initial} size={44} />
+        <Avatar initial={conv.user.initial} src={conv.user.avatarUrl} size={44} />
         {(conv.unread ?? 0) > 0 && (
           <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-gold text-[10px] font-bold text-white">
             {conv.unread}
@@ -559,7 +559,7 @@ export function MessagesLayout({
                 >
                   <ArrowLeft className="size-5" />
                 </button>
-                <Avatar initial={selected.user.initial} size={40} />
+                <Avatar initial={selected.user.initial} src={selected.user.avatarUrl} size={40} />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1 font-semibold leading-tight text-brown">
                     {selected.user.name}

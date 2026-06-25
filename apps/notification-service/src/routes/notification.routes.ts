@@ -12,6 +12,7 @@ export function createNotificationRouter(io: SocketServer): Router {
 
   router.get("/", requireAuth, validateQuery(listQuerySchema), ctrl.getNotifications);
   router.get("/unread", requireAuth, ctrl.getUnread);
+  router.patch("/read-all", requireAuth, ctrl.markAllRead);
   router.patch("/:id/read", requireAuth, validateParams(idParamSchema), ctrl.markRead);
   router.post("/internal", requireAuth, writeLimiter, validateBody(internalCreateSchema), ctrl.createInternal);
 

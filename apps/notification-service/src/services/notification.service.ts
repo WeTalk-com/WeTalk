@@ -117,3 +117,12 @@ export async function markAsRead(
 export async function getUnreadCount(userId: string): Promise<number> {
   return NotificationModel.countDocuments({ recipientId: userId, read: false });
 }
+
+/** Marque toutes les notifications non lues de l'utilisateur comme lues. Renvoie le nombre mis à jour. */
+export async function markAllAsRead(userId: string): Promise<number> {
+  const result = await NotificationModel.updateMany(
+    { recipientId: userId, read: false },
+    { read: true },
+  ).exec();
+  return result.modifiedCount;
+}

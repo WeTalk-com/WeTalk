@@ -3,6 +3,7 @@ import {
   createNotification,
   listNotifications,
   markAsRead,
+  markAllAsRead,
   getUnreadCount,
 } from "../services/notification.service.js";
 import type { Server as SocketServer } from "socket.io";
@@ -59,6 +60,11 @@ export function getController(io: SocketServer) {
     }
 
     res.json({ notification });
+  }
+
+  async function markAllRead(req: Request, res: Response): Promise<void> {
+    const updated = await markAllAsRead(req.user!.sub);
+    res.json({ updated });
   }
 
   async function createInternal(req: Request, res: Response): Promise<void> {
@@ -118,5 +124,5 @@ export function getController(io: SocketServer) {
     res.json({ count });
   }
 
-  return { getNotifications, markRead, createInternal, getUnread };
+  return { getNotifications, markRead, markAllRead, createInternal, getUnread };
 }

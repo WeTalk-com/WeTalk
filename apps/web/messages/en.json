@@ -137,7 +137,8 @@
       "actionFollow": "started following you",
       "actionMention": "mentioned you in a post",
       "loading": "Loading…",
-      "empty": "No notifications yet"
+      "empty": "No notifications yet",
+      "loadMore": "Show more"
     },
     "profile": {
       "editProfile": "Edit profile",
