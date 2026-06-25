@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/toast-provider";
 import { MentionDropdown } from "@/components/ui/mention-dropdown";
 import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { GifPicker } from "@/components/ui/gif-picker";
 
 const MAX_CHARS = 280;
 
@@ -100,6 +101,14 @@ export function CreatePostModal({
         el.setSelectionRange(pos, pos);
       }
     });
+  }
+
+  // GIF Giphy choisi → devient l'image du post (un seul média par post).
+  function handleGifSelect(file: File) {
+    removeVideo();
+    removeImage();
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
   }
 
   async function handlePost() {
@@ -252,6 +261,7 @@ export function CreatePostModal({
             <Film className="size-5" />
           </IconButton>
           <EmojiPicker onSelect={insertEmoji} label={t("addEmoji")} />
+          <GifPicker onSelect={handleGifSelect} label={t("addGif")} />
 <IconButton label={t("enhance")}>
             <Sparkles className="size-5" />
           </IconButton>
