@@ -214,6 +214,7 @@
       "composeClose": "Close",
       "composePlaceholder": "Search people…",
       "composeNoResults": "No users found.",
+      "composeSuggestions": "Recent follows",
       "today": "Today",
       "yesterday": "Yesterday"
     },

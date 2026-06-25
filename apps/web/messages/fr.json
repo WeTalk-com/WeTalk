@@ -214,6 +214,7 @@
       "composeClose": "Fermer",
       "composePlaceholder": "Rechercher des personnes…",
       "composeNoResults": "Aucun utilisateur trouvé.",
+      "composeSuggestions": "Abonnements récents",
       "today": "Aujourd'hui",
       "yesterday": "Hier"
     },

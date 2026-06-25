@@ -46,6 +46,14 @@ export async function getFollowingList(userId: string): Promise<User[]> {
   return (data.data ?? []).map((u) => mapUser(u as BackendUser));
 }
 
+/** Les 5 derniers comptes suivis par un utilisateur (récent → ancien). */
+export async function getLatestFollowing(userId: string): Promise<User[]> {
+  const data = await apiFetch<{ data: FollowEntry[] }>(
+    `/users/${encodeURIComponent(userId)}/following/latest`,
+  );
+  return (data.data ?? []).map((u) => mapUser(u as BackendUser));
+}
+
 export type UpdateProfileInput = {
   displayName?: string;
   description?: string;

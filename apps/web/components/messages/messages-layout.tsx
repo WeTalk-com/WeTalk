@@ -7,7 +7,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Send, ArrowLeft, Loader2, SquarePen, Search, X, Smile } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import type { Conversation, Message, User } from "@/lib/types";
-import { sendMessage, getConversationMessages, markConversationRead, searchUsers } from "@/lib/api";
+import { sendMessage, getConversationMessages, markConversationRead, searchUsers, getLatestFollowing } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 import { Avatar } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/icons/brand";
@@ -210,20 +210,54 @@ function ConversationRow({
   );
 }
 
+function UserRow({ user, onSelect }: { user: User; onSelect: () => void }) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-canvas"
+      >
+        <Avatar initial={user.initial} src={user.avatarUrl} size={40} />
+        <div className="min-w-0">
+          <p className="flex items-center gap-1 font-semibold text-brown">
+            {user.name}
+            {user.verified && <VerifiedBadge className="size-4 shrink-0" />}
+          </p>
+          <p className="text-sm text-brown-sec">@{user.handle}</p>
+        </div>
+      </button>
+    </li>
+  );
+}
+
 function ComposeModal({
   open,
   onClose,
   onSelectUser,
+  currentUserId,
 }: {
   open: boolean;
   onClose: () => void;
   onSelectUser: (user: User) => void;
+  currentUserId?: string;
 }) {
   const t = useTranslations("app.messages");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState<User[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Suggestions par défaut : les 5 derniers comptes suivis (chargés à l'ouverture).
+  useEffect(() => {
+    if (!open || !currentUserId) return;
+    let cancelled = false;
+    getLatestFollowing(currentUserId)
+      .then((users) => { if (!cancelled) setSuggestions(users); })
+      .catch(() => { if (!cancelled) setSuggestions([]); });
+    return () => { cancelled = true; };
+  }, [open, currentUserId]);
 
   function handleQueryChange(value: string) {
     setQuery(value);
@@ -284,32 +318,35 @@ function ComposeModal({
             </div>
 
             <ul className="max-h-72 overflow-y-auto">
-              {results.length === 0 && query.trim() && !searching ? (
-                <li className="py-8 text-center text-sm text-brown-sec">
-                  {t("composeNoResults")}
-                </li>
-              ) : (
-                results.map((u) => (
-                  <li key={u.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectUser(u);
-                        handleClose();
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-canvas"
-                    >
-                      <Avatar initial={u.initial} src={u.avatarUrl} size={40} />
-                      <div className="min-w-0">
-                        <p className="flex items-center gap-1 font-semibold text-brown">
-                          {u.name}
-                          {u.verified && <VerifiedBadge className="size-4 shrink-0" />}
-                        </p>
-                        <p className="text-sm text-brown-sec">@{u.handle}</p>
-                      </div>
-                    </button>
+              {query.trim() ? (
+                results.length === 0 && !searching ? (
+                  <li className="py-8 text-center text-sm text-brown-sec">
+                    {t("composeNoResults")}
                   </li>
-                ))
+                ) : (
+                  results.map((u) => (
+                    <UserRow
+                      key={u.id}
+                      user={u}
+                      onSelect={() => { onSelectUser(u); handleClose(); }}
+                    />
+                  ))
+                )
+              ) : (
+                suggestions.length > 0 && (
+                  <>
+                    <li className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-brown-sec">
+                      {t("composeSuggestions")}
+                    </li>
+                    {suggestions.map((u) => (
+                      <UserRow
+                        key={u.id}
+                        user={u}
+                        onSelect={() => { onSelectUser(u); handleClose(); }}
+                      />
+                    ))}
+                  </>
+                )
               )}
             </ul>
           </div>
@@ -321,7 +358,13 @@ function ComposeModal({
 
 // ─── Main layout ──────────────────────────────────────────────────────────────
 
-export function MessagesLayout({ conversations: initial }: { conversations: Conversation[] }) {
+export function MessagesLayout({
+  conversations: initial,
+  currentUserId,
+}: {
+  conversations: Conversation[];
+  currentUserId?: string;
+}) {
   const t = useTranslations("app.messages");
   const locale = useLocale();
   const [conversations, setConversations] = useState(initial);
@@ -442,6 +485,7 @@ export function MessagesLayout({ conversations: initial }: { conversations: Conv
         open={showCompose}
         onClose={() => setShowCompose(false)}
         onSelectUser={handleSelectUser}
+        currentUserId={currentUserId}
       />
 
       <div className="flex min-h-0 flex-1">
