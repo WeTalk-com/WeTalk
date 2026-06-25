@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Plus, Check } from "lucide-react";
 import { followUser, unfollowUser } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { useFollowing, setFollowing as setFollowingStore } from "@/lib/follow-store";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -17,14 +18,15 @@ type Props = {
 
 export function FollowButton({ userId, initialFollowing = false, size = "sm", onFollow, onUnfollow }: Props) {
   const t = useTranslations("app.rightRail");
-  const [following, setFollowing] = useState(initialFollowing);
+  // État partagé par userId → toutes les instances (hover, post, profil, suggestions) restent synchro.
+  const following = useFollowing(userId, initialFollowing);
   const [pending, setPending] = useState(false);
 
   async function toggle() {
     if (pending) return;
     setPending(true);
     const next = !following;
-    setFollowing(next);
+    setFollowingStore(userId, next);
     try {
       await (next ? followUser(userId) : unfollowUser(userId));
       if (next) onFollow?.(); else onUnfollow?.();
@@ -33,7 +35,7 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm", on
         // 400 = déjà dans l'état cible — on garde l'UI optimiste.
         return;
       }
-      setFollowing(!next);
+      setFollowingStore(userId, !next);
     } finally {
       setPending(false);
     }
