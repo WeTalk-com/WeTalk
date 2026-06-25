@@ -46,7 +46,7 @@ jobs:
         name: Test
         run: npm test -- --reporter=default --reporter=junit --outputFile=junit.xml
       - name: Test report
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Vitest report

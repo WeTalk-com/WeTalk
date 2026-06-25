@@ -3,7 +3,7 @@ import { isValidObjectId } from "mongoose";
 import { z } from "zod";
 import { CommentModel } from "../models/comment.js";
 import { PostModel } from "../models/post.js";
-import { forwardAuth, withAuthors, authorPostingBlock, notifyNotificationService, buildLikers, extractTags } from "./post.controller.js";
+import { forwardAuth, withAuthors, authorPostingBlock, notifyNotificationService, notifyMentions, buildLikers, extractTags } from "./post.controller.js";
 import { likesQuerySchema } from "../schemas/post.schemas.js";
 
 const createSchema = z.object({
