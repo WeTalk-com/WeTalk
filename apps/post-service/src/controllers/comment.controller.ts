@@ -131,7 +131,7 @@ export async function listComments(req: Request, res: Response): Promise<void> {
   res.json({ comments: enriched, nextCursor });
 }
 
-// GET /comments?userId=X — commentaires d'un compte (absent = courant), enrichis comme listComments.
+// Commentaires d'un compte
 export async function listUserComments(req: Request, res: Response): Promise<void> {
   const parsed = userCommentsQuerySchema.safeParse(req.query);
   if (!parsed.success) {
@@ -147,7 +147,6 @@ export async function listUserComments(req: Request, res: Response): Promise<voi
   const last = comments.at(-1);
   const nextCursor = comments.length === limit && last ? String(last._id) : null;
 
-  // Même enrichissement que listComments : auteur joint + likeCount/likedByMe ; likedBy jamais exposé.
   const authored = await withAuthors(comments, forwardAuth(req));
   const me = req.user!.sub;
   const enriched = authored.map((c) => {

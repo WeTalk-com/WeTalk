@@ -38,7 +38,6 @@ const commentResponseSchema = z.object({
   updatedAt: z.string(),
 });
 const commentSingleSchema = z.object({ comment: commentResponseSchema });
-// Commentaire enrichi renvoyé par les listes : auteur joint + compteurs (likedBy jamais exposé).
 const commentEnrichedSchema = commentResponseSchema.extend({
   content: z.string().nullable(), // masqué (null) si l'auteur est banni, comme withAuthors
   author: authorLiteSchema.nullable(),

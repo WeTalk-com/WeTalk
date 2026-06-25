@@ -49,7 +49,6 @@ export const likedQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
-// Commentaires d'un user : userId absent = user courant, présent = un autre profil (cf. likedQuerySchema).
 export const userCommentsQuerySchema = z.object({
   userId: z.string().trim().min(1).optional(),
   cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
