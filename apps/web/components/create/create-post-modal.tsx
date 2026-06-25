@@ -14,6 +14,7 @@ import { cn } from "@/lib/cn";
 import { useToast } from "@/components/ui/toast-provider";
 import { MentionDropdown } from "@/components/ui/mention-dropdown";
 import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
 
 const MAX_CHARS = 280;
 
@@ -83,6 +84,22 @@ export function CreatePostModal({
     setVideo(null);
     setVideoPreview(null);
     if (videoRef.current) videoRef.current.value = "";
+  }
+
+  // Insère l'emoji choisi à la position du curseur dans le textarea.
+  function insertEmoji(native: string) {
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? text.length;
+    const end = el?.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + native + text.slice(end);
+    setText(next);
+    requestAnimationFrame(() => {
+      if (el) {
+        const pos = start + native.length;
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      }
+    });
   }
 
   async function handlePost() {
@@ -234,6 +251,7 @@ export function CreatePostModal({
           <IconButton label={t("addVideo")} onClick={() => videoRef.current?.click()}>
             <Film className="size-5" />
           </IconButton>
+          <EmojiPicker onSelect={insertEmoji} label={t("addEmoji")} />
 <IconButton label={t("enhance")}>
             <Sparkles className="size-5" />
           </IconButton>
