@@ -94,7 +94,7 @@ export function TopBar({ searchPlaceholder, searchable = false }: Props) {
         <Link
           href="/explore"
           aria-label={placeholder}
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-brown-sec transition-colors hover:border-gold/50"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-brown-sec transition-colors"
         >
           {inner}
         </Link>

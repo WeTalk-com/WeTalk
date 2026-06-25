@@ -14,6 +14,8 @@ import { cn } from "@/lib/cn";
 import { useToast } from "@/components/ui/toast-provider";
 import { MentionDropdown } from "@/components/ui/mention-dropdown";
 import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { GifPicker } from "@/components/ui/gif-picker";
 
 const MAX_CHARS = 280;
 
@@ -83,6 +85,30 @@ export function CreatePostModal({
     setVideo(null);
     setVideoPreview(null);
     if (videoRef.current) videoRef.current.value = "";
+  }
+
+  // Insère l'emoji choisi à la position du curseur dans le textarea.
+  function insertEmoji(native: string) {
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? text.length;
+    const end = el?.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + native + text.slice(end);
+    setText(next);
+    requestAnimationFrame(() => {
+      if (el) {
+        const pos = start + native.length;
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      }
+    });
+  }
+
+  // GIF Giphy choisi → devient l'image du post (un seul média par post).
+  function handleGifSelect(file: File) {
+    removeVideo();
+    removeImage();
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
   }
 
   async function handlePost() {
@@ -184,7 +210,7 @@ export function CreatePostModal({
               type="button"
               onClick={removeImage}
               aria-label={t("removeImage")}
-              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors hover:bg-dark"
+              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors"
             >
               <X className="size-4" />
             </button>
@@ -203,7 +229,7 @@ export function CreatePostModal({
               type="button"
               onClick={removeVideo}
               aria-label={t("removeVideo")}
-              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors hover:bg-dark"
+              className="absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-dark/70 text-canvas backdrop-blur-sm transition-colors"
             >
               <X className="size-4" />
             </button>
@@ -234,6 +260,8 @@ export function CreatePostModal({
           <IconButton label={t("addVideo")} onClick={() => videoRef.current?.click()}>
             <Film className="size-5" />
           </IconButton>
+          <EmojiPicker onSelect={insertEmoji} label={t("addEmoji")} />
+          <GifPicker onSelect={handleGifSelect} label={t("addGif")} />
 <IconButton label={t("enhance")}>
             <Sparkles className="size-5" />
           </IconButton>

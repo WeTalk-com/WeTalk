@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Shield } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
-import { getCurrentUser, getReportedPosts } from "@/lib/api";
+import { getCurrentUser, getReportedPosts, getTotalPostCount } from "@/lib/api";
 import { ModerationQueue } from "@/components/admin/moderation-queue";
 
 export async function generateMetadata({
@@ -22,8 +22,9 @@ export default async function AdminPage() {
     notFound();
   }
 
-  const [reports, t] = await Promise.all([
-    getReportedPosts(),
+  const [reports, totalPosts, t] = await Promise.all([
+    getReportedPosts().catch(() => []),
+    getTotalPostCount().catch(() => 0),
     getTranslations("app.admin"),
   ]);
 
@@ -43,11 +44,10 @@ export default async function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 border-b border-border">
+      <div className="grid grid-cols-2 border-b border-border">
         {[
           { label: t("statReports"), value: reports.length },
-          { label: t("statUsers"), value: "—" },
-          { label: t("statPosts"), value: "—" },
+          { label: t("statPosts"), value: totalPosts },
         ].map(({ label, value }) => (
           <div
             key={label}

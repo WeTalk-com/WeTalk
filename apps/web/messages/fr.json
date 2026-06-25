@@ -24,7 +24,8 @@
     "accountMenu": "Menu du compte",
     "brandHome": "Accueil WeTalk",
     "primary": "Navigation principale",
-    "messages": "Messages"
+    "messages": "Messages",
+    "admin": "Modération"
   },
   "landing": {
     "hero": {
@@ -32,7 +33,7 @@
       "title": "Le côté chaleureux du social.",
       "highlightWord": "chaleureux",
       "paragraph": "Partagez vos golden hours, suivez les gens que vous aimez vraiment, et parlez plus lentement. WeTalk, c'est le fil où il fait bon revenir.",
-      "ctaCreate": "Créer votre compte →"
+      "cta": "Discutons →"
     },
     "stats": {
       "creators": "créateurs",
@@ -56,6 +57,8 @@
   "auth": {
     "subtitle": "Parlez plus chaleureux · Partagez plus lentement",
     "invalidCredentials": "Identifiants invalides",
+    "rateLimited": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "serverError": "Une erreur est survenue. Réessayez.",
     "logout": "Se déconnecter",
     "toggleLogin": "Se connecter",
     "toggleSignup": "S'inscrire",
@@ -111,8 +114,7 @@
       "title": "Explorer",
       "searchPlaceholder": "Rechercher golden hours, personnes, tags…",
       "tabTrending": "Tendances",
-      "tabForYou": "Pour vous",
-      "tabPeople": "Personnes",
+      "tabPeople": "Suggestions",
       "trending": "Tendances",
       "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "moreOptions": "Plus d'options",
@@ -157,17 +159,21 @@
       "tabPosts": "Posts",
       "tabMedia": "Médias",
       "tabLikes": "J'aime",
+      "tabComments": "Commentaires",
       "handleComingSoon": "Profil de @{handle} — bientôt disponible",
       "postsEmpty": "Aucun post pour l'instant.",
       "mediaEmpty": "Aucun média pour l'instant.",
-      "likesEmpty": "Aucun j'aime pour l'instant."
+      "likesEmpty": "Aucun j'aime pour l'instant.",
+      "commentsEmpty": "Aucun commentaire pour l'instant.",
+      "bannedTitle": "Compte banni",
+      "bannedText": "Ce compte a été banni de WeTalk."
     },
     "rightRail": {
       "whoToFollow": "À suivre",
       "trending": "Tendances",
       "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "follow": "Suivre",
-      "following": "Suivi",
+      "following": "Abonné",
       "unfollow": "Se désabonner",
       "linkAbout": "À propos",
       "linkHelp": "Aide",
@@ -201,7 +207,15 @@
       "selectConversation": "Choisissez une conversation pour commencer à discuter.",
       "typeMessage": "Écrivez un message…",
       "send": "Envoyer",
-      "back": "Retour"
+      "back": "Retour",
+      "empty": "Aucun message pour l'instant. Dites bonjour !",
+      "noConversations": "Aucune conversation pour l'instant.",
+      "compose": "Nouveau message",
+      "composeClose": "Fermer",
+      "composePlaceholder": "Rechercher des personnes…",
+      "composeNoResults": "Aucun utilisateur trouvé.",
+      "today": "Aujourd'hui",
+      "yesterday": "Hier"
     },
     "create": {
       "title": "Nouveau post",
@@ -210,6 +224,8 @@
       "addImage": "Ajouter une image",
       "addVideo": "Ajouter une vidéo",
       "addEmoji": "Ajouter un emoji",
+      "addGif": "Ajouter un GIF",
+      "gifSearch": "Rechercher un GIF",
       "addLocation": "Ajouter un lieu",
       "enhance": "Améliorer",
       "post": "Publier",
@@ -233,6 +249,9 @@
       "reply": "Répondre",
       "replies": "réponses",
       "delete": "Supprimer",
+      "edit": "Modifier",
+      "editSave": "Enregistrer",
+      "editError": "Erreur lors de la modification. Réessayez.",
       "deleteError": "Suppression impossible. Réessayez."
     },
     "report": {
@@ -248,8 +267,12 @@
       "submit": "Soumettre",
       "cancel": "Annuler",
       "close": "Fermer",
-      "soonTitle": "Bientôt disponible",
-      "soonText": "Le signalement n'est pas encore actif — il arrive très prochainement."
+      "successTitle": "Signalement envoyé",
+      "successText": "Merci, notre équipe va examiner ce post.",
+      "duplicateTitle": "Déjà signalé",
+      "duplicateText": "Vous avez déjà signalé ce post.",
+      "errorText": "Une erreur s'est produite. Réessayez.",
+      "submitting": "Envoi…"
     },
     "admin": {
       "title": "Modération",
@@ -260,8 +283,26 @@
       "reasonLabel": "Raison :",
       "reportedBy": "Signalé par",
       "dismiss": "Ignorer",
-      "remove": "Supprimer",
-      "noReports": "Aucun signalement en attente 🎉"
+      "remove": "Supprimer le post",
+      "noReports": "Aucun signalement en attente 🎉",
+      "banAuthor": "Bannir",
+      "banned": "Banni",
+      "suspendAuthor": "Suspendre",
+      "suspended": "Suspendu",
+      "banSuccess": "@{handle} a été banni.",
+      "banError": "Impossible de bannir cet utilisateur.",
+      "suspendTitle": "Suspendre l'utilisateur",
+      "suspendConfirm": "Suspendre",
+      "suspendSuccess": "@{handle} a été suspendu.",
+      "suspendError": "Impossible de suspendre cet utilisateur.",
+      "actionError": "Une erreur s'est produite.",
+      "unknownUser": "Utilisateur inconnu",
+      "cancel": "Annuler",
+      "unit_minutes": "minutes",
+      "unit_hours": "heures",
+      "unit_days": "jours",
+      "unit_months": "mois",
+      "unit_years": "ans"
     }
   },
   "settings": {
@@ -285,7 +326,9 @@
     "deleteAccountCancel": "Annuler",
     "deleteAccountError": "Une erreur s'est produite. Réessayez.",
     "toastProfileSaved": "Profil mis à jour",
-    "toastProfileError": "Impossible de mettre à jour le profil."
+    "toastProfileError": "Impossible de mettre à jour le profil.",
+    "toastProfileFormat": "Format non supporté. Utilisez JPG, PNG, WebP ou GIF.",
+    "toastProfileTooLarge": "Image trop volumineuse."
   },
   "theme": {
     "changeTheme": "Changer de thème",

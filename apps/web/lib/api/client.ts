@@ -16,9 +16,13 @@ export class ApiError extends Error {
  *  - navigateur : base relative (/api) + cookie httpOnly envoye automatiquement.
  *  - Server Component : base interne absolue + cookie relaye depuis la requete entrante.
  */
+/**
+ * silent: true — supprime le redirect wetalk:unauthorized (pour les requêtes
+ * non-critiques comme le HoverCard où un 401 ne doit pas forcer une déconnexion).
+ */
 export async function apiFetch<T>(
   path: string,
-  init?: RequestInit,
+  init?: RequestInit & { silent?: boolean },
 ): Promise<T> {
   const isServer = typeof window === "undefined";
   const base = isServer ? env.internalApiUrl : env.apiUrl;
@@ -63,7 +67,7 @@ export async function apiFetch<T>(
     const error = new ApiError(res.status, body, path);
     // Côté client, signale la session expirée via un événement custom
     // pour que SessionWatcher puisse rediriger sans coupler apiFetch au routeur.
-    if (!isServer && res.status === 401) {
+    if (!isServer && res.status === 401 && !init?.silent) {
       window.dispatchEvent(new CustomEvent("wetalk:unauthorized"));
     }
     throw error;

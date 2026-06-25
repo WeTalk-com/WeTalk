@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getProfile, getPostsByAuthor } from "@/lib/api";
+import { getProfile, getPostsByAuthor, getLikedPosts, getUserComments } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { ProfileInteractive } from "@/components/profile/profile-interactive";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
@@ -21,7 +21,11 @@ export async function generateMetadata({
 
 export default async function ProfilePage() {
   const profile = await getProfile();
-  const myPosts = await getPostsByAuthor(profile.id);
+  const [myPosts, likedPosts, comments] = await Promise.all([
+    getPostsByAuthor(profile.id),
+    getLikedPosts(profile.id),
+    getUserComments(profile.id),
+  ]);
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
@@ -38,7 +42,7 @@ export default async function ProfilePage() {
 
       <ProfileInteractive profile={profile} isSelf={true} initialFollowing={false} />
 
-      <ProfileTabs posts={myPosts} />
+      <ProfileTabs posts={myPosts} likedPosts={likedPosts} comments={comments} />
     </main>
   );
 }

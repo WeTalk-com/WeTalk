@@ -24,7 +24,7 @@ export default async function GlobalNotFound() {
           <p className="text-brown-sec">{t("notFoundMessage")}</p>
           <Link
             href="/"
-            className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-gold px-7 font-bold text-white shadow-gold transition-all hover:brightness-105 active:scale-[0.98]"
+            className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-gold px-7 font-bold text-white shadow-gold transition-all active:scale-[0.98]"
           >
             {t("notFoundCta")}
           </Link>

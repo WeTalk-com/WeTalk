@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Heart, CornerDownRight, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Heart, CornerDownRight, ChevronDown, ChevronUp, Trash2, Pencil } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
-import { createComment, createReply, deleteComment } from "@/lib/api";
+import { createComment, createReply, deleteComment, updateComment, likeComment, unlikeComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
-import { useCurrentUser } from "@/components/create/create-modal-provider";
+import { useCurrentUser, useCurrentUserId } from "@/components/create/create-modal-provider";
 import { cn } from "@/lib/cn";
 import { useToast } from "@/components/ui/toast-provider";
+import { useOptimisticLike } from "@/hooks/use-optimistic-like";
 
 function ReplyRow({
   reply,
@@ -21,10 +22,40 @@ function ReplyRow({
   onDelete: (id: string) => void;
 }) {
   const t = useTranslations("app.comments");
-  const [liked, setLiked] = useState(false);
   const locale = useLocale();
   const toast = useToast();
   const isOwner = currentUserId === reply.author.id;
+
+  const { liked, count, toggle } = useOptimisticLike({
+    initial: Boolean(reply.likedByMe),
+    initialCount: reply.likes,
+    onToggle: (next) => next ? likeComment(reply.id) : unlikeComment(reply.id),
+  });
+
+  const [text, setText] = useState(reply.text);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  function startEdit() {
+    setEditText(text);
+    setIsEditing(true);
+  }
+
+  async function saveEdit() {
+    const trimmed = editText.trim();
+    if (!trimmed || trimmed === text) { setIsEditing(false); return; }
+    setSaving(true);
+    try {
+      await updateComment(reply.id, trimmed);
+      setText(trimmed);
+      setIsEditing(false);
+    } catch {
+      toast.error(t("editError"));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleDelete() {
     try {
@@ -37,7 +68,7 @@ function ReplyRow({
 
   return (
     <div className="ml-11 mt-2 flex gap-2.5">
-      <Avatar initial={reply.author.initial} size={28} />
+      <Avatar initial={reply.author.initial} src={reply.author.avatarUrl} alt={reply.author.name} size={28} />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-brown">
           {reply.author.name}{" "}
@@ -45,28 +76,72 @@ function ReplyRow({
             @{reply.author.handle} · {formatTimeAgo(reply.createdAt, locale)}
           </span>
         </p>
-        <p className="mt-0.5 text-sm text-ink">{reply.text}</p>
-        <div className="mt-1 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setLiked((v) => !v)}
-            aria-pressed={liked}
-            className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
-          >
-            <Heart className={cn("size-3", liked && "fill-live")} />
-            {reply.likes + (liked ? 1 : 0)}
-          </button>
-          {isOwner && (
+
+        {isEditing ? (
+          <div className="mt-1">
+            <textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              rows={2}
+              autoFocus
+              className="w-full resize-none rounded-lg border border-border bg-canvas px-2.5 py-1.5 text-sm text-brown placeholder:text-brown-sec/60 focus:outline-none focus:ring-2 focus:ring-gold/40"
+            />
+            <div className="mt-1 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                disabled={saving}
+                className="rounded-full px-3 py-1 text-xs text-brown-sec disabled:opacity-50"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={saveEdit}
+                disabled={saving || !editText.trim()}
+                className="rounded-full bg-brown px-3 py-1 text-xs font-semibold text-canvas disabled:opacity-50"
+              >
+                {t("editSave")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-0.5 text-sm text-ink">{text}</p>
+        )}
+
+        {!isEditing && (
+          <div className="mt-1 flex items-center gap-3">
             <button
               type="button"
-              onClick={handleDelete}
-              className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
-              aria-label={t("delete")}
+              onClick={toggle}
+              aria-pressed={liked}
+              className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec")}
             >
-              <Trash2 className="size-3" />
+              <Heart className={cn("size-3", liked && "fill-live")} />
+              {count}
             </button>
-          )}
-        </div>
+            {isOwner && (
+              <>
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
+                  aria-label={t("edit")}
+                >
+                  <Pencil className="size-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
+                  aria-label={t("delete")}
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -86,10 +161,40 @@ function CommentRow({
   const t = useTranslations("app.comments");
   const locale = useLocale();
   const toast = useToast();
-  const [liked, setLiked] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState(comment.replies);
   const isOwner = currentUserId === comment.author.id;
+
+  const { liked, count, toggle } = useOptimisticLike({
+    initial: Boolean(comment.likedByMe),
+    initialCount: comment.likes,
+    onToggle: (next) => next ? likeComment(comment.id) : unlikeComment(comment.id),
+  });
+
+  const [text, setText] = useState(comment.text);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  function startEdit() {
+    setEditText(text);
+    setIsEditing(true);
+  }
+
+  async function saveEdit() {
+    const trimmed = editText.trim();
+    if (!trimmed || trimmed === text) { setIsEditing(false); return; }
+    setSaving(true);
+    try {
+      await updateComment(comment.id, trimmed);
+      setText(trimmed);
+      setIsEditing(false);
+    } catch {
+      toast.error(t("editError"));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleDelete() {
     try {
@@ -103,7 +208,7 @@ function CommentRow({
   return (
     <div className="border-b border-border py-4 last:border-0">
       <div className="flex gap-3">
-        <Avatar initial={comment.author.initial} size={36} />
+        <Avatar initial={comment.author.initial} src={comment.author.avatarUrl} alt={comment.author.name} size={36} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-brown">
             {comment.author.name}{" "}
@@ -111,55 +216,98 @@ function CommentRow({
               @{comment.author.handle} · {formatTimeAgo(comment.createdAt, locale)}
             </span>
           </p>
-          <p className="mt-0.5 text-sm text-ink">{comment.text}</p>
 
-          <div className="mt-2 flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setLiked((v) => !v)}
-              aria-pressed={liked}
-              className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
-            >
-              <Heart className={cn("size-3.5", liked && "fill-live")} />
-              {comment.likes + (liked ? 1 : 0)}
-            </button>
+          {isEditing ? (
+            <div className="mt-1">
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                rows={2}
+                autoFocus
+                className="w-full resize-none rounded-lg border border-border bg-canvas px-2.5 py-1.5 text-sm text-brown placeholder:text-brown-sec/60 focus:outline-none focus:ring-2 focus:ring-gold/40"
+              />
+              <div className="mt-1 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={saving}
+                  className="rounded-full px-3 py-1 text-xs text-brown-sec disabled:opacity-50"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEdit}
+                  disabled={saving || !editText.trim()}
+                  className="rounded-full bg-brown px-3 py-1 text-xs font-semibold text-canvas disabled:opacity-50"
+                >
+                  {t("editSave")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-0.5 text-sm text-ink">{text}</p>
+          )}
 
-            <button
-              type="button"
-              onClick={() => onReply(comment.id)}
-              className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-brown"
-            >
-              <CornerDownRight className="size-3.5" />
-              {t("reply")}
-            </button>
-
-            {isOwner && (
+          {!isEditing && (
+            <div className="mt-2 flex items-center gap-4">
               <button
                 type="button"
-                onClick={handleDelete}
-                className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
-                aria-label={t("delete")}
+                onClick={toggle}
+                aria-pressed={liked}
+                className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec")}
               >
-                <Trash2 className="size-3.5" />
+                <Heart className={cn("size-3.5", liked && "fill-live")} />
+                {count}
               </button>
-            )}
 
-            {replies.length > 0 && (
               <button
                 type="button"
-                onClick={() => setShowReplies((v) => !v)}
-                className="ml-auto flex items-center gap-1 text-xs text-gold hover:underline"
+                onClick={() => onReply(comment.id)}
+                className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
               >
-                {showReplies ? (
-                  <ChevronUp className="size-3.5" />
-                ) : (
-                  <ChevronDown className="size-3.5" />
-                )}
-                {replies.length}{" "}
-                {replies.length === 1 ? t("reply") : t("replies")}
+                <CornerDownRight className="size-3.5" />
+                {t("reply")}
               </button>
-            )}
-          </div>
+
+              {isOwner && (
+                <>
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
+                    aria-label={t("edit")}
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="flex items-center gap-1 text-xs text-brown-sec transition-colors"
+                    aria-label={t("delete")}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </>
+              )}
+
+              {replies.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowReplies((v) => !v)}
+                  className="ml-auto flex items-center gap-1 text-xs text-gold hover:underline"
+                >
+                  {showReplies ? (
+                    <ChevronUp className="size-3.5" />
+                  ) : (
+                    <ChevronDown className="size-3.5" />
+                  )}
+                  {replies.length}{" "}
+                  {replies.length === 1 ? t("reply") : t("replies")}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -185,7 +333,7 @@ export function PostDetailComments({
 }) {
   const t = useTranslations("app.comments");
   const currentUser = useCurrentUser();
-  const currentUserId = currentUser.id;
+  const currentUserId = useCurrentUserId();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -215,8 +363,7 @@ export function PostDetailComments({
   }
 
   return (
-    <div className="border-t border-border">
-      {/* Composer style Twitter */}
+    <div className="rounded-2xl border border-border bg-card px-4">
       <div className="border-b border-border py-3">
         {replyingTo && (
           <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
@@ -256,20 +403,23 @@ export function PostDetailComments({
         </div>
       </div>
 
-      {/* Thread des commentaires */}
       <div>
-        {comments.map((c) => (
-          <CommentRow
-            key={c.id}
-            comment={c}
-            currentUserId={currentUserId}
-            onReply={(id) => {
-              setReplyingTo(id);
-              setInput("");
-            }}
-            onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
-          />
-        ))}
+        {comments.length === 0 ? (
+          <p className="py-12 text-center text-sm text-brown-sec">{t("empty")}</p>
+        ) : (
+          comments.map((c) => (
+            <CommentRow
+              key={c.id}
+              comment={c}
+              currentUserId={currentUserId}
+              onReply={(id) => {
+                setReplyingTo(id);
+                setInput("");
+              }}
+              onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
+            />
+          ))
+        )}
       </div>
     </div>
   );

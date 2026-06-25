@@ -51,7 +51,7 @@ function ToastItem({ item, onClose }: { item: ToastItem; onClose: (id: number) =
       </Toast.Title>
       <Toast.Close
         aria-label={t("toastClose")}
-        className="shrink-0 rounded-full p-0.5 text-brown-sec transition-colors hover:text-brown"
+        className="shrink-0 rounded-full p-0.5 text-brown-sec transition-colors"
       >
         <X className="size-3.5" />
       </Toast.Close>

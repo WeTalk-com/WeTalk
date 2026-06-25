@@ -1,6 +1,6 @@
 import type { Post, Comment, Reply, ReportReason, User } from "@/lib/types";
 import { apiFetch } from "./client";
-import { mapPost, mapCommentTree, type BackendPost, type BackendComment } from "./map";
+import { mapPost, mapCommentTree, mapReply, type BackendPost, type BackendComment } from "./map";
 
 // Reponse brute de creation d'un commentaire (pas encore enrichi auteur/likes).
 type CreatedComment = { _id: string; content: string; createdAt: string };
@@ -23,6 +23,22 @@ export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
     `/posts?authorId=${encodeURIComponent(authorId)}`,
   );
   return data.posts.map(mapPost);
+}
+
+/** Posts likés par un utilisateur (onglet profil "J'aime"). */
+export async function getLikedPosts(userId: string): Promise<Post[]> {
+  const data = await apiFetch<{ posts: BackendPost[] }>(
+    `/posts/liked?userId=${encodeURIComponent(userId)}`,
+  );
+  return data.posts.map(mapPost);
+}
+
+/** Commentaires écrits par un utilisateur (onglet profil "Commentaires"), liste plate. */
+export async function getUserComments(userId: string): Promise<Comment[]> {
+  const data = await apiFetch<{ comments: BackendComment[] }>(
+    `/comments?userId=${encodeURIComponent(userId)}`,
+  );
+  return data.comments.map((c) => ({ ...mapReply(c), replies: [] }));
 }
 
 /** Posts portant un #hashtag */
@@ -145,11 +161,22 @@ export function deleteComment(commentId: string): Promise<void> {
   return apiFetch(`/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
 }
 
+/** Modifie le texte d'un commentaire (auteur uniquement, vérifié côté back). */
+export function updateComment(commentId: string, text: string): Promise<void> {
+  return apiFetch(`/comments/${encodeURIComponent(commentId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ content: text }),
+  });
+}
+
 /** Signale un post. */
 export async function reportPost(
-  _postId: string,
-  _reason: ReportReason,
-  _details?: string,
-): Promise<void> {
-  // TODO(api): await apiFetch(`/posts/${_postId}/report`, { method: "POST", body: JSON.stringify({ reason: _reason, details: _details }) });
+  postId: string,
+  reason: ReportReason,
+  details?: string,
+): Promise<{ duplicate?: boolean }> {
+  return apiFetch<{ duplicate?: boolean }>(`/posts/${encodeURIComponent(postId)}/report`, {
+    method: "POST",
+    body: JSON.stringify({ reason, details }),
+  });
 }

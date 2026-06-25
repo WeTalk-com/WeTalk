@@ -188,13 +188,21 @@ function LoginPageContent() {
           case "password_too_short":
             setFieldErrors((e) => ({ ...e, password: t("passwordErrorMin") }));
             break;
-          default:
+          case "rate_limited":
+            setTouched({});
+            setGlobalError(t("rateLimited"));
+            break;
+          case "invalid_credentials":
             setTouched({});
             setGlobalError(t("invalidCredentials"));
+            break;
+          default:
+            setTouched({});
+            setGlobalError(t("serverError"));
         }
       } else {
         setTouched({});
-        setGlobalError(t("invalidCredentials"));
+        setGlobalError(t("serverError"));
       }
       setPending(false);
     }
@@ -220,6 +228,8 @@ function LoginPageContent() {
       />
 
       <header className="relative z-10 mb-6 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" aria-hidden className="mx-auto mb-2 h-14 w-auto" />
         <h1 className="font-head text-[40px] font-extrabold italic leading-none text-brown">
           WeTalk
         </h1>
@@ -304,7 +314,7 @@ function LoginPageContent() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? t("hidePassword") : t("showPassword")}
-                  className="shrink-0 text-placeholder transition-colors hover:text-gold"
+                  className="shrink-0 text-placeholder transition-colors"
                 >
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
@@ -337,7 +347,7 @@ function LoginPageContent() {
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
                   aria-label={showConfirm ? t("hidePassword") : t("showPassword")}
-                  className="shrink-0 text-placeholder transition-colors hover:text-gold"
+                  className="shrink-0 text-placeholder transition-colors"
                 >
                   {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
@@ -352,7 +362,7 @@ function LoginPageContent() {
           <button
             type="submit"
             disabled={pending || !canSubmit}
-            className="h-13 rounded-[14px] bg-gold font-bold text-white shadow-gold transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-40"
+            className="h-13 rounded-[14px] bg-gold font-bold text-white shadow-gold transition-all active:scale-[0.98] disabled:opacity-40"
           >
             {copy.cta}
           </button>
@@ -388,10 +398,10 @@ function LoginPageContent() {
       <p className="relative z-10 mt-6 max-w-104 text-center text-xs text-brown-sec">
         {t.rich("legal", {
           terms: (chunks) => (
-            <a href="#" className="underline hover:text-brown">{chunks}</a>
+            <a href="#" className="underline">{chunks}</a>
           ),
           privacy: (chunks) => (
-            <a href="#" className="underline hover:text-brown">{chunks}</a>
+            <a href="#" className="underline">{chunks}</a>
           ),
         })}
       </p>

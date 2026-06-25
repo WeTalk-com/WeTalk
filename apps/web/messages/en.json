@@ -24,7 +24,8 @@
     "accountMenu": "Account menu",
     "brandHome": "WeTalk home",
     "primary": "Primary navigation",
-    "messages": "Messages"
+    "messages": "Messages",
+    "admin": "Moderation"
   },
   "landing": {
     "hero": {
@@ -32,7 +33,7 @@
       "title": "The warm side of social.",
       "highlightWord": "warm",
       "paragraph": "Share your golden hours, follow people you actually like, and talk slower. WeTalk is the feed that feels good to come back to.",
-      "ctaCreate": "Create your account →"
+      "cta": "Let's Talk →"
     },
     "stats": {
       "creators": "creators",
@@ -56,6 +57,8 @@
   "auth": {
     "subtitle": "Talk warmer · Share slower",
     "invalidCredentials": "Invalid credentials",
+    "rateLimited": "Too many attempts. Try again in a few minutes.",
+    "serverError": "Something went wrong. Please try again.",
     "logout": "Log out",
     "toggleLogin": "Log in",
     "toggleSignup": "Sign up",
@@ -111,8 +114,7 @@
       "title": "Explore",
       "searchPlaceholder": "Search golden hours, people, tags…",
       "tabTrending": "Trending",
-      "tabForYou": "For you",
-      "tabPeople": "People",
+      "tabPeople": "Suggestions",
       "trending": "Trending",
       "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "moreOptions": "More options",
@@ -157,10 +159,14 @@
       "tabPosts": "Posts",
       "tabMedia": "Media",
       "tabLikes": "Likes",
+      "tabComments": "Comments",
       "handleComingSoon": "Profile of @{handle} — coming soon",
       "postsEmpty": "No posts yet.",
       "mediaEmpty": "No media yet.",
-      "likesEmpty": "No likes yet."
+      "likesEmpty": "No likes yet.",
+      "commentsEmpty": "No comments yet.",
+      "bannedTitle": "Account banned",
+      "bannedText": "This account has been suspended from WeTalk."
     },
     "rightRail": {
       "whoToFollow": "Who to follow",
@@ -201,7 +207,15 @@
       "selectConversation": "Choose a conversation to start chatting.",
       "typeMessage": "Write a message…",
       "send": "Send",
-      "back": "Back"
+      "back": "Back",
+      "empty": "No messages yet. Say hello!",
+      "noConversations": "No conversations yet.",
+      "compose": "New message",
+      "composeClose": "Close",
+      "composePlaceholder": "Search people…",
+      "composeNoResults": "No users found.",
+      "today": "Today",
+      "yesterday": "Yesterday"
     },
     "create": {
       "title": "New post",
@@ -210,6 +224,8 @@
       "addImage": "Add image",
       "addVideo": "Add video",
       "addEmoji": "Add emoji",
+      "addGif": "Add GIF",
+      "gifSearch": "Search GIFs",
       "addLocation": "Add location",
       "enhance": "Enhance",
       "post": "Post",
@@ -233,6 +249,9 @@
       "reply": "Reply",
       "replies": "replies",
       "delete": "Delete",
+      "edit": "Edit",
+      "editSave": "Save",
+      "editError": "Failed to save changes. Please try again.",
       "deleteError": "Couldn't delete. Please try again."
     },
     "report": {
@@ -248,8 +267,12 @@
       "submit": "Submit",
       "cancel": "Cancel",
       "close": "Close",
-      "soonTitle": "Coming soon",
-      "soonText": "Reporting isn't available yet — it'll be enabled shortly."
+      "successTitle": "Report sent",
+      "successText": "Thank you, our team will review this post.",
+      "duplicateTitle": "Already reported",
+      "duplicateText": "You have already reported this post.",
+      "errorText": "Something went wrong. Please try again.",
+      "submitting": "Sending…"
     },
     "admin": {
       "title": "Moderation",
@@ -260,8 +283,26 @@
       "reasonLabel": "Reason:",
       "reportedBy": "Reported by",
       "dismiss": "Dismiss",
-      "remove": "Remove",
-      "noReports": "No pending reports 🎉"
+      "remove": "Remove post",
+      "noReports": "No pending reports 🎉",
+      "banAuthor": "Ban",
+      "banned": "Banned",
+      "suspendAuthor": "Suspend",
+      "suspended": "Suspended",
+      "banSuccess": "@{handle} has been banned.",
+      "banError": "Failed to ban this user.",
+      "suspendTitle": "Suspend user",
+      "suspendConfirm": "Suspend",
+      "suspendSuccess": "@{handle} has been suspended.",
+      "suspendError": "Failed to suspend this user.",
+      "actionError": "Something went wrong.",
+      "unknownUser": "Unknown user",
+      "cancel": "Cancel",
+      "unit_minutes": "minutes",
+      "unit_hours": "hours",
+      "unit_days": "days",
+      "unit_months": "months",
+      "unit_years": "years"
     }
   },
   "settings": {
@@ -285,7 +326,9 @@
     "deleteAccountCancel": "Cancel",
     "deleteAccountError": "An error occurred. Please try again.",
     "toastProfileSaved": "Profile updated",
-    "toastProfileError": "Failed to update profile. Please try again."
+    "toastProfileError": "Failed to update profile. Please try again.",
+    "toastProfileFormat": "Unsupported format. Use JPG, PNG, WebP or GIF.",
+    "toastProfileTooLarge": "Image too large."
   },
   "theme": {
     "changeTheme": "Change theme",

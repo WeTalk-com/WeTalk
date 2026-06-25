@@ -48,7 +48,7 @@ export function FollowListModal({ userId, type, title, isOpen, onClose }: Props)
               </Dialog.Title>
               <Dialog.Close
                 aria-label={t("followListClose")}
-                className="rounded-full p-1 text-brown-sec hover:bg-card"
+                className="rounded-full p-1 text-brown-sec"
               >
                 <X className="size-5" />
               </Dialog.Close>
@@ -68,7 +68,7 @@ export function FollowListModal({ userId, type, title, isOpen, onClose }: Props)
                       <Link
                         href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }}
                         onClick={onClose}
-                        className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-card"
+                        className="flex items-center gap-3 px-5 py-3 transition-colors"
                       >
                         <Avatar initial={u.initial} src={u.avatarUrl} size={40} solid />
                         <div className="min-w-0">

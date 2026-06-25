@@ -16,6 +16,8 @@ export type BackendUser = {
   followersCount?: number;
   followingCount?: number;
   postsCount?: number;
+  isBanned?: boolean;
+  isSuspended?: boolean;
 };
 
 // media attaché à un post
@@ -48,6 +50,8 @@ export function mapUser(u: BackendUser): User {
     initial: name.charAt(0).toUpperCase(),
     avatarUrl: u.profileImage ?? undefined,
     role: u.role,
+    isBanned: u.isBanned,
+    isSuspended: u.isSuspended,
   };
 }
 

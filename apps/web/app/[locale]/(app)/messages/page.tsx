@@ -18,7 +18,7 @@ export async function generateMetadata({
 }
 
 export default async function MessagesPage() {
-  const conversations = await getConversations();
+  const conversations = await getConversations().catch(() => []);
 
   return (
     <main className="flex min-w-0 flex-1 flex-col lg:border-x lg:border-border" style={{ height: "100dvh" }}>
