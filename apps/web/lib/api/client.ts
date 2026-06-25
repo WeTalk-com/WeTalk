@@ -10,19 +10,34 @@ export class ApiError extends Error {
   }
 }
 
+// Routes où un 401 signifie "identifiants invalides", pas "token expiré"
+const NO_REFRESH_PATHS = ["/auth/login", "/auth/register"];
+
+// Déduplique les appels refresh concurrents : si plusieurs requêtes échouent
+// avec 401 simultanément, un seul POST /auth/refresh est émis puis toutes retentent.
+let refreshPromise: Promise<boolean> | null = null;
+
+function tryRefresh(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = fetch("/api/auth/refresh", { method: "POST", credentials: "include" })
+    .then((r) => r.ok)
+    .catch(() => false)
+    .finally(() => { refreshPromise = null; });
+  return refreshPromise;
+}
+
 /**
  * Wrapper fetch de l'API — point d'integration UNIQUE du back-end.
  * Isomorphe :
  *  - navigateur : base relative (/api) + cookie httpOnly envoye automatiquement.
  *  - Server Component : base interne absolue + cookie relaye depuis la requete entrante.
- */
-/**
+ *
  * silent: true — supprime le redirect wetalk:unauthorized (pour les requêtes
- * non-critiques comme le HoverCard où un 401 ne doit pas forcer une déconnexion).
+ * non-critiques où un 401 ne doit pas forcer une déconnexion).
  */
 export async function apiFetch<T>(
   path: string,
-  init?: RequestInit & { silent?: boolean },
+  init?: RequestInit & { silent?: boolean; _retry?: boolean },
 ): Promise<T> {
   const isServer = typeof window === "undefined";
   const base = isServer ? env.internalApiUrl : env.apiUrl;
@@ -67,7 +82,17 @@ export async function apiFetch<T>(
     const error = new ApiError(res.status, body, path);
     // Côté client, signale la session expirée via un événement custom
     // pour que SessionWatcher puisse rediriger sans coupler apiFetch au routeur.
-    if (!isServer && res.status === 401 && !init?.silent) {
+    const refreshable =
+      !isServer &&
+      res.status === 401 &&
+      !init?.silent &&
+      !NO_REFRESH_PATHS.some((p) => path.startsWith(p));
+    if (refreshable) {
+      if (!init?._retry) {
+        const refreshed = await tryRefresh();
+        if (refreshed) return apiFetch<T>(path, { ...init, _retry: true });
+      }
+      // la session est fini donc on signale la déconnexion.
       window.dispatchEvent(new CustomEvent("wetalk:unauthorized"));
     }
     throw error;
