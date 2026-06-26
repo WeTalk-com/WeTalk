@@ -39,7 +39,7 @@ type NavItem = {
   badge?: number;
 };
 
-export function LeftSidebar({ user }: { user: UserModel }) {
+export function LeftSidebar({ user, unreadMessages = 0 }: { user: UserModel; unreadMessages?: number }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const { count: unreadCount } = useUnreadCount();
@@ -50,7 +50,7 @@ export function LeftSidebar({ user }: { user: UserModel }) {
     { key: "home", Icon: Home, href: "/home" },
     { key: "explore", Icon: Compass, href: "/explore" },
     { key: "notifications", Icon: Bell, href: "/notifications", badge: unreadCount },
-    { key: "messages", Icon: MessageSquare, href: "/messages" },
+    { key: "messages", Icon: MessageSquare, href: "/messages", badge: unreadMessages },
     { key: "profile", Icon: User, href: "/profile" },
     { key: "settings", Icon: Settings, href: "/settings" },
     ...(isModOrAdmin ? [{ key: "admin" as NavKey, Icon: Shield, href: "/admin" as NavHref }] : []),
