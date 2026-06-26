@@ -1,0 +1,7 @@
+ollama
+chromadb
+sentence-transformers
+mcp
+fastapi
+uvicorn[standard]
+pyjwt

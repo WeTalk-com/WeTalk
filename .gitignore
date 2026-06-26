@@ -59,3 +59,10 @@ dist/
 .env
 # Rapport JUnit généré en CI (dorny/test-reporter)
 junit.xml
+
+.chromadb
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/

@@ -11,6 +11,7 @@ export const routing = defineRouting({
     "/home": "/home",
     "/explore": "/explore",
     "/messages": "/messages",
+    "/assistant": "/assistant",
     "/notifications": "/notifications",
     "/profile": "/profile",
     "/profile/[handle]": "/profile/[handle]",

@@ -10,6 +10,7 @@ import {
   User,
   Settings,
   MessageSquare,
+  Sparkles,
   MoreHorizontal,
   Shield,
   type LucideIcon,
@@ -21,13 +22,14 @@ import { LogoutButton } from "../auth/logout-button";
 import { useUnreadCount } from "@/lib/use-unread-count";
 import { cn } from "@/lib/cn";
 
-type NavKey = "home" | "explore" | "notifications" | "messages" | "profile" | "settings" | "admin";
+type NavKey = "home" | "explore" | "notifications" | "messages" | "assistant" | "profile" | "settings" | "admin";
 
 type NavHref =
   | "/home"
   | "/explore"
   | "/notifications"
   | "/messages"
+  | "/assistant"
   | "/profile"
   | "/settings"
   | "/admin";
@@ -50,7 +52,8 @@ export function LeftSidebar({ user, unreadMessages = 0 }: { user: UserModel; unr
     { key: "home", Icon: Home, href: "/home" },
     { key: "explore", Icon: Compass, href: "/explore" },
     { key: "notifications", Icon: Bell, href: "/notifications", badge: unreadCount },
-    { key: "messages", Icon: MessageSquare, href: "/messages", badge: unreadMessages },
+    { key: "messages", Icon: MessageSquare, href: "/messages" },
+    { key: "assistant", Icon: Sparkles, href: "/assistant" },
     { key: "profile", Icon: User, href: "/profile" },
     { key: "settings", Icon: Settings, href: "/settings" },
     ...(isModOrAdmin ? [{ key: "admin" as NavKey, Icon: Shield, href: "/admin" as NavHref }] : []),

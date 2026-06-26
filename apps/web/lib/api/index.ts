@@ -5,3 +5,4 @@ export * from "./notifications";
 export * from "./explore";
 export * from "./messages";
 export * from "./admin";
+export * from "./agent";

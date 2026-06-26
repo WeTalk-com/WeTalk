@@ -1,0 +1,68 @@
+WeTalk - Présentation générale
+WeTalk (nom de code Breezy) est un réseau social de microblogging léger, rapide et pensé pour les environnements à ressources limitées. Inspiré de Twitter/X, il met l'accent sur la diffusion de messages courts et l'échange immédiat entre membres. Son slogan est « Le côté chaleureux du social ». L'objectif est d'offrir une expérience fluide et accessible, en mobile-first, sur tous les formats d'écran.
+
+Profils et permissions
+WeTalk définit quatre profils d'utilisateurs gouvernés par une grille de permissions : Visiteur, Utilisateur, Modérateur et Administrateur. Le Visiteur n'a accès à rien tant qu'il n'est pas authentifié. L'Utilisateur accède à toutes les fonctionnalités sociales. Le Modérateur peut traiter les signalements, bannir et suspendre des comptes. L'Administrateur dispose des droits de modération et d'administration les plus étendus.
+
+Création de compte et connexion
+Pour utiliser WeTalk, il faut créer un compte puis se connecter. L'inscription se fait via la page d'inscription qui crée le compte côté auth-service puis user-service, avant de rediriger automatiquement vers le fil d'actualité. La connexion se fait avec identifiant et mot de passe. En cas de succès, un cookie de session « wetalk_session » est posé côté client et l'utilisateur est redirigé vers son fil. En cas d'identifiants incorrects, un message d'erreur s'affiche.
+
+Sécurité de l'authentification
+L'authentification repose sur des jetons JWT. À la connexion, deux jetons sont émis : un jeton d'accès de courte durée et un jeton de renouvellement de longue durée. Ces jetons sont déposés dans des cookies HttpOnly, invisibles au JavaScript du navigateur, ce qui protège contre les attaques XSS. Un système de rate limiting limite les tentatives de connexion pour contrer les attaques par force brute. Un utilisateur banni voit sa session révoquée dès sa requête suivante.
+
+Déconnexion
+La déconnexion supprime le cookie « wetalk_session » côté client et invalide la session côté auth-service. L'utilisateur est alors redirigé vers la page de connexion. Toute tentative d'accès à une route protégée sans cookie valide renvoie une erreur 401 et redirige vers la page de connexion.
+
+Publier un message (post)
+La fonctionnalité centrale de WeTalk est la publication de messages courts, limités à 280 caractères. Un post peut contenir du texte, une image, une vidéo ou un GIF. Pour publier, l'utilisateur remplit le formulaire de création. Le service vérifie d'abord que l'auteur n'est ni banni ni suspendu, enregistre la publication, puis déclenche les notifications nécessaires. Le post devient alors visible dans le fil d'actualité.
+
+Tags et mentions
+À la création d'un post, le texte est analysé automatiquement. Les tags sont les mots précédés de # (passés en minuscules, maximum 10 par post) et servent à catégoriser le contenu. Les mentions sont les pseudonymes précédés de @ ; elles sont validées auprès du service utilisateurs et déclenchent une notification à l'utilisateur mentionné.
+
+Fil d'actualité (feed)
+Le fil d'actualité est la page d'accueil par défaut une fois connecté. Il présente les publications des utilisateurs suivis ainsi que ses propres posts, triées par ordre chronologique décroissant (les plus récentes en premier). Les publications d'un auteur banni sont masquées dynamiquement à la lecture, sans être supprimées en base : la mesure est réversible en cas de débannissement.
+
+Likes et commentaires
+Un utilisateur peut aimer (liker) une publication ou un commentaire pour montrer son appréciation, et retirer son like à tout moment. Il peut aussi commenter une publication et répondre à un commentaire pour participer à une discussion. Pour préserver la confidentialité, l'API ne renvoie pas la liste brute des profils ayant aimé un contenu au client classique, mais un compteur total et un indicateur signalant si l'utilisateur connecté a aimé le contenu.
+
+Abonnements (follow)
+Les utilisateurs peuvent suivre (follow) d'autres utilisateurs pour voir leur contenu dans leur fil d'actualité, et se désabonner à tout moment. Chaque profil dispose d'une liste d'abonnements (les comptes qu'il suit) et d'une liste d'abonnés (les comptes qui le suivent). Un nouveau follower déclenche une notification.
+
+Profil utilisateur
+Chaque utilisateur possède une page de profil affichant son nom, sa biographie, son avatar et sa bannière, ainsi que la liste de ses publications. L'utilisateur peut éditer ses informations personnelles depuis son profil. Un compte peut afficher un badge de certification (compte vérifié).
+
+Notifications
+Le système de notifications alerte l'utilisateur des actions le concernant : un like, un commentaire, une mention ou un nouveau follower. Les notifications sont distribuées en temps réel via WebSocket (Socket.io) : un utilisateur connecté les reçoit instantanément, sans rafraîchir la page. La section Notifications liste les événements reçus, et un compteur indique le nombre de notifications non lues. Une notification peut être marquée comme lue.
+
+Messagerie privée
+WeTalk propose une messagerie privée permettant aux utilisateurs de s'écrire des messages directs. Elle s'appuie sur une API REST pour envoyer un message et récupérer l'historique d'une conversation, et sur une connexion Socket.io pour la réception en temps réel. Avant chaque envoi, le service vérifie que ni l'expéditeur ni le destinataire ne sont bannis ou suspendus. Si le destinataire est connecté, il reçoit le message instantanément.
+
+Explorer
+La section Explorer recense les derniers utilisateurs inscrits sur l'application ainsi que les tags en tendance. Elle permet de découvrir de nouveaux comptes à suivre et les sujets populaires du moment.
+
+Recherche
+WeTalk permet de rechercher des utilisateurs via un champ de recherche, et de retrouver des publications via les tags. Rechercher un tag affiche les posts associés à ce tag.
+
+Signalement et modération
+Un utilisateur peut signaler une publication qu'il juge inappropriée. Les modérateurs et administrateurs consultent les signalements en attente et peuvent ignorer un rapport ou supprimer le contenu concerné. Ils peuvent également bannir ou suspendre des comptes. Un compte banni est bloqué dès sa requête suivante et ses publications sont masquées à la lecture.
+
+Médias (images et vidéos)
+Les utilisateurs peuvent joindre des images ou des vidéos à leurs messages. Les fichiers sont gérés par un service média dédié qui vérifie leur taille et leur format avant de les accepter. Une limite de 60 Mo est imposée pour éviter les fichiers trop lourds. Les médias sont servis directement, ce qui allège la charge applicative.
+
+Thèmes et apparence
+WeTalk propose trois thèmes d'affichage : Ambre (par défaut), Rose et Sombre. Le changement de thème se fait à la volée, sans recharger la page. L'identité visuelle privilégie des tons chauds et dorés (papier kraft, ambre, lumière du soir) pour une interface chaleureuse.
+
+Langues (internationalisation)
+L'interface de WeTalk est entièrement traduite en français et en anglais. L'utilisateur choisit sa langue préférée depuis les paramètres, et l'interface bascule immédiatement, sans rechargement de la page.
+
+Accessibilité et expérience utilisateur
+WeTalk est conçu en mobile-first : la navigation principale s'affiche en barre basse sur mobile et en sidebar gauche sur ordinateur. Les composants interactifs gèrent la navigation au clavier et les rôles ARIA. Chaque action reçoit un retour visuel immédiat (animation de like, message envoyé affiché instantanément, erreur en toast). Les animations respectent la préférence système « prefers-reduced-motion ».
+
+Architecture technique
+WeTalk repose sur une architecture microservices conteneurisée avec Docker. Cinq services métier collaborent : auth-service (authentification et JWT), user-service (profils et graphe social), post-service (publications, likes, commentaires, tags, signalements), notification-service (notifications temps réel) et message-service (messagerie privée). Un media-service gère le stockage des fichiers. Chaque service possède sa propre base de données (PostgreSQL pour auth et users, MongoDB pour posts, notifications et messages, Redis pour le cache et la gestion des sessions).
+
+Passerelle API (Gateway)
+Toutes les requêtes passent par une passerelle Nginx unique sur le port 80, seul point d'entrée public de l'application. Elle route chaque requête préfixée par /api/ vers le bon service interne. Les services internes ne sont jamais accessibles directement depuis l'extérieur : ils communiquent entre eux sur un réseau Docker privé. La passerelle gère aussi les connexions WebSocket pour les notifications et la messagerie temps réel.
+
+Assistant IA WeTalk
+WeTalk intègre un assistant conversationnel basé sur un modèle de langage local (Ollama). Il aide les utilisateurs à comprendre et utiliser la plateforme : fonctionnalités, navigation, règles de modération et questions fréquentes. L'assistant s'appuie sur cette documentation via un mécanisme de RAG (recherche augmentée) et répond dans la langue de l'utilisateur.

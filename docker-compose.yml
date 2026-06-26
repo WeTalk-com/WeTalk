@@ -268,6 +268,8 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
+      agent:
+        condition: service_started
     networks:
       - wetalk-net
 
@@ -294,6 +296,72 @@ services:
     networks:
       - wetalk-net
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: wetalk-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - wetalk-net
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: wetalk-chromadb
+    restart: unless-stopped
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - wetalk-net
+    expose:
+      - "8000"
+
+  agent:
+    build:
+      context: ./apps/agent
+      dockerfile: Dockerfile
+    container_name: wetalk-agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      API_BASE: http://gateway
+    depends_on:
+      ollama:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    networks:
+      - wetalk-net
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./apps/agent
+          target: /app/agent
+          ignore:
+            - __pycache__/
+        - action: rebuild
+          path: ./apps/agent/requirements.txt
+
 networks:
   wetalk-net:
     driver: bridge
@@ -302,3 +370,5 @@ volumes:
   postgres_data:
   mongo_data:
   media_data:
+  ollama_data:
+  chroma_data:

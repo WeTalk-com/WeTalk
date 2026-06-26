@@ -11,6 +11,7 @@
     "profile": "Profil · WeTalk",
     "settings": "Paramètres · WeTalk",
     "messages": "Messages · WeTalk",
+    "assistant": "Assistant · WeTalk",
     "login": "Connexion · WeTalk",
     "loginDescription": "Connectez-vous ou créez votre compte WeTalk."
   },
@@ -25,6 +26,7 @@
     "brandHome": "Accueil WeTalk",
     "primary": "Navigation principale",
     "messages": "Messages",
+    "assistant": "Assistant",
     "admin": "Modération"
   },
   "landing": {
@@ -215,6 +217,18 @@
       "youPrefix": "Vous :",
       "today": "Aujourd'hui",
       "yesterday": "Hier"
+    },
+    "assistant": {
+      "title": "Assistant WeTalk",
+      "subtitle": "Votre guide sur la plateforme",
+      "welcomeTitle": "Bonjour 👋",
+      "welcomeText": "Posez-moi une question sur WeTalk, ou demandez-moi de résumer votre activité.",
+      "suggestion1": "Quoi de neuf ?",
+      "suggestion2": "Comment publier un message ?",
+      "suggestion3": "Trouve un utilisateur",
+      "placeholder": "Écrivez à l'assistant…",
+      "send": "Envoyer",
+      "error": "Désolé, une erreur est survenue. Réessayez dans un instant."
     },
     "create": {
       "title": "Nouveau post",
