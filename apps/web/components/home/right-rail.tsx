@@ -28,7 +28,7 @@ export function RightRail({ topics }: { topics: TrendingTopic[] }) {
   ];
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[340px] shrink-0 flex-col gap-5 px-4 py-6 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-[340px] shrink-0 flex-col gap-5 px-4 py-6 xl:flex">
       {/* Trending */}
       <Section title={t("trending")}>
         <ul className="flex flex-col gap-4">

@@ -189,8 +189,8 @@ function ConversationRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1 truncate font-semibold text-brown">
-            {conv.user.name}
+          <span className="flex min-w-0 items-center gap-1 font-semibold text-brown">
+            <span className="truncate">{conv.user.name}</span>
             {conv.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
           </span>
           <span className="shrink-0 text-xs text-brown-sec">
@@ -219,12 +219,12 @@ function UserRow({ user, onSelect }: { user: User; onSelect: () => void }) {
         className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-canvas"
       >
         <Avatar initial={user.initial} src={user.avatarUrl} size={40} />
-        <div className="min-w-0">
-          <p className="flex items-center gap-1 font-semibold text-brown">
-            {user.name}
+        <div className="min-w-0 flex-1">
+          <p className="flex min-w-0 items-center gap-1 font-semibold text-brown">
+            <span className="truncate">{user.name}</span>
             {user.verified && <VerifiedBadge className="size-4 shrink-0" />}
           </p>
-          <p className="text-sm text-brown-sec">@{user.handle}</p>
+          <p className="truncate text-sm text-brown-sec">@{user.handle}</p>
         </div>
       </button>
     </li>
