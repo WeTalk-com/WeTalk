@@ -12,6 +12,7 @@ COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
 COPY apps/media-service/package.json ./apps/media-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
+COPY apps/message-service/package.json ./apps/message-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
@@ -20,8 +21,8 @@ RUN npm ci
 
 # Sources
 COPY packages/typescript-config ./packages/typescript-config
-COPY apps/notification-service ./apps/notification-service
-RUN npm run build --workspace=notification-service
+COPY apps/message-service ./apps/message-service
+RUN npm run build --workspace=message-service
 
 # Runtime
 FROM base AS runner
@@ -32,14 +33,15 @@ COPY apps/user-service/package.json ./apps/user-service/package.json
 COPY apps/post-service/package.json ./apps/post-service/package.json
 COPY apps/media-service/package.json ./apps/media-service/package.json
 COPY apps/notification-service/package.json ./apps/notification-service/package.json
+COPY apps/message-service/package.json ./apps/message-service/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
-RUN npm ci --omit=dev --workspace=notification-service
-COPY --from=builder /app/apps/notification-service/dist ./apps/notification-service/dist
+RUN npm ci --omit=dev --workspace=message-service
+COPY --from=builder /app/apps/message-service/dist ./apps/message-service/dist
 
-EXPOSE 4003
-WORKDIR /app/apps/notification-service
+EXPOSE 4004
+WORKDIR /app/apps/message-service
 USER node
 CMD ["node", "dist/index.js"]

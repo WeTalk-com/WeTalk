@@ -3,12 +3,17 @@ import { isValidObjectId } from "mongoose";
 import { z } from "zod";
 import { CommentModel } from "../models/comment.js";
 import { PostModel } from "../models/post.js";
-import { forwardAuth, withAuthors, authorPostingBlock } from "./post.controller.js";
+import { forwardAuth, withAuthors, authorPostingBlock, notifyNotificationService, notifyMentions, buildLikers, extractTags } from "./post.controller.js";
+import { likesQuerySchema, userCommentsQuerySchema } from "../schemas/post.schemas.js";
 
 const createSchema = z.object({
   content: z.string().trim().min(1).max(280),
   // parentId présent = réponse à un commentaire existant (1 niveau).
   parentId: z.string().refine(isValidObjectId, "Invalid parentId").optional(),
+});
+
+const updateCommentSchema = z.object({
+  content: z.string().trim().min(1).max(280),
 });
 
 const listQuerySchema = z.object({
@@ -43,26 +48,53 @@ export async function createComment(req: Request, res: Response): Promise<void> 
   }
 
   // Une réponse doit cibler un commentaire existant du même post.
+  let parentAuthorId: string | null = null;
   if (parsed.data.parentId) {
     const parent = await CommentModel.findById(parsed.data.parentId)
-      .select({ postId: 1, parentId: 1 })
+      .select({ postId: 1, parentId: 1, authorId: 1 })
       .lean();
     if (!parent || String(parent.postId) !== id) {
       res.status(404).json({ error: "Parent comment not found" });
       return;
     }
-    if (parent.parentId) {  
-      res.status(400).json({ error: "Replies can only target top-level comments" });  
-      return;  
-    } 
+    if (parent.parentId) {
+      res.status(400).json({ error: "Replies can only target top-level comments" });
+      return;
+    }
+    parentAuthorId = parent.authorId;
   }
 
   const comment = await CommentModel.create({
     postId: id,
     authorId: req.user!.sub,
     content: parsed.data.content,
+    tags: extractTags(parsed.data.content),
     parentId: parsed.data.parentId ?? null,
   });
+
+  const actorId = req.user!.sub;
+  const headers = forwardAuth(req);
+  const commentPayload = {
+    type: "comment" as const,
+    actorId,
+    postId: id!,
+    commentId: String(comment._id),
+    preview: parsed.data.content.slice(0, 100),
+  };
+
+  // Notifie l'auteur du post (sauf si c'est l'auteur du commentaire).
+  if (post.authorId !== actorId) {
+    notifyNotificationService({ ...commentPayload, recipientId: post.authorId }, headers);
+  }
+
+  // Fx8 : réponse à un commentaire → notifie aussi l'auteur du commentaire parent.
+  // Dédup : pas soi-même, ni un doublon si parent == auteur du post.
+  if (parentAuthorId && parentAuthorId !== actorId && parentAuthorId !== post.authorId) {
+    notifyNotificationService({ ...commentPayload, recipientId: parentAuthorId }, headers);
+  }
+
+  notifyMentions(parsed.data.content, actorId, id!, String(comment._id), headers);
+
   // likedBy (ids des likers) n'est jamais exposé au client.
   const { likedBy: _likedBy, ...commentOut } = comment.toObject();
   res.status(201).json({ comment: commentOut });
@@ -99,6 +131,31 @@ export async function listComments(req: Request, res: Response): Promise<void> {
   res.json({ comments: enriched, nextCursor });
 }
 
+// Commentaires d'un compte
+export async function listUserComments(req: Request, res: Response): Promise<void> {
+  const parsed = userCommentsQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const { userId, cursor, limit } = parsed.data;
+  const target = userId ?? req.user!.sub;
+
+  const filter: Record<string, unknown> = { authorId: target };
+  if (cursor) filter._id = { $lt: cursor };
+  const comments = await CommentModel.find(filter).sort({ _id: -1 }).limit(limit).lean();
+  const last = comments.at(-1);
+  const nextCursor = comments.length === limit && last ? String(last._id) : null;
+
+  const authored = await withAuthors(comments, forwardAuth(req));
+  const me = req.user!.sub;
+  const enriched = authored.map((c) => {
+    const { likedBy = [], ...rest } = c;
+    return { ...rest, likeCount: likedBy.length, likedByMe: likedBy.includes(me) };
+  });
+  res.json({ comments: enriched, nextCursor });
+}
+
 // DELETE /comments/:id — supprimer son propre commentaire.
 export async function deleteComment(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
@@ -111,12 +168,43 @@ export async function deleteComment(req: Request, res: Response): Promise<void> 
     res.status(404).json({ error: "Comment not found" });
     return;
   }
-  if (comment.authorId !== req.user!.sub) {
+  // Auteur, ou modérateur/admin (modération de contenu, Fx20).
+  const role = req.user!.role;
+  if (comment.authorId !== req.user!.sub && role !== "moderator" && role !== "admin") {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
   await comment.deleteOne();
   res.status(204).send();
+}
+
+// Editer son propre commentaire (ou sa propre réponse).
+export async function updateComment(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid comment id" });
+    return;
+  }
+  const parsed = updateCommentSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const comment = await CommentModel.findById(id);
+  if (!comment) {
+    res.status(404).json({ error: "Comment not found" });
+    return;
+  }
+  if (comment.authorId !== req.user!.sub) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  comment.content = parsed.data.content;
+  comment.tags = extractTags(parsed.data.content); // ré-extraits sinon ?tag= / /tags périmés
+  await comment.save();
+  // Même forme que createComment : document brut, likedBy (ids des likers) jamais exposé.
+  const { likedBy: _likedBy, ...commentOut } = comment.toObject();
+  res.json({ comment: commentOut });
 }
 
 // Like idempotent : $addToSet évite les doublons, re-liker = no-op.
@@ -155,4 +243,26 @@ export async function unlikeComment(req: Request, res: Response): Promise<void> 
     return;
   }
   res.json({ likeCount: (comment.likedBy ?? []).length, likedByMe: false });
+}
+
+// Liste paginée des utilisateurs ayant liké le commentaire.
+export async function listCommentLikers(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid comment id" });
+    return;
+  }
+  const parsed = likesQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const comment = await CommentModel.findById(id).select({ likedBy: 1 }).lean();
+  if (!comment) {
+    res.status(404).json({ error: "Comment not found" });
+    return;
+  }
+  const { cursor, limit } = parsed.data;
+  const result = await buildLikers(comment.likedBy ?? [], cursor, limit, req);
+  res.json(result);
 }

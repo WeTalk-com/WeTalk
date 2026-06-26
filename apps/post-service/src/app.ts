@@ -2,10 +2,15 @@ import express, { type Request, type Response, type NextFunction } from "express
 import cookieParser from "cookie-parser";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { env } from "./config/env.js";
+import { registry } from "./config/openapi.js";
 import { logger } from "./utils/logger.js";
 import { postRouter } from "./routes/post.routes.js";
 import { commentRouter } from "./routes/comment.routes.js";
+import { tagRouter } from "./routes/tag.routes.js";
+import { adminRouter } from "./routes/admin.routes.js";
 
 export function createApp() {
   const app = express();
@@ -40,12 +45,23 @@ export function createApp() {
     next();
   });
 
+  const generator = new OpenApiGeneratorV3(registry.definitions);
+  const openApiDoc = generator.generateDocument({
+    openapi: "3.0.3",
+    info: { title: "Post Service", version: "1.0.0" },
+    // URL relative : les requêtes "Try it out" passent par la gateway (origine du navigateur + /api).
+    servers: [{ url: "/api" }],
+  });
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
+
   app.get("/health", (_req: Request, res: Response) => {
     res.json({ status: "ok", service: "post-service" });
   });
 
   app.use("/posts", postRouter);
   app.use("/comments", commentRouter);
+  app.use("/tags", tagRouter);
+  app.use("/admin", adminRouter);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: "Not found" });

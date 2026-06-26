@@ -16,8 +16,8 @@ const BASE =
   "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-gold text-white shadow-gold hover:brightness-105",
-  outline: "border border-border bg-card text-brown hover:bg-cream",
+  primary: "bg-gold text-white shadow-gold",
+  outline: "border border-border bg-card text-brown",
 };
 
 const SIZES: Record<Size, string> = {

@@ -24,7 +24,8 @@
     "accountMenu": "Account menu",
     "brandHome": "WeTalk home",
     "primary": "Primary navigation",
-    "messages": "Messages"
+    "messages": "Messages",
+    "admin": "Moderation"
   },
   "landing": {
     "hero": {
@@ -32,25 +33,12 @@
       "title": "The warm side of social.",
       "highlightWord": "warm",
       "paragraph": "Share your golden hours, follow people you actually like, and talk slower. WeTalk is the feed that feels good to come back to.",
-      "ctaCreate": "Create your account →"
+      "cta": "Let's Talk →"
     },
     "stats": {
       "creators": "creators",
       "goldenHours": "golden hours",
       "comeBackDaily": "come back daily"
-    },
-    "marquee": {
-      "heading": "Loved by warm-light people everywhere"
-    },
-    "features": {
-      "visualTitle": "Made for visual stories",
-      "visualText": "Full-bleed photo posts with warm-tone presets built in.",
-      "discoveryTitle": "A calmer discovery",
-      "discoveryText": "No doomscroll. Curated by people, sorted by warmth.",
-      "connectionTitle": "Real connection",
-      "connectionText": "Follow fewer, talk more. Comments that feel like a coffee.",
-      "ctaHeading": "Come for the light. Stay for the people.",
-      "getStarted": "Get started"
     },
     "phone": {
       "sceneHome": "Home feed",
@@ -69,39 +57,41 @@
   "auth": {
     "subtitle": "Talk warmer · Share slower",
     "invalidCredentials": "Invalid credentials",
-    "emailTaken": "This email or username is already in use",
+    "rateLimited": "Too many attempts. Try again in a few minutes.",
+    "serverError": "Something went wrong. Please try again.",
     "logout": "Log out",
-    "backToLogin": "Back to log in",
     "toggleLogin": "Log in",
     "toggleSignup": "Sign up",
-    "methodEmail": "Email",
-    "methodPhone": "Phone",
     "loginTitle": "Welcome back",
     "loginSubtitle": "Log in to pick up where you left off.",
     "loginCta": "Log in",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join the warm side of the internet.",
     "signupCta": "Create account",
-    "forgotTitle": "Reset your password",
-    "forgotSubtitle": "Enter your email and we'll send you a link to get back in.",
-    "forgotCta": "Send reset link",
-    "nameLabel": "Full name",
-    "namePlaceholder": "Jane Doe",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. jane_doe",
+    "usernameHint": "3–50 characters, no spaces",
+    "usernameErrorMin": "At least 3 characters",
+    "usernameErrorSpaces": "No spaces allowed",
+    "usernameErrorTaken": "This username is already taken",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
-    "phoneLabel": "Phone",
-    "phonePlaceholder": "+33 6 12 34 56 78",
+    "emailErrorInvalid": "Invalid email address",
+    "emailErrorTaken": "This email is already in use",
     "passwordLabel": "Password",
+    "passwordHint": "Minimum 8 characters",
+    "passwordErrorMin": "Password must be at least 8 characters",
+    "passwordStrengthWeak": "Weak",
+    "passwordStrengthFair": "Fair",
+    "passwordStrengthStrong": "Strong",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordError": "Passwords don't match",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "rememberMe": "Remember me",
-    "forgotPassword": "Forgot password?",
     "footerLoginPrompt": "New to WeTalk?",
     "footerCreateAccount": "Create an account",
     "footerSignupPrompt": "Already have an account?",
     "footerLoginLink": "Log in",
-    "footerForgotPrompt": "Remembered it?",
-    "footerBackLink": "Back to log in",
     "legal": "By continuing you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
   },
   "app": {
@@ -124,9 +114,9 @@
       "title": "Explore",
       "searchPlaceholder": "Search golden hours, people, tags…",
       "tabTrending": "Trending",
-      "tabForYou": "For you",
-      "tabPeople": "People",
+      "tabPeople": "Suggestions",
       "trending": "Trending",
+      "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "moreOptions": "More options",
       "catAll": "All",
       "catPhoto": "Photo",
@@ -135,7 +125,8 @@
       "catFilm": "Film",
       "catFood": "Food",
       "noResults": "No results for \"{query}\"",
-      "searchResults": "Results for \"{query}\""
+      "searchResults": "Results for \"{query}\"",
+      "loadMore": "Show more"
     },
     "notifications": {
       "title": "Notifications",
@@ -144,7 +135,10 @@
       "actionLike": "liked your post",
       "actionComment": "commented on your post",
       "actionFollow": "started following you",
-      "actionMention": "mentioned you in a post"
+      "actionMention": "mentioned you in a post",
+      "loading": "Loading…",
+      "empty": "No notifications yet",
+      "loadMore": "Show more"
     },
     "profile": {
       "editProfile": "Edit profile",
@@ -159,17 +153,26 @@
       "statPosts": "Posts",
       "statFollowers": "Followers",
       "statFollowing": "Following",
+      "followListLoading": "Loading…",
+      "followListEmpty": "No users yet",
+      "followListError": "Could not load the list. Please try again.",
+      "followListClose": "Close",
       "tabPosts": "Posts",
       "tabMedia": "Media",
       "tabLikes": "Likes",
+      "tabComments": "Comments",
       "handleComingSoon": "Profile of @{handle} — coming soon",
       "postsEmpty": "No posts yet.",
       "mediaEmpty": "No media yet.",
-      "likesEmpty": "No likes yet."
+      "likesEmpty": "No likes yet.",
+      "commentsEmpty": "No comments yet.",
+      "bannedTitle": "Account banned",
+      "bannedText": "This account has been suspended from WeTalk."
     },
     "rightRail": {
       "whoToFollow": "Who to follow",
       "trending": "Trending",
+      "postCount": "{count, plural, =1 {# post} other {# posts}}",
       "follow": "Follow",
       "following": "Following",
       "unfollow": "Unfollow",
@@ -184,11 +187,20 @@
       "video": "Video",
       "more": "More options",
       "like": "Like",
+      "unlike": "Unlike",
       "comment": "Comment",
-      "share": "Share",
-      "save": "Save",
       "report": "Report",
-      "copyLink": "Copy link"
+      "copyLink": "Copy link",
+      "delete": "Delete",
+      "edit": "Edit",
+      "pageTitle": "Post",
+      "backLabel": "Back",
+      "editPlaceholder": "Edit your post…",
+      "editSave": "Save",
+      "editCancel": "Cancel",
+      "editError": "Failed to save changes. Please try again.",
+      "toastEditSaved": "Post updated",
+      "toastDeleteError": "Couldn't delete the post. Please try again."
     },
     "messages": {
       "title": "Messages",
@@ -196,7 +208,16 @@
       "selectConversation": "Choose a conversation to start chatting.",
       "typeMessage": "Write a message…",
       "send": "Send",
-      "back": "Back"
+      "back": "Back",
+      "empty": "No messages yet. Say hello!",
+      "noConversations": "No conversations yet.",
+      "compose": "New message",
+      "composeClose": "Close",
+      "composePlaceholder": "Search people…",
+      "composeNoResults": "No users found.",
+      "composeSuggestions": "Recent follows",
+      "today": "Today",
+      "yesterday": "Yesterday"
     },
     "create": {
       "title": "New post",
@@ -205,13 +226,18 @@
       "addImage": "Add image",
       "addVideo": "Add video",
       "addEmoji": "Add emoji",
+      "addGif": "Add GIF",
+      "gifSearch": "Search GIFs",
       "addLocation": "Add location",
       "enhance": "Enhance",
       "post": "Post",
       "close": "Close",
       "removeImage": "Remove image",
       "removeVideo": "Remove video",
-      "charCount": "{count}/{max}"
+      "charCount": "{count}/{max}",
+      "imagePreviewAlt": "Image preview",
+      "toastSuccess": "Post published!",
+      "toastError": "Failed to publish. Please try again."
     },
     "comments": {
       "title": "Comments",
@@ -223,7 +249,12 @@
       "cancel": "Cancel",
       "send": "Send",
       "reply": "Reply",
-      "replies": "replies"
+      "replies": "replies",
+      "delete": "Delete",
+      "edit": "Edit",
+      "editSave": "Save",
+      "editError": "Failed to save changes. Please try again.",
+      "deleteError": "Couldn't delete. Please try again."
     },
     "report": {
       "title": "Report",
@@ -238,8 +269,12 @@
       "submit": "Submit",
       "cancel": "Cancel",
       "close": "Close",
-      "successTitle": "Report submitted",
-      "successText": "Thanks, we'll review this shortly."
+      "successTitle": "Report sent",
+      "successText": "Thank you, our team will review this post.",
+      "duplicateTitle": "Already reported",
+      "duplicateText": "You have already reported this post.",
+      "errorText": "Something went wrong. Please try again.",
+      "submitting": "Sending…"
     },
     "admin": {
       "title": "Moderation",
@@ -250,8 +285,26 @@
       "reasonLabel": "Reason:",
       "reportedBy": "Reported by",
       "dismiss": "Dismiss",
-      "remove": "Remove",
-      "noReports": "No pending reports 🎉"
+      "remove": "Remove post",
+      "noReports": "No pending reports 🎉",
+      "banAuthor": "Ban",
+      "banned": "Banned",
+      "suspendAuthor": "Suspend",
+      "suspended": "Suspended",
+      "banSuccess": "@{handle} has been banned.",
+      "banError": "Failed to ban this user.",
+      "suspendTitle": "Suspend user",
+      "suspendConfirm": "Suspend",
+      "suspendSuccess": "@{handle} has been suspended.",
+      "suspendError": "Failed to suspend this user.",
+      "actionError": "Something went wrong.",
+      "unknownUser": "Unknown user",
+      "cancel": "Cancel",
+      "unit_minutes": "minutes",
+      "unit_hours": "hours",
+      "unit_days": "days",
+      "unit_months": "months",
+      "unit_years": "years"
     }
   },
   "settings": {
@@ -263,13 +316,30 @@
     "themeLabel": "Theme",
     "themeDescription": "Customize how WeTalk looks.",
     "accountLabel": "Account",
-    "accountDescription": "Manage your session."
+    "accountDescription": "Manage your session.",
+    "dangerLabel": "Danger zone",
+    "dangerDescription": "These actions are permanent and cannot be undone.",
+    "deleteAccountButton": "Delete account",
+    "deleteAccountTitle": "Permanently delete your account?",
+    "deleteAccountText": "All your posts, comments and subscriptions will be deleted. This action cannot be undone. Type {keyword} to confirm.",
+    "deleteAccountKeyword": "DELETE",
+    "deleteAccountPlaceholder": "Type DELETE to confirm",
+    "deleteAccountSubmit": "Permanently delete",
+    "deleteAccountCancel": "Cancel",
+    "deleteAccountError": "An error occurred. Please try again.",
+    "toastProfileSaved": "Profile updated",
+    "toastProfileError": "Failed to update profile. Please try again.",
+    "toastProfileFormat": "Unsupported format. Use JPG, PNG, WebP or GIF.",
+    "toastProfileTooLarge": "Image too large."
   },
   "theme": {
     "changeTheme": "Change theme",
     "amber": "Amber",
     "rose": "Rose",
     "dark": "Dark"
+  },
+  "ui": {
+    "toastClose": "Close notification"
   },
   "errors": {
     "notFoundLabel": "NOT FOUND",

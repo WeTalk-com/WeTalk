@@ -9,6 +9,7 @@ import {
 import { Avatar } from "../ui/avatar";
 import type { Notification, NotificationType } from "@/lib/types";
 import { formatTimeAgo } from "@/lib/format-time";
+import { cn } from "@/lib/cn";
 
 type ActionKey =
   | "actionLike"
@@ -39,14 +40,12 @@ export function NotificationItem({
 
   return (
     <li
-      className={`flex gap-3 border-b border-border px-5 py-4 transition-colors hover:bg-cream ${
-        read ? "" : "bg-gold/5"
-      }`}
+      className={cn("flex gap-3 border-b border-border px-5 py-4 transition-colors", !read && "bg-gold/5")}
     >
       <div className="relative shrink-0">
-        <Avatar initial={actor.initial} />
+        <Avatar initial={actor.initial} src={actor.avatarUrl} alt={actor.name} />
         <span
-          className={`absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full text-white ring-2 ring-canvas ${badge}`}
+          className={cn("absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full text-white ring-2 ring-canvas", badge)}
         >
           <Icon className="size-3" />
         </span>

@@ -14,7 +14,9 @@ export const routing = defineRouting({
     "/notifications": "/notifications",
     "/profile": "/profile",
     "/profile/[handle]": "/profile/[handle]",
+    "/posts/[id]": "/posts/[id]",
     "/settings": "/settings",
+    "/admin": "/admin",
   },
 });
 

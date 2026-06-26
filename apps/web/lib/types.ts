@@ -13,6 +13,8 @@ export type User = {
   avatarUrl?: string;
   verified?: boolean;
   role?: "user" | "moderator" | "admin";
+  isBanned?: boolean;
+  isSuspended?: boolean;
 };
 
 export type Post = {
@@ -32,7 +34,6 @@ export type Post = {
   /** Le lecteur courant a-t-il liké ce post (état initial du bouton). */
   likedByMe?: boolean;
   comments: number;
-  shares: number;
 };
 
 export type Reply = {
@@ -55,9 +56,8 @@ export type Comment = {
 };
 
 export type TrendingTopic = {
-  category: string;
-  tag: string;
-  posts: string; // "48.2K posts"
+  tag: string; 
+  count: number;
 };
 
 export type Profile = User & {
@@ -81,6 +81,8 @@ export type Notification = {
   preview?: string;
   createdAt: string;
   read?: boolean;
+  postId?: string;
+  commentId?: string;
 };
 
 export type Message = {
@@ -108,9 +110,14 @@ export type ReportReason =
 
 export type ReportedPost = {
   id: string;
-  post: Post;
   reason: ReportReason;
-  reportedBy: User;
-  reportedAt: string;
+  details?: string | null;
   status: "pending" | "resolved" | "dismissed";
+  reportedAt: string;
+  reporter: User | null;
+  post: {
+    id: string;
+    text: string;
+    author: User | null;
+  } | null;
 };

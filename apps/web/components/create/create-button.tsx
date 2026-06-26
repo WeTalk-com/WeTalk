@@ -26,7 +26,7 @@ export function CreateButton({ variant }: { variant: "sidebar" | "dock" }) {
     <button
       type="button"
       onClick={open}
-      className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-gold py-4 text-lg font-bold text-white shadow-gold transition-all hover:brightness-105 active:scale-[0.98]"
+      className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-gold py-4 text-lg font-bold text-white shadow-gold transition-all active:scale-[0.98]"
     >
       <Plus className="size-5" />
       {t("create")}

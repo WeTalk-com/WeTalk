@@ -5,7 +5,7 @@ import { uploadProfileMedia } from "../middleware/upload.js";
 import { validateBody, validateParams } from "../middleware/validate.js";
 import { idParamSchema, userIdentifierParamSchema, updateMeSchema } from "../schemas/user.schemas.js";
 import {
-    me,
+	me,
 	getUsers,
 	getUser,
 	updateMe,
@@ -19,9 +19,12 @@ import {
 	unbanUser,
 	suspendUser,
 	unsuspendUser,
+	isUserAvailable,
+	getLastRegisteredUsers,
+	getLastFollowedUsers,
 } from "../controllers/user.controller.js";
 
-export const userRouter = Router();
+export const userRouter: Router = Router();
 
 /*
 Profils
@@ -45,14 +48,17 @@ DELETE /users/:id/suspend : Lever la suspension.
 
 // Profils
 userRouter.get("/", requireAuth, getUsers);
+userRouter.get("/latest", requireAuth, getLastRegisteredUsers);
 userRouter.get("/me", requireAuth, me);
 userRouter.get("/:id", requireAuth, validateParams(userIdentifierParamSchema), getUser);
+userRouter.get("/:id/status", requireAuth, validateParams(userIdentifierParamSchema), isUserAvailable);
 userRouter.patch("/me", requireAuth, writeLimiter, uploadProfileMedia, validateBody(updateMeSchema), updateMe);
 userRouter.delete("/me", requireAuth, writeLimiter, deleteMe);
 
 // Abonnements
 userRouter.get("/:id/following", requireAuth, validateParams(idParamSchema), getFollowing);
 userRouter.get("/:id/following/ids", requireAuth, validateParams(idParamSchema), followingIds);
+userRouter.get("/:id/following/latest", requireAuth, validateParams(idParamSchema), getLastFollowedUsers);
 userRouter.get("/:id/followers", requireAuth, validateParams(idParamSchema), getFollowers);
 userRouter.post("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), follow);
 userRouter.delete("/:id/follow", requireAuth, writeLimiter, validateParams(idParamSchema), unfollow);

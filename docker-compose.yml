@@ -96,6 +96,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_URL: redis://redis:6379
       MEDIA_SERVICE_URL: http://media-service:4004
+      POST_SERVICE_URL: http://post-service:4002
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,6 +115,36 @@ services:
       retries: 5
       start_period: 20s
 
+  message-service:
+    build:
+      context: .
+      dockerfile: apps/message-service/Dockerfile
+    container_name: wetalk-message-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: 4004
+      USER_SERVICE_URL: http://user-service:4001
+      MONGO_URI: ${MONGO_URI_MESSAGE:-mongodb://mongo:27017/wetalk_message}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks:
+      - wetalk-net
+    expose:
+      - "4004"
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4004/health',r=>process.exit(r.statusCode<300?0:1)).on('error',()=>process.exit(1))" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
   post-service:
     build:
       context: .
@@ -123,7 +154,7 @@ services:
     env_file:
       - .env
     environment:
-      MONGO_URI: ${MONGO_URI_POST}
+      MONGO_URI: ${MONGO_URI_POST:-mongodb://mongo:27017/wetalk_posts}
       USER_SERVICE_URL: http://user-service:4001
       MEDIA_SERVICE_URL: http://media-service:4004
     depends_on:
@@ -168,30 +199,37 @@ services:
       retries: 5
       start_period: 20s
 
-  # notification-service:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/notification-service/Dockerfile
-  #   container_name: wetalk-notification-service
-  #   restart: unless-stopped
-  #   env_file:
-  #     - .env
-  #     # Préciser la DB ici quand on aura décidé mongo ou postgres.
-  #   networks:
-  #     - wetalk-net
-  #   expose:
-  #     - "4003"
-  #   healthcheck:
-  #     test: ["CMD", "node", "-e", "require('http').get('http://localhost:4003/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
-  #     interval: 10s
-  #     timeout: 3s
-  #     retries: 5
-  #     start_period: 20s
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: wetalk-notification-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: ${MONGO_URI_NOTIFICATIONS:-mongodb://mongo:27017/wetalk_notifications}
+      USER_SERVICE_URL: http://user-service:4001
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - wetalk-net
+    expose:
+      - "4003"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4003/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_GIPHY_KEY: ${NEXT_PUBLIC_GIPHY_KEY:-}
     container_name: wetalk-web
     restart: unless-stopped
     env_file:
@@ -224,13 +262,35 @@ services:
         condition: service_healthy
       media-service:
         condition: service_healthy
-      # Desactive tant que notification-service n'est pas implemente (feature notifications).
-      # notification-service:
-      #   condition: service_healthy
+      notification-service:
+        condition: service_healthy
       web:
         condition: service_healthy
       agent:
         condition: service_started
+    networks:
+      - wetalk-net
+
+  provisioner:
+    build:
+      context: apps/provisioner
+      dockerfile: Dockerfile
+    container_name: wetalk-provisioner
+    restart: "no"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      media-service:
+        condition: service_healthy
+      # Créent les tables Postgres (users / Follows) via Sequelize sync.
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
     networks:
       - wetalk-net
 

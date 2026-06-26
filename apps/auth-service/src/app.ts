@@ -2,7 +2,10 @@ import express, { type Request, type Response, type NextFunction } from "express
 import cookieParser from "cookie-parser";
 import cors, { type CorsOptions } from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
+import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { env } from "./config/env.js";
+import { registry } from "./config/openapi.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { logger } from "./utils/logger.js";
 
@@ -48,6 +51,15 @@ export function createApp() {
     });
     next();
   });
+
+  const generator = new OpenApiGeneratorV3(registry.definitions);
+  const openApiDoc = generator.generateDocument({
+    openapi: "3.0.3",
+    info: { title: "Auth Service", version: "1.0.0" },
+    // URL relative : les requêtes "Try it out" passent par la gateway (origine du navigateur + /api).
+    servers: [{ url: "/api" }],
+  });
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
   app.get("/health", (_req: Request, res: Response) => {
     res.json({ status: "ok", service: "auth-service" });

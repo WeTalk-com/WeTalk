@@ -1,106 +1,117 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { MoreHorizontal, ImageIcon, PlayCircle, Flag, Link as LinkIcon, Trash2 } from "lucide-react";
+import { Link, useRouter } from "@/i18n/navigation";
 import { formatTimeAgo } from "@/lib/format-time";
-import { Card } from "../ui/card";
 import { UserChip } from "../ui/user-chip";
 import { PostActions } from "./post-actions";
 import { CommentThread } from "./comment-thread";
 import { ReportModal } from "./report-modal";
-import { getComments } from "@/lib/api";
+import { getComments, deletePost } from "@/lib/api";
+import { useCurrentUserId } from "@/components/create/create-modal-provider";
 import type { Post, Comment } from "@/lib/types";
+import { useToast } from "@/components/ui/toast-provider";
+import { UserHoverCard } from "@/components/ui/user-hover-card";
+import { MentionText } from "@/components/ui/mention-text";
+import { FollowButton } from "@/components/ui/follow-button";
 
-function PostText({ text, tags }: { text: string; tags: string[] }) {
+function PostText({ text }: { text: string }) {
+  // Les #hashtags sont déjà inline dans le contenu : MentionText les met en
+  // valeur (avec les @mentions). Pas de chips séparés pour éviter les doublons.
   return (
-    <p className="text-ink leading-relaxed">
-      {text}{" "}
-      {tags.map((tag) => (
-        <span key={tag} className="font-medium text-gold">
-          {tag}{" "}
-        </span>
-      ))}
+    <p className="break-words text-ink leading-relaxed">
+      <MentionText text={text} />
     </p>
   );
 }
 
 function PostMenu({
   postId,
-  authorHandle,
+  locale,
+  isOwner,
   onReport,
-  onClose,
+  onDelete,
 }: {
   postId: string;
-  authorHandle: string;
+  locale: string;
+  isOwner: boolean;
   onReport: () => void;
-  onClose: () => void;
+  onDelete: () => void;
 }) {
   const t = useTranslations("app.post");
 
   function copyLink() {
     navigator.clipboard.writeText(
-      `${window.location.origin}/posts/${postId}`,
+      `${window.location.origin}/${locale}/posts/${postId}`,
     );
-    onClose();
   }
 
   return (
-    <ul
-      role="menu"
-      className="absolute right-0 top-10 z-20 min-w-44 rounded-xl border border-border bg-card py-1 shadow-card"
-    >
-      <li role="none">
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          role="menuitem"
-          onClick={copyLink}
-          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-brown hover:bg-canvas"
+          aria-label={t("more")}
+          className="grid size-9 place-items-center rounded-full text-brown-sec"
         >
-          <LinkIcon className="size-4 text-brown-sec" />
-          {t("copyLink")}
+          <MoreHorizontal className="size-5" />
         </button>
-      </li>
-      <li role="none">
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => { onReport(); onClose(); }}
-          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-live hover:bg-live/5"
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={4}
+          className="z-20 min-w-44 rounded-xl border border-border bg-card py-1 shadow-card"
         >
-          <Flag className="size-4" />
-          {t("report")}
-        </button>
-      </li>
-    </ul>
+          <DropdownMenu.Item
+            onSelect={copyLink}
+            className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-brown outline-none data-[highlighted]:bg-canvas"
+          >
+            <LinkIcon className="size-4 text-brown-sec" />
+            {t("copyLink")}
+          </DropdownMenu.Item>
+
+          {isOwner ? (
+            <DropdownMenu.Item
+              onSelect={onDelete}
+              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none data-[highlighted]:bg-live/5"
+            >
+              <Trash2 className="size-4" />
+              {t("delete")}
+            </DropdownMenu.Item>
+          ) : (
+            <DropdownMenu.Item
+              onSelect={onReport}
+              className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-live outline-none data-[highlighted]:bg-live/5"
+            >
+              <Flag className="size-4" />
+              {t("report")}
+            </DropdownMenu.Item>
+          )}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 }
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingAuthor?: boolean }) {
   const { author } = post;
   const t = useTranslations("app.post");
-  // Langue active, pour formater la date relative du post.
   const locale = useLocale();
+  const router = useRouter();
+  const currentUserId = useCurrentUserId();
+  const toast = useToast();
+  const isOwner = currentUserId === author.id;
 
-  const [showMenu, setShowMenu] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showMenu) return;
-    function onOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, [showMenu]);
 
   async function openComments() {
     setShowComments(true);
@@ -115,42 +126,54 @@ export function PostCard({ post }: { post: Post }) {
     }
   }
 
+  async function handleDelete() {
+    try {
+      await deletePost(post.id);
+      router.refresh();
+    } catch {
+      toast.error(t("toastDeleteError"));
+    }
+  }
+
+  function handleCardClick(e: React.MouseEvent<HTMLElement>) {
+    // Ne pas naviguer si le clic provient d'un bouton, d'un lien, du champ commentaire ou du menu.
+    if ((e.target as HTMLElement).closest("a, button, textarea, [role='menu']")) return;
+    router.push({ pathname: "/posts/[id]", params: { id: post.id } });
+  }
+
   return (
     <>
-      <Card as="article" className="p-4">
+      <article
+        onClick={handleCardClick}
+        className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors"
+      >
         {/* En-tête */}
         <div className="flex items-center gap-3">
-          <Link
-            href={{ pathname: "/profile/[handle]", params: { handle: author.handle } }}
-            className="min-w-0 flex-1"
-          >
-            <UserChip user={author} subtitle={`@${author.handle} · ${formatTimeAgo(post.createdAt, locale)}`} />
-          </Link>
-
-          <div ref={menuRef} className="relative shrink-0">
-            <button
-              type="button"
-              aria-label={t("more")}
-              aria-expanded={showMenu}
-              onClick={() => setShowMenu((v) => !v)}
-              className="grid size-9 place-items-center rounded-full text-brown-sec hover:bg-canvas"
+          <UserHoverCard handle={author.handle}>
+            <Link
+              href={{ pathname: "/profile/[handle]", params: { handle: author.handle } }}
+              className="min-w-0 flex-1"
             >
-              <MoreHorizontal className="size-5" />
-            </button>
-            {showMenu && (
-              <PostMenu
-                postId={post.id}
-                authorHandle={author.handle}
-                onReport={() => setShowReport(true)}
-                onClose={() => setShowMenu(false)}
-              />
-            )}
-          </div>
+              <UserChip user={author} subtitle={`@${author.handle} · ${formatTimeAgo(post.createdAt, locale)}`} />
+            </Link>
+          </UserHoverCard>
+
+          {isFollowingAuthor !== undefined && !isOwner && (
+            <FollowButton userId={author.id} initialFollowing={isFollowingAuthor} size="sm" />
+          )}
+
+          <PostMenu
+            postId={post.id}
+            locale={locale}
+            isOwner={isOwner}
+            onDelete={handleDelete}
+            onReport={() => setShowReport(true)}
+          />
         </div>
 
-        {/* Texte */}
+        {/* Texte — posts immuables, pas d'édition */}
         <div className="mt-3">
-          <PostText text={post.text} tags={post.tags} />
+          <PostText text={post.text} />
         </div>
 
         {/* Image (Fx18) — réelle si URL, sinon placeholder design (mocks) */}
@@ -201,11 +224,10 @@ export function PostCard({ post }: { post: Post }) {
             likes={post.likes}
             likedByMe={post.likedByMe}
             comments={commentCount}
-            shares={post.shares}
             onComment={openComments}
           />
         </div>
-      </Card>
+      </article>
 
       {showComments && (
         <CommentThread
@@ -214,6 +236,7 @@ export function PostCard({ post }: { post: Post }) {
           loading={commentsLoading}
           onClose={() => setShowComments(false)}
           onCommentAdded={() => setCommentCount((c) => c + 1)}
+          onCommentDeleted={() => setCommentCount((c) => Math.max(0, c - 1))}
         />
       )}
 

@@ -1,6 +1,8 @@
 # Build context
 FROM node:20-alpine AS base
 WORKDIR /app
+# libc6-compat : requis pour charger le binaire natif SWC de Next sur Alpine/musl (sinon "Failed to load SWC binary").
+RUN apk add --no-cache libc6-compat
 
 # Dependencies + build
 FROM base AS builder
@@ -23,6 +25,9 @@ COPY packages/typescript-config ./packages/typescript-config
 COPY apps/web ./apps/web
 # NEXT_PUBLIC_* doit etre present au build : Next l'inline dans le bundle client.
 ENV NEXT_PUBLIC_API_URL=/api
+# Cle Giphy (publique cote client) passee en build-arg depuis .env via compose.
+ARG NEXT_PUBLIC_GIPHY_KEY
+ENV NEXT_PUBLIC_GIPHY_KEY=$NEXT_PUBLIC_GIPHY_KEY
 RUN npm run build --workspace=web
 
 # Runtime avec next standalone
@@ -35,6 +40,8 @@ ENV PORT=3000
 
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+# Next standalone n'inclut pas public/ : on le copie pour servir les assets statiques.
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000
 WORKDIR /app/apps/web

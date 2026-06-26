@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useTranslations, useLocale } from "next-intl";
-import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { X, Heart, CornerDownRight, ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
 import type { Comment, Reply } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
-import { createComment, createReply, likeComment, unlikeComment } from "@/lib/api";
+import { createComment, createReply, likeComment, unlikeComment, deleteComment } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
+import { useCurrentUser } from "@/components/create/create-modal-provider";
+import { cn } from "@/lib/cn";
+import { useOptimisticLike } from "@/hooks/use-optimistic-like";
+import { useToast } from "@/components/ui/toast-provider";
+import { MentionDropdown } from "@/components/ui/mention-dropdown";
+import { MentionText } from "@/components/ui/mention-text";
+import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
 
 // Bouton like d'un commentaire/réponse : optimiste, recalé sur la réponse serveur,
 // rollback si erreur. Même logique que PostActions.
@@ -21,60 +29,74 @@ function CommentLike({
   likedByMe?: boolean;
   iconClass: string;
 }) {
-  const [liked, setLiked] = useState(Boolean(likedByMe));
-  const [count, setCount] = useState(likes);
-  const [pending, setPending] = useState(false);
-
-  async function toggle() {
-    if (pending) return;
-    const next = !liked;
-    setLiked(next);
-    setCount((c) => c + (next ? 1 : -1));
-    setPending(true);
-    try {
-      const s = next ? await likeComment(commentId) : await unlikeComment(commentId);
-      setLiked(s.likedByMe);
-      setCount(s.likeCount);
-    } catch {
-      setLiked(!next);
-      setCount((c) => c + (next ? -1 : 1));
-    } finally {
-      setPending(false);
-    }
-  }
+  const { liked, count, toggle } = useOptimisticLike({
+    initial: Boolean(likedByMe),
+    initialCount: likes,
+    onToggle: (next) => next ? likeComment(commentId) : unlikeComment(commentId),
+  });
 
   return (
     <button
       type="button"
       onClick={toggle}
       aria-pressed={liked}
-      className={`flex items-center gap-1 text-xs transition-colors ${liked ? "text-live" : "text-brown-sec hover:text-live"}`}
+      className={cn("flex items-center gap-1 text-xs transition-colors", liked ? "text-live" : "text-brown-sec hover:text-live")}
     >
-      <Heart className={`${iconClass} ${liked ? "fill-live" : ""}`} />
+      <Heart className={cn(iconClass, liked && "fill-live")} />
       {count}
     </button>
   );
 }
 
-function ReplyRow({ reply }: { reply: Reply }) {
-  // Langue active, pour formater la date relative de la reponse.
+function ReplyRow({
+  reply,
+  currentUserId,
+  onDelete,
+}: {
+  reply: Reply;
+  currentUserId: string;
+  onDelete: (id: string) => void;
+}) {
+  const t = useTranslations("app.comments");
   const locale = useLocale();
+  const toast = useToast();
+  const isOwner = currentUserId === reply.author.id;
+
+  async function handleDelete() {
+    try {
+      await deleteComment(reply.id);
+      onDelete(reply.id);
+    } catch {
+      toast.error(t("deleteError"));
+    }
+  }
+
   return (
     <div className="ml-11 mt-2 flex gap-2.5">
-      <Avatar initial={reply.author.initial} size={28} />
+      <Avatar initial={reply.author.initial} src={reply.author.avatarUrl} alt={reply.author.name} size={28} />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-brown">
           {reply.author.name}{" "}
           <span className="font-normal text-brown-sec">@{reply.author.handle} · {formatTimeAgo(reply.createdAt, locale)}</span>
         </p>
-        <p className="mt-0.5 text-sm text-ink">{reply.text}</p>
-        <div className="mt-1">
+        <p className="mt-0.5 text-sm text-ink"><MentionText text={reply.text} /></p>
+        <div className="mt-1 flex items-center gap-3">
           <CommentLike
             commentId={reply.id}
             likes={reply.likes}
             likedByMe={reply.likedByMe}
             iconClass="size-3"
           />
+          {isOwner && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
+              aria-label={t("delete")}
+            >
+              <Trash2 className="size-3" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -83,20 +105,39 @@ function ReplyRow({ reply }: { reply: Reply }) {
 
 function CommentRow({
   comment,
+  currentUserId,
   onReply,
+  onDelete,
+  onDeleted,
 }: {
   comment: Comment;
+  currentUserId: string;
   onReply: (id: string) => void;
+  onDelete: (id: string) => void;
+  /** Notifie le parent qu'un commentaire OU une réponse a été supprimé (compteur). */
+  onDeleted: () => void;
 }) {
   const t = useTranslations("app.comments");
-  // Langue active, pour formater la date relative du commentaire.
   const locale = useLocale();
+  const toast = useToast();
   const [showReplies, setShowReplies] = useState(false);
+  const [replies, setReplies] = useState(comment.replies);
+  const isOwner = currentUserId === comment.author.id;
+
+  async function handleDelete() {
+    try {
+      await deleteComment(comment.id);
+      onDelete(comment.id);
+      onDeleted();
+    } catch {
+      toast.error(t("deleteError"));
+    }
+  }
 
   return (
     <div className="border-b border-border py-3 last:border-0">
       <div className="flex gap-3">
-        <Avatar initial={comment.author.initial} size={36} />
+        <Avatar initial={comment.author.initial} src={comment.author.avatarUrl} alt={comment.author.name} size={36} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-brown">
             {comment.author.name}{" "}
@@ -104,7 +145,7 @@ function CommentRow({
               @{comment.author.handle} · {formatTimeAgo(comment.createdAt, locale)}
             </span>
           </p>
-          <p className="mt-0.5 text-sm text-ink">{comment.text}</p>
+          <p className="mt-0.5 text-sm text-ink"><MentionText text={comment.text} /></p>
 
           <div className="mt-2 flex items-center gap-4">
             <CommentLike
@@ -123,7 +164,18 @@ function CommentRow({
               {t("reply")}
             </button>
 
-            {comment.replies.length > 0 && (
+            {isOwner && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="flex items-center gap-1 text-xs text-brown-sec transition-colors hover:text-live"
+                aria-label={t("delete")}
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
+
+            {replies.length > 0 && (
               <button
                 type="button"
                 onClick={() => setShowReplies((v) => !v)}
@@ -134,8 +186,8 @@ function CommentRow({
                 ) : (
                   <ChevronDown className="size-3.5" />
                 )}
-                {comment.replies.length}{" "}
-                {comment.replies.length === 1 ? t("reply") : t("replies")}
+                {replies.length}{" "}
+                {replies.length === 1 ? t("reply") : t("replies")}
               </button>
             )}
           </div>
@@ -143,7 +195,14 @@ function CommentRow({
       </div>
 
       {showReplies &&
-        comment.replies.map((r) => <ReplyRow key={r.id} reply={r} />)}
+        replies.map((r) => (
+          <ReplyRow
+            key={r.id}
+            reply={r}
+            currentUserId={currentUserId}
+            onDelete={(id) => { setReplies((prev) => prev.filter((x) => x.id !== id)); onDeleted(); }}
+          />
+        ))}
     </div>
   );
 }
@@ -154,18 +213,25 @@ export function CommentThread({
   loading,
   onClose,
   onCommentAdded,
+  onCommentDeleted,
 }: {
   postId: string;
   initialComments: Comment[];
   loading?: boolean;
   onClose: () => void;
   onCommentAdded?: () => void;
+  onCommentDeleted?: () => void;
 }) {
   const t = useTranslations("app.comments");
+  const currentUser = useCurrentUser();
+  const currentUserId = currentUser.id;
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { users, mention, loading: mentionLoading, update, insertMention, clear } =
+    useMentionAutocomplete();
 
   // La modale s'ouvre avant la fin du fetch : resynchroniser l'état interne
   // quand les commentaires chargés arrivent (un useState(prop) ne suit pas le prop).
@@ -179,7 +245,7 @@ export function CommentThread({
     setPending(true);
     try {
       if (replyingTo) {
-        const reply = await createReply(postId, replyingTo, text);
+        const reply = await createReply(postId, replyingTo, text, currentUser);
         setComments((prev) =>
           prev.map((c) =>
             c.id === replyingTo ? { ...c, replies: [...c.replies, reply] } : c,
@@ -187,7 +253,7 @@ export function CommentThread({
         );
         setReplyingTo(null);
       } else {
-        const comment = await createComment(postId, text);
+        const comment = await createComment(postId, text, currentUser);
         setComments((prev) => [...prev, comment]);
       }
       onCommentAdded?.();
@@ -198,96 +264,121 @@ export function CommentThread({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-60 flex items-end justify-center bg-dark/50 backdrop-blur-sm p-4 sm:items-center"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("title")}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[80dvh] w-full max-w-lg flex-col rounded-card border border-border bg-card shadow-card"
-      >
-        {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="font-head text-lg font-bold text-brown">
-            {t("title")} ({comments.length})
-          </h2>
-          <button
-            type="button"
-            aria-label={t("close")}
-            onClick={onClose}
-            className="grid size-8 place-items-center rounded-full text-brown-sec hover:bg-card"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        {/* Liste des commentaires */}
-        <div className="flex-1 overflow-y-auto px-5">
-          {loading && comments.length === 0 ? (
-            <div className="grid place-items-center py-12">
-              <Loader2 className="size-5 animate-spin text-brown-sec" />
-            </div>
-          ) : comments.length > 0 ? (
-            comments.map((c) => (
-              <CommentRow
-                key={c.id}
-                comment={c}
-                onReply={(id) => {
-                  setReplyingTo(id);
-                  setInput("");
-                }}
-              />
-            ))
-          ) : (
-            <p className="py-12 text-center text-sm text-brown-sec">
-              {t("empty")}
-            </p>
-          )}
-        </div>
-
-        {/* Champ de saisie */}
-        <div className="shrink-0 border-t border-border px-5 py-4">
-          {replyingTo && (
-            <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
-              <CornerDownRight className="size-3" />
-              <span>{t("replyingTo")}</span>
-              <button
-                type="button"
-                onClick={() => setReplyingTo(null)}
-                className="text-gold hover:underline"
+    <Dialog.Root open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-dark/50 backdrop-blur-sm" />
+        <Dialog.Content className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+          <div className="flex max-h-[80dvh] w-full max-w-lg flex-col rounded-card border border-border bg-card shadow-card">
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
+              <Dialog.Title className="font-head text-lg font-bold text-brown">
+                {t("title")} ({comments.length})
+              </Dialog.Title>
+              <Dialog.Close
+                aria-label={t("close")}
+                className="grid size-8 place-items-center rounded-full text-brown-sec hover:bg-card"
               >
-                {t("cancel")}
-              </button>
+                <X className="size-4" />
+              </Dialog.Close>
             </div>
-          )}
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
-              className="min-w-0 flex-1 rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
-            />
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!input.trim() || pending}
-              className="shrink-0 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
-            >
-              {t("send")}
-            </button>
+
+            {/* Liste des commentaires */}
+            <div className="flex-1 overflow-y-auto px-5">
+              {loading && comments.length === 0 ? (
+                <div className="grid place-items-center py-12">
+                  <Loader2 className="size-5 animate-spin text-brown-sec" />
+                </div>
+              ) : comments.length > 0 ? (
+                comments.map((c) => (
+                  <CommentRow
+                    key={c.id}
+                    comment={c}
+                    currentUserId={currentUserId}
+                    onReply={(id) => { setReplyingTo(id); setInput(""); }}
+                    onDelete={(id) => setComments((prev) => prev.filter((x) => x.id !== id))}
+                    onDeleted={() => onCommentDeleted?.()}
+                  />
+                ))
+              ) : (
+                <p className="py-12 text-center text-sm text-brown-sec">{t("empty")}</p>
+              )}
+            </div>
+
+            {/* Champ de saisie */}
+            <div className="shrink-0 border-t border-border px-5 py-4">
+              {replyingTo && (
+                <div className="mb-2 flex items-center gap-2 text-xs text-brown-sec">
+                  <CornerDownRight className="size-3" />
+                  <span>{t("replyingTo")}</span>
+                  <button type="button" onClick={() => setReplyingTo(null)} className="text-gold hover:underline">
+                    {t("cancel")}
+                  </button>
+                </div>
+              )}
+              <div className="relative flex items-center gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      update(e.target.value, e.target.selectionStart ?? 0);
+                    }}
+                    onKeyDown={(e) => {
+                      if (mention && users.length > 0 && e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        const el = inputRef.current;
+                        if (el) {
+                          const next = insertMention(users[0]?.username ?? "", input, el.selectionStart ?? 0);
+                          setInput(next);
+                          clear();
+                        }
+                      } else if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                      if (mention && e.key === "Escape") clear();
+                    }}
+                    onClick={() => {
+                      const el = inputRef.current;
+                      if (el) update(input, el.selectionStart ?? 0);
+                    }}
+                    onKeyUp={() => {
+                      const el = inputRef.current;
+                      if (el) update(input, el.selectionStart ?? 0);
+                    }}
+                    placeholder={replyingTo ? t("replyPlaceholder") : t("placeholder")}
+                    className="w-full rounded-full border border-border bg-canvas px-4 py-2 text-sm text-brown outline-none placeholder:text-placeholder focus:border-gold"
+                  />
+                  <MentionDropdown
+                    users={users}
+                    loading={mentionLoading}
+                    mention={mention}
+                    onSelect={(username) => {
+                      const el = inputRef.current;
+                      if (el) {
+                        const next = insertMention(username, input, el.selectionStart ?? 0);
+                        setInput(next);
+                        clear();
+                        el.focus();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!input.trim() || pending}
+                  className="shrink-0 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+                >
+                  {t("send")}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

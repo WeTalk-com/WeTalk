@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Request, Response } from "express";
-import { Op, type WhereOptions } from "sequelize";
+import { Op, type WhereOptions, type Order } from "sequelize";
 import { env } from "../config/env.js";
 import { User, Follow } from "../models/index.js";
 import type { UserRole } from "../models/user.js";
@@ -10,9 +11,26 @@ import {
 	followListQuerySchema,
 	suspendBodySchema,
 } from "../schemas/user.schemas.js";
+import {logger} from "../utils/logger.js";
 
 // Détecte un UUID v1-v5 pour distinguer lookup par id vs par username.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function notifyFollow(followingId: string, forwardHeaders: Record<string, string>): Promise<void> {
+  try {
+    await fetch(`${env.notificationServiceUrl}/notifications/internal`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...forwardHeaders,
+      },
+      body: JSON.stringify({ type: "follow", recipientId: followingId }),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // best-effort : ne pas bloquer le follow pour une notification ratée
+  }
+}
 
 // Headers d'auth à relayer vers le media-service (cookie front ou Bearer est-ouest).
 function forwardAuth(req: Request): Record<string, string> {
@@ -33,10 +51,7 @@ class MediaUploadError extends Error {
 }
 
 // Relaie une image de profil au media-service (pattern proxy)
-async function uploadImageToMediaService(
-	file: Express.Multer.File,
-	headers: Record<string, string>,
-): Promise<{ id: string; url: string }> {
+async function uploadImageToMediaService(file: Express.Multer.File, headers: Record<string, string>): Promise<{ id: string; url: string }> {
 	const form = new FormData();
 	form.append("file", new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname);
 	const res = await fetch(`${env.mediaServiceUrl}/media`, {
@@ -71,13 +86,27 @@ async function deleteMediaFromService(id: string, headers: Record<string, string
 	}
 }
 
+async function fetchPostCount(userId: string, headers: Record<string, string>): Promise<number> {
+	try {
+		const res = await fetch(
+			`${env.postServiceUrl}/posts/count?authorId=${encodeURIComponent(userId)}`,
+			{ headers, signal: AbortSignal.timeout(3000) },
+		);
+		if (!res.ok) return 0;
+		const data = (await res.json()) as { count?: number };
+		return typeof data.count === "number" ? data.count : 0;
+	} catch {
+		return 0;
+	}
+}
+
 // Échappe les jokers LIKE (\ % _) pour qu'un terme de recherche soit traité
 // littéralement et ne permette pas à l'utilisateur d'injecter des wildcards.
 function escapeLike(term: string): string {
 	return term.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
-// Suspension active = date future. On normalise les dates passées à "non suspendu".
+// Suspension active = date future. On normalise les dates passées à "non suspendues".
 function isSuspended(user: User): boolean {
 	return user.suspendedUntil != null && user.suspendedUntil.getTime() > Date.now();
 }
@@ -125,11 +154,12 @@ function publicUser(user: User, includeModeration = false) {
 		role: user.role,
 		createdAt: user.createdAt,
 		updatedAt: user.updatedAt,
+		// Toujours exposé : le front en a besoin pour afficher l'état banni sur le profil.
+		isBanned: user.isBanned,
 	};
 	if (!includeModeration) return base;
 	return {
 		...base,
-		isBanned: user.isBanned,
 		isSuspended: isSuspended(user),
 		suspendedUntil: isSuspended(user) ? user.suspendedUntil : null,
 	};
@@ -142,7 +172,12 @@ export async function me(req: Request, res: Response): Promise<void> {
 		res.status(404).json({ error: "User not found" });
 		return;
 	}
-	res.json(publicUser(user, true));
+	const [followersCount, followingCount, postsCount] = await Promise.all([
+		Follow.count({ where: { followingId: user.id } }),
+		Follow.count({ where: { followerId: user.id } }),
+		fetchPostCount(user.id, forwardAuth(req)),
+	]);
+	res.json({ ...publicUser(user, true), followersCount, followingCount, postsCount });
 }
 
 export async function getUsers(req: Request, res: Response): Promise<void> {
@@ -151,7 +186,7 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
 		return;
 	}
-	const { limit, cursor, search, ids } = parsed.data;
+	const { limit, cursor, search, ids, sort } = parsed.data;
 
 	if (ids) {
 		const idList = ids
@@ -170,10 +205,12 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 	}
 
 	// Recherche (Fx13) : match partiel insensible à la casse sur username + displayName.
-	let where: WhereOptions | undefined;
+	// Les bannis sont toujours exclus des suggestions/résultats de recherche.
+	let where: WhereOptions = { isBanned: false };
 	if (search) {
 		const pattern = `%${escapeLike(search)}%`;
 		where = {
+			isBanned: false,
 			[Op.or]: [
 				{ username: { [Op.iLike]: pattern } },
 				{ displayName: { [Op.iLike]: pattern } },
@@ -181,13 +218,15 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
 		};
 	}
 
+	const order: Order = sort === "latest"
+		? [["createdAt", "DESC"]]
+		: [["id", "DESC"]];
+
 	const users = await User.findAll({
-		...(where && { where }),
+		where,
 		limit,
 		...(cursor !== undefined && { offset: cursor }),
-		order: [
-			["id", "DESC"]
-		],
+		order,
 	});
 	const showModeration = req.user?.role === "moderator" || req.user?.role === "admin";
 	res.json(users.map((u) => publicUser(u, showModeration)));
@@ -205,10 +244,13 @@ export async function getUser(req: Request, res: Response): Promise<void> {
 		res.status(404).json({ error: "User not found" });
 		return;
 	}
-	res.json(publicUser(user, canSeeModeration(req.user, user.id)));
+	const [followersCount, followingCount, postsCount] = await Promise.all([
+		Follow.count({ where: { followingId: user.id } }),
+		Follow.count({ where: { followerId: user.id } }),
+		fetchPostCount(user.id, forwardAuth(req)),
+	]);
+	res.json({ ...publicUser(user, canSeeModeration(req.user, user.id)), followersCount, followingCount, postsCount });
 }
-
-// export async function updateMe(req: Request, res: Response): Promise<void> {}
 
 export async function updateMe(req: Request, res: Response): Promise<void> {
 	try {
@@ -303,38 +345,43 @@ export async function deleteMe(req: Request, res: Response): Promise<void> {
 		await revokeAllRefresh(myId);
 
 		res.json({ message: "Compte supprimé avec succès." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la suppression du compte." });
 	}
 }
 
 export async function follow(req: Request, res: Response): Promise<void> {
-	try {
-		const targetId = req.params.id as string;
-		const myId = req.user?.sub as string;
+  try {
+    const targetId = req.params.id as string;
+    const myId = req.user?.sub as string;
 
-		if (targetId === myId) {
-			res.status(400).json({ error: "Vous ne pouvez pas vous abonner à vous-même." });
-			return;
-		}
+    if (targetId === myId) {
+      res.status(400).json({ error: "Vous ne pouvez pas vous abonner à vous-même." });
+      return;
+    }
 
-		const targetUser = await User.findByPk(targetId);
-		if (!targetUser) {
-			res.status(404).json({ error: "Utilisateur cible introuvable." });
-			return;
-		}
+    const targetUser = await User.findByPk(targetId);
+    if (!targetUser) {
+      res.status(404).json({ error: "Utilisateur cible introuvable." });
+      return;
+    }
+	
+    const [_, created] = await Follow.findOrCreate({
+      where: { followerId: myId, followingId: targetId }
+    });
 
-		const [_, created] = await Follow.findOrCreate({
-			where: { followerId: myId, followingId: targetId }
-		});
-
-		if (!created) {
-			res.status(400).json({ error: "Vous suivez déjà cet utilisateur." });
-			return;
-		}
+    if (!created) {
+      res.status(400).json({ error: "Vous suivez déjà cet utilisateur." });
+      return;
+    }
 
 		res.status(201).json({ message: "Vous vous êtes abonné avec succès." });
+
+    // Best-effort notification; don't block the follow response.
+    void notifyFollow(targetId, forwardAuth(req));
 	} catch (error) {
+	  logger.error((error as Error).message);
 		res.status(500).json({ error: "Erreur lors de l'abonnement." });
 	}
 }
@@ -351,6 +398,7 @@ export async function unfollow(req: Request, res: Response): Promise<void> {
 		}
 
 		res.json({ message: "Vous vous êtes désabonné avec succès." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors du désabonnement." });
 	}
@@ -378,10 +426,11 @@ export async function getFollowing(req: Request, res: Response): Promise<void> {
 
 		res.json({
 			data: followRelations.map(f => {
-				// @ts-ignore
+				// @ts-expect-error Unrecognized runtime alias
 				return f.Following;
 			})
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
@@ -409,10 +458,11 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 
 		res.json({
 			data: followRelations.map(f => {
-				// @ts-ignore
+				// @ts-expect-error Unrecognized runtime alias
 				return f.Follower;
 			})
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
@@ -427,6 +477,7 @@ export async function followingIds(req: Request, res: Response): Promise<void> {
 		});
 		res.json({ ids: rows.map((r) => r.get("followingId") as string) });
 	} catch (error) {
+		logger.error((error as Error).message);
 		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
 }
@@ -461,6 +512,7 @@ export async function banUser(req: Request, res: Response): Promise<void> {
 		await markAccessBanned(targetId);
 
 		res.json({ message: "Utilisateur banni." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors du bannissement." });
 	}
@@ -479,6 +531,7 @@ export async function unbanUser(req: Request, res: Response): Promise<void> {
 		await clearAccessBanned(targetUser.id);
 
 		res.json({ message: "Utilisateur débanni." });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors du débannissement." });
 	}
@@ -518,6 +571,7 @@ export async function suspendUser(req: Request, res: Response): Promise<void> {
 		await targetUser.save();
 
 		res.json({ message: "Utilisateur suspendu.", suspendedUntil: targetUser.suspendedUntil });
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		res.status(500).json({ error: "Erreur lors de la suspension." });
 	}
@@ -535,7 +589,69 @@ export async function unsuspendUser(req: Request, res: Response): Promise<void> 
 		await targetUser.save();
 
 		res.json({ message: "Suspension levée." });
-	} catch (error) {
+	} catch (e) {
+		logger.error((e as Error).message);
 		res.status(500).json({ error: "Erreur lors de la levée de suspension." });
+	}
+}
+
+export async function isUserAvailable(req: Request, res: Response): Promise<void> {
+	try {
+		const identifier = req.params.id as string;
+		
+		// Lookup par UUID si l'identifiant en est un, sinon par username.
+		const targetUser = UUID_RE.test(identifier)
+			? await User.findByPk(identifier)
+			: await User.findOne({ where: { username: identifier } });
+		if (!targetUser) {
+			res.status(404).json({ error: "Utilisateur cible introuvable." });
+			return;
+		}
+		
+		res.json({ userID: targetUser.username, isAvailable: !(isSuspended(targetUser) || targetUser.isBanned) });
+	} catch (e) {
+		logger.error((e as Error).message);
+		res.status(500).json({ error: "Erreur lors de la vérification du status." });
+	}
+}
+
+export async function getLastRegisteredUsers(req: Request, res: Response): Promise<void> {
+	try {
+		const users = await User.findAll({
+			limit: 50,
+			order: [["createdAt", "DESC"]],
+		});
+		const showModeration = req.user?.role === "moderator" || req.user?.role === "admin";
+		res.json(users.map((u) => publicUser(u, showModeration)));
+	} catch {
+		res.status(500).json({ error: "Erreur lors de la récupération des derniers utilisateurs inscrits." });
+	}
+}
+
+export async function getLastFollowedUsers(req: Request, res: Response): Promise<void> {
+	try {
+		if (req.params.id !== req.user?.sub) {
+			res.status(403).json({ error: "Accès interdit." });
+			return;
+		}
+
+		const followRelations = await Follow.findAll({
+			where: { followerId: req.params.id },
+			limit: 5,
+			order: [['createdAt', 'DESC'], ['followingId', 'DESC']],
+			// On inclut le modèle User lié pour récupérer les infos du compte suivi
+			// (displayName + profileImage requis par le front pour le nom et la photo).
+			include: [{ model: User, as: 'Following', attributes: ['id', 'username', 'displayName', 'profileImage'] }]
+		});
+		
+		res.json({
+			data: followRelations.map(f => {
+				// @ts-expect-error Unrecognized runtime alias
+				return f.Following;
+			})
+		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	} catch (error) {
+		res.status(500).json({ error: "Erreur lors de la récupération des abonnements." });
 	}
 }

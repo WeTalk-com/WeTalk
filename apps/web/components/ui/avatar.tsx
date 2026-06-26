@@ -1,3 +1,8 @@
+"use client";
+
+import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import { cn } from "@/lib/cn";
+
 type AvatarProps = {
   initial: string;
   /** taille en px (defaut 40) */
@@ -6,7 +11,7 @@ type AvatarProps = {
   ring?: boolean;
   /** fond dore plein + texte blanc (utilisateur courant) */
   solid?: boolean;
-  /** URL de la photo de profil (Fx10) — remplace l'initiale si définie */
+  /** URL de la photo de profil — remplace l'initiale si définie et valide */
   src?: string;
   /** texte alternatif de l'image */
   alt?: string;
@@ -20,18 +25,27 @@ export function Avatar({
   src,
   alt = "",
 }: AvatarProps) {
-  const base = `inline-grid place-items-center shrink-0 overflow-hidden rounded-full font-semibold ${
-    solid ? "bg-gold text-white" : "bg-gold/20 text-gold"
-  } ${ring ? "ring-2 ring-live ring-offset-2 ring-offset-card" : ""}`;
-
   return (
-    <span className={base} style={{ width: size, height: size, fontSize: size * 0.4 }}>
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className="size-full object-cover" />
-      ) : (
-        initial
+    <AvatarPrimitive.Root
+      className={cn(
+        "relative inline-flex shrink-0 overflow-hidden rounded-full",
+        ring && "ring-2 ring-live ring-offset-2 ring-offset-card",
       )}
-    </span>
+      style={{ width: size, height: size }}
+    >
+      {src && (
+        <AvatarPrimitive.Image src={src} alt={alt} className="size-full object-cover" />
+      )}
+      <AvatarPrimitive.Fallback
+        delayMs={src ? 600 : 0}
+        className={cn(
+          "flex size-full items-center justify-center font-semibold",
+          solid ? "bg-gold text-white" : "bg-gold/20 text-gold",
+        )}
+        style={{ fontSize: size * 0.4 }}
+      >
+        {initial}
+      </AvatarPrimitive.Fallback>
+    </AvatarPrimitive.Root>
   );
 }

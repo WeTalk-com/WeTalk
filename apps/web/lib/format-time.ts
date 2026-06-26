@@ -1,19 +1,17 @@
-// Formate une date ISO en libelle relatif localise ("il y a 2 h" / "2h ago").
-// Utilise l'API navigateur Intl.RelativeTimeFormat (zero dependance).
+import { format, register } from "timeago.js";
+import fr from "timeago.js/esm/lang/fr";
+
+register("fr", fr);
+
 export function formatTimeAgo(iso: string, locale: string): string {
-  const diffSec = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
-  const rtf = new Intl.RelativeTimeFormat(locale, {
-    numeric: "auto",
-    style: "narrow",
-  });
-  const units: [Intl.RelativeTimeFormatUnit, number][] = [
-    ["day", 86400],
-    ["hour", 3600],
-    ["minute", 60],
-  ];
-  // Plus grande unite donnant une valeur >= 1, sinon "maintenant".
-  for (const [unit, secs] of units) {
-    if (diffSec >= secs) return rtf.format(-Math.floor(diffSec / secs), unit);
-  }
-  return rtf.format(0, "second");
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "—";
+  // Décalage d'horloge serveur/navigateur : un post tout neuf peut avoir
+  // un createdAt légèrement dans le futur → timeago affiche "dans un instant".
+  // On ramène toute date future à maintenant pour garder "à l'instant".
+  const now = Date.now();
+  const safe = date.getTime() > now ? new Date(now) : date;
+  const result = format(safe, locale === "fr" ? "fr" : "en_US");
+  // Supprimer le préfixe/suffixe narratif pour un affichage compact.
+  return result.replace(/^il y a /, "").replace(/ ago$/, "");
 }

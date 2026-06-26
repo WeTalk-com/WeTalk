@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { getFeed, getTrending } from "@/lib/api";
+import { getPosts, getTrendingHome, getCurrentUser, getFollowingIds } from "@/lib/api";
 import { TopBar } from "@/components/layout/top-bar";
 import { RightRail } from "@/components/home/right-rail";
 import { PostCard } from "@/components/post/post-card";
@@ -20,7 +20,12 @@ export async function generateMetadata({
 }
 
 export default async function HomePage() {
-  const [posts, trending] = await Promise.all([getFeed(), getTrending()]);
+  const me = await getCurrentUser();
+  const [posts, trending, followingIds] = await Promise.all([
+    getPosts(),
+    getTrendingHome(),
+    getFollowingIds(me.id),
+  ]);
 
   return (
     <>
@@ -29,7 +34,11 @@ export default async function HomePage() {
 
         <div className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard
+              key={post.id}
+              post={post}
+              isFollowingAuthor={followingIds.includes(post.author.id)}
+            />
           ))}
         </div>
       </main>

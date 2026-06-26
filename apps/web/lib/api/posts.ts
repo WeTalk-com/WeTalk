@@ -1,8 +1,6 @@
-import type { Post, Comment, Reply, ReportReason } from "@/lib/types";
-import { postComments, currentUser } from "@/lib/mock-data";
+import type { Post, Comment, Reply, ReportReason, User } from "@/lib/types";
 import { apiFetch } from "./client";
-import { getCurrentUser } from "./users";
-import { mapPost, mapCommentTree, type BackendPost, type BackendComment } from "./map";
+import { mapPost, mapCommentTree, mapReply, type BackendPost, type BackendComment } from "./map";
 
 // Reponse brute de creation d'un commentaire (pas encore enrichi auteur/likes).
 type CreatedComment = { _id: string; content: string; createdAt: string };
@@ -13,7 +11,7 @@ export async function getPosts(): Promise<Post[]> {
   return data.posts.map(mapPost);
 }
 
-/** Fil d'accueil (Fx5) — posts de l'utilisateur courant + des comptes qu'il suit. */
+/** Fil d'accueil — posts de l'utilisateur courant + des comptes qu'il suit. */
 export async function getFeed(): Promise<Post[]> {
   const data = await apiFetch<{ posts: BackendPost[] }>("/posts/feed");
   return data.posts.map(mapPost);
@@ -23,6 +21,31 @@ export async function getFeed(): Promise<Post[]> {
 export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
   const data = await apiFetch<{ posts: BackendPost[] }>(
     `/posts?authorId=${encodeURIComponent(authorId)}`,
+  );
+  return data.posts.map(mapPost);
+}
+
+/** Posts likés par un utilisateur (onglet profil "J'aime"). */
+export async function getLikedPosts(userId: string): Promise<Post[]> {
+  const data = await apiFetch<{ posts: BackendPost[] }>(
+    `/posts/liked?userId=${encodeURIComponent(userId)}`,
+  );
+  return data.posts.map(mapPost);
+}
+
+/** Commentaires écrits par un utilisateur (onglet profil "Commentaires"), liste plate. */
+export async function getUserComments(userId: string): Promise<Comment[]> {
+  const data = await apiFetch<{ comments: BackendComment[] }>(
+    `/comments?userId=${encodeURIComponent(userId)}`,
+  );
+  return data.comments.map((c) => ({ ...mapReply(c), replies: [] }));
+}
+
+/** Posts portant un #hashtag */
+export async function getPostsByTag(tag: string): Promise<Post[]> {
+  const clean = tag.replace(/^#/, "").toLowerCase();
+  const data = await apiFetch<{ posts: BackendPost[] }>(
+    `/posts?tag=${encodeURIComponent(clean)}`,
   );
   return data.posts.map(mapPost);
 }
@@ -37,9 +60,7 @@ export type CreatePostInput = {
   video?: File;
 };
 
-/**
- * Création d'un post (texte + image/video)
- */
+/** Création d'un post (texte + image/video). */
 export async function createPost(input: CreatePostInput): Promise<void> {
   const file = input.image ?? input.video;
   if (file) {
@@ -55,34 +76,43 @@ export async function createPost(input: CreatePostInput): Promise<void> {
   });
 }
 
+/** Récupère un post par son identifiant. */
+export async function getPost(id: string): Promise<Post> {
+  const data = await apiFetch<{ post: BackendPost }>(`/posts/${encodeURIComponent(id)}`);
+  return mapPost(data.post);
+}
+
 export type LikeState = { likeCount: number; likedByMe: boolean };
 
 /** Like un post (idempotent côté back). */
 export function likePost(postId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/posts/${postId}/like`, { method: "POST" });
+  return apiFetch<LikeState>(`/posts/${encodeURIComponent(postId)}/like`, { method: "POST" });
 }
 
 /** Retire son like (idempotent côté back). */
 export function unlikePost(postId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/posts/${postId}/like`, { method: "DELETE" });
+  return apiFetch<LikeState>(`/posts/${encodeURIComponent(postId)}/like`, { method: "DELETE" });
 }
 
-/** Commentaires d'un post (liste plate -> arbre 1 niveau). */
+/** Commentaires d'un post (liste plate → arbre 1 niveau). */
 export async function getComments(postId: string): Promise<Comment[]> {
   const data = await apiFetch<{ comments: BackendComment[] }>(`/posts/${postId}/comments`);
   return mapCommentTree(data.comments);
 }
 
-/** Ajoute un commentaire racine ; l'auteur est le lecteur courant. */
-export async function createComment(postId: string, text: string): Promise<Comment> {
+/** Ajoute un commentaire racine ; `author` = lecteur courant (déjà en mémoire). */
+export async function createComment(
+  postId: string,
+  text: string,
+  author: User,
+): Promise<Comment> {
   const { comment } = await apiFetch<{ comment: CreatedComment }>(
     `/posts/${postId}/comments`,
     { method: "POST", body: JSON.stringify({ content: text }) },
   );
-  const me = await getCurrentUser();
   return {
     id: comment._id,
-    author: me,
+    author,
     text: comment.content,
     createdAt: comment.createdAt,
     likes: 0,
@@ -91,20 +121,20 @@ export async function createComment(postId: string, text: string): Promise<Comme
   };
 }
 
-/** Ajoute une réponse : commentaire avec parentId (le back traite les réponses comme des commentaires). */
+/** Ajoute une réponse (commentaire avec parentId). */
 export async function createReply(
   postId: string,
   commentId: string,
   text: string,
+  author: User,
 ): Promise<Reply> {
   const { comment } = await apiFetch<{ comment: CreatedComment }>(
     `/posts/${postId}/comments`,
     { method: "POST", body: JSON.stringify({ content: text, parentId: commentId }) },
   );
-  const me = await getCurrentUser();
   return {
     id: comment._id,
-    author: me,
+    author,
     text: comment.content,
     createdAt: comment.createdAt,
     likes: 0,
@@ -114,11 +144,29 @@ export async function createReply(
 
 /** Like / unlike un commentaire (idempotent côté back). */
 export function likeComment(commentId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/comments/${commentId}/like`, { method: "POST" });
+  return apiFetch<LikeState>(`/comments/${encodeURIComponent(commentId)}/like`, { method: "POST" });
 }
 
 export function unlikeComment(commentId: string): Promise<LikeState> {
-  return apiFetch<LikeState>(`/comments/${commentId}/like`, { method: "DELETE" });
+  return apiFetch<LikeState>(`/comments/${encodeURIComponent(commentId)}/like`, { method: "DELETE" });
+}
+
+/** Supprime un post (auteur uniquement, vérifié côté back). */
+export function deletePost(postId: string): Promise<void> {
+  return apiFetch(`/posts/${encodeURIComponent(postId)}`, { method: "DELETE" });
+}
+
+/** Supprime un commentaire (auteur uniquement, vérifié côté back). */
+export function deleteComment(commentId: string): Promise<void> {
+  return apiFetch(`/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
+}
+
+/** Modifie le texte d'un commentaire (auteur uniquement, vérifié côté back). */
+export function updateComment(commentId: string, text: string): Promise<void> {
+  return apiFetch(`/comments/${encodeURIComponent(commentId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ content: text }),
+  });
 }
 
 /** Signale un post. */
@@ -126,9 +174,9 @@ export async function reportPost(
   postId: string,
   reason: ReportReason,
   details?: string,
-): Promise<void> {
-  // TODO(api): await apiFetch(`/posts/${postId}/report`, { method: "POST", body: JSON.stringify({ reason, details }) });
-  if (process.env.NODE_ENV === "development") {
-    console.log("reportPost (mock)", { postId, reason, details });
-  }
+): Promise<{ duplicate?: boolean }> {
+  return apiFetch<{ duplicate?: boolean }>(`/posts/${encodeURIComponent(postId)}/report`, {
+    method: "POST",
+    body: JSON.stringify({ reason, details }),
+  });
 }

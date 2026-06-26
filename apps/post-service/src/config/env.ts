@@ -25,6 +25,7 @@ export const env = {
   mongoUri: required("MONGO_URI", "mongodb://localhost:27017/post_db"),
   userServiceUrl: required("USER_SERVICE_URL", "http://user-service:4001"),
   mediaServiceUrl: required("MEDIA_SERVICE_URL", "http://media-service:4004"),
+  notificationServiceUrl: required("NOTIFICATION_SERVICE_URL", "http://notification-service:4003"),
   jwtAccessSecret: required("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
   corsOrigins: (process.env.CORS_ORIGIN ?? "")
     .split(",")

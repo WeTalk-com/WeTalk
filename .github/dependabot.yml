@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      # patch + minor : sûrs, regroupés en une PR
+      npm-patch-minor:
+        applies-to: version-updates
+        update-types:
+          - "patch"
+          - "minor"
+      # majors : potentiellement cassants, regroupés en une seule PR à reviewer
+      npm-major:
+        applies-to: version-updates
+        update-types:
+          - "major"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      actions-patch-minor:
+        applies-to: version-updates
+        update-types:
+          - "patch"
+          - "minor"
+      actions-major:
+        applies-to: version-updates
+        update-types:
+          - "major"

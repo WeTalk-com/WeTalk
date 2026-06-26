@@ -187,6 +187,103 @@ flowchart TB
 | **Fx22.** Interface multi-langues | ❌ | ✅ | ✅ | ✅ |
 | **Fx23.** Thème personnalisé | ✅ | ✅ | ✅ | ✅ |
 
+## Endpoints API — état d'intégration front
+
+### Auth (`lib/api/auth.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| POST | `/auth/register` | `register` | ✅ Oui |
+| POST | `/auth/login` | `login` | ✅ Oui |
+| POST | `/auth/logout` | `logout` | ✅ Oui |
+| GET | `/auth/me` | `me` | ✅ Oui |
+
+### Users (`lib/api/users.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/users/me` | `getCurrentUser` / `getProfile` | ✅ Oui |
+| GET | `/users/:handle` | `getUserProfile` | ✅ Oui |
+| PATCH | `/users/me` | `updateProfile` | ✅ Oui |
+| DELETE | `/users/me` | `deleteAccount` | ✅ Oui |
+| GET | `/users?search=` | `searchUsers` | ✅ Oui |
+| GET | `/users/:id/followers` | `getFollowers` | ✅ Oui |
+| GET | `/users/:id/following` | `getFollowingList` | ✅ Oui |
+| GET | `/users/:id/following/ids` | `getFollowingIds` | ✅ Oui |
+| POST | `/users/:id/follow` | `followUser` | ✅ Oui |
+| DELETE | `/users/:id/follow` | `unfollowUser` | ✅ Oui |
+
+### Posts & commentaires (`lib/api/posts.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/posts` | `getPosts` | ✅ Oui |
+| GET | `/posts?authorId=` | `getPostsByAuthor` | ✅ Oui |
+| GET | `/posts/feed` | `getFeed` | ✅ Oui |
+| GET | `/posts/:id` | `getPost` | ✅ Oui |
+| POST | `/posts` | `createPost` | ✅ Oui |
+| DELETE | `/posts/:id` | `deletePost` | ✅ Oui |
+| POST | `/posts/:id/like` | `likePost` | ✅ Oui |
+| DELETE | `/posts/:id/like` | `unlikePost` | ✅ Oui |
+| GET | `/posts/:id/comments` | `getComments` | ✅ Oui |
+| POST | `/posts/:id/comments` | `createComment` / `createReply` | ✅ Oui |
+| DELETE | `/comments/:id` | `deleteComment` | ✅ Oui |
+| POST | `/comments/:id/like` | `likeComment` | ✅ Oui |
+| DELETE | `/comments/:id/like` | `unlikeComment` | ✅ Oui |
+| PATCH | `/comments/:id` | `editComment` | ❌ Non (back prêt) |
+| GET | `/posts?tag=` | `getPostsByTag` | ❌ Non (back prêt) |
+| GET | `/posts/liked` | `getLikedPosts` | ❌ Non (back prêt) |
+| GET | `/posts/:id/likes` | `getPostLikers` | ❌ Non (back prêt) |
+| GET | `/comments/:id/likes` | `getCommentLikers` | ❌ Non (back prêt) |
+| GET | `/tags` | `getPopularTags` | ❌ Non (back prêt) |
+| POST | `/posts/:id/report` | `reportPost` | ❌ Non (stub `TODO`) |
+
+> **Note** : `PATCH /posts/:id` retiré — les posts sont désormais **immuables** (seuls les commentaires sont éditables via `PATCH /comments/:id`).
+
+### Notifications (`lib/api/notifications.ts`)
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/notifications` | `getNotifications` | ✅ Oui |
+| GET | `/notifications/unread` | `getUnreadCount` | ✅ Oui |
+| PATCH | `/notifications/:id/read` | `markNotificationRead` | ✅ Oui |
+
+### Messages privés (`lib/api/messages.ts`) — Fx17
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/conversations` | `getConversations` | ❌ Non (mock) |
+| POST | `/conversations/:id/messages` | `sendMessage` | ❌ Non (mock) |
+
+### Modération / Admin (`lib/api/admin.ts`) — Fx20/Fx21
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/admin/reports?status=pending` | `getReportedPosts` | ❌ Non (mock) |
+| POST | `/admin/reports/:id/dismiss` | `dismissReport` | ❌ Non (stub) |
+| POST | `/admin/reports/:id/remove` | `removeReportedPost` | ❌ Non (stub) |
+
+### Explore / Tendances (`lib/api/explore.ts`) — Fx13
+
+| Méthode | Endpoint | Fonction front | Intégré |
+| :--- | :--- | :--- | :---: |
+| GET | `/trending` | `getTrending` | ❌ Non (mock) |
+
+**Bilan : 27 endpoints intégrés ✅ · 14 non connectés ❌**
+
+## Documentation Swagger
+
+Chaque microservice expose sa doc OpenAPI via Swagger UI, accessible derrière la gateway (port 80). Slash final obligatoire.
+
+| Service | URL |
+| :--- | :--- |
+| Auth | http://localhost/api-docs/auth/ |
+| Users | http://localhost/api-docs/users/ |
+| Posts | http://localhost/api-docs/posts/ |
+| Notifications | http://localhost/api-docs/notifications/ |
+| Messages | http://localhost/api-docs/messages/ |
+| Media | http://localhost/api-docs/media/ |
+
 ## IA
 
 Assistant conversationnel basé sur un LLM local (Ollama). Trois briques :

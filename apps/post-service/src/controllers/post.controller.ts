@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
 import { isValidObjectId, Types } from "mongoose";
-import { z } from "zod";
 import { PostModel } from "../models/post.js";
 import { CommentModel } from "../models/comment.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
+import { createSchema, listQuerySchema, feedQuerySchema, likesQuerySchema, likedQuerySchema } from "../schemas/post.schemas.js";
 
 // Headers d'auth à réémettre vers user-service : on relaie le cookie (front) et/ou le Bearer (est-ouest).
 export function forwardAuth(req: Request): Record<string, string> {
@@ -12,6 +12,81 @@ export function forwardAuth(req: Request): Record<string, string> {
   if (req.headers.authorization) headers.authorization = req.headers.authorization;
   if (req.headers.cookie) headers.cookie = req.headers.cookie;
   return headers;
+}
+
+export async function notifyNotificationService(
+  payload: {
+    type: "like" | "comment" | "mention";
+    recipientId: string;
+    actorId: string;
+    postId: string;
+    commentId?: string;
+    preview?: string;
+  },
+  headers?: Record<string, string>,
+): Promise<void> {
+  try {
+    await fetch(`${env.notificationServiceUrl}/notifications/internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch (err) {
+    logger.warn("notification service call failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+const MENTION_RE = /(?<!\w)@(\w{3,50})/g;
+
+async function resolveMentionedUsers(
+  content: string,
+  headers: Record<string, string>,
+): Promise<string[]> {
+  const usernames = [...new Set(
+    Array.from(content.matchAll(MENTION_RE), m => m[1]).filter(Boolean),
+  )] as string[];
+  if (usernames.length === 0) return [];
+
+  const userIds: string[] = [];
+  for (const username of usernames) {
+    try {
+      const res = await fetch(`${env.userServiceUrl}/users/${encodeURIComponent(username)}`, {
+        headers,
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const user = (await res.json()) as { id: string };
+        userIds.push(user.id);
+      }
+    } catch {
+      // best-effort
+    }
+  }
+  return userIds;
+}
+
+export async function notifyMentions(
+  content: string,
+  actorId: string,
+  postId?: string,
+  commentId?: string,
+  headers?: Record<string, string>,
+): Promise<void> {
+  const userIds = await resolveMentionedUsers(content, headers ?? {});
+  for (const userId of userIds) {
+    if (userId === actorId) continue;
+    notifyNotificationService({
+      type: "mention",
+      recipientId: userId,
+      actorId,
+      postId: postId ?? "",
+      commentId,
+      preview: content.slice(0, 100),
+    }, headers);
+  }
 }
 
 // Vérifie auprès du user-service si l'auteur peut publier
@@ -92,22 +167,6 @@ async function deleteMediaFromService(id: string, headers: Record<string, string
   }
 }
 
-const createSchema = z.object({
-  content: z.string().trim().min(1).max(280),
-});
-
-const updateSchema = createSchema;
-
-const listQuerySchema = z.object({
-  authorId: z.string().trim().min(1).optional(),
-  cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
-
-const feedQuerySchema = z.object({
-  cursor: z.string().refine(isValidObjectId, "Invalid cursor").optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
 
 type AuthorLite = {
   id: string;
@@ -115,6 +174,7 @@ type AuthorLite = {
   displayName: string | null;
   profileImage: string | null;
   isBanned: boolean;
+  isSuspended: boolean;
 };
 
 async function fetchFollowingIds(userId: string, headers: Record<string, string>): Promise<string[]> {
@@ -138,7 +198,7 @@ async function fetchFollowingIds(userId: string, headers: Record<string, string>
   }
 }
 
-async function fetchAuthors(
+export async function fetchAuthors(
   ids: string[],
   headers: Record<string, string>,
 ): Promise<Map<string, AuthorLite>> {
@@ -162,6 +222,7 @@ async function fetchAuthors(
         displayName: u.displayName ?? null,
         profileImage: u.profileImage ?? null,
         isBanned: Boolean(u.isBanned),
+        isSuspended: Boolean(u.isSuspended),
       });
     }
   } catch (err) {
@@ -227,6 +288,30 @@ async function enrichForViewer<T extends { _id: unknown; authorId: string; liked
   });
 }
 
+// Extraction des #hashtags du contenu, cap à 10 tags
+const TAG_RE = /#([\p{L}\p{N}_]+)/gu;
+export function extractTags(content: string): string[] {
+  const tags = new Set<string>();
+  for (const match of content.matchAll(TAG_RE)) {
+    const tag = match[1]?.toLowerCase();
+    if (tag && tag.length <= 50) tags.add(tag);
+    if (tags.size >= 10) break;
+  }
+  return [...tags];
+}
+
+export async function buildLikers(likedBy: string[], cursor: number, limit: number, req: Request): Promise<{ likers: AuthorLite[]; nextCursor: number | null; total: number }> {
+  const total = likedBy.length;
+  const slice = likedBy.slice(cursor, cursor + limit);
+  const authors = await fetchAuthors(slice, forwardAuth(req));
+  const likers = slice
+    .map((uid) => authors.get(uid) ?? null)
+    .filter((a): a is AuthorLite => a !== null)
+    .map((a) => (a.isBanned ? { ...a, displayName: "Utilisateur banni", profileImage: null } : a));
+  const nextCursor = cursor + limit < total ? cursor + limit : null;
+  return { likers, nextCursor, total };
+}
+
 export async function createPost(req: Request, res: Response): Promise<void> {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -264,6 +349,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     post = await PostModel.create({
       authorId: req.user!.sub,
       content: parsed.data.content,
+      tags: extractTags(parsed.data.content),
       ...(media ? { media: { url: media.url, type: media.type } } : {}),
     });
   } catch (err) {
@@ -272,7 +358,31 @@ export async function createPost(req: Request, res: Response): Promise<void> {
   }
   // likedBy (ids des likers) n'est jamais exposé au client.
   const { likedBy: _likedBy, ...postOut } = post.toObject();
+
+  notifyMentions(parsed.data.content, req.user!.sub, String(post._id), undefined, forwardAuth(req));
+
   res.status(201).json({ post: postOut });
+}
+
+export async function countPosts(req: Request, res: Response): Promise<void> {
+  const { authorId } = req.query;
+  if (authorId !== undefined && typeof authorId !== "string") {
+    res.status(400).json({ error: "authorId must be a string" });
+    return;
+  }
+  if (!authorId) {
+    // Total count — réservé aux mods/admins
+    const role = req.user!.role;
+    if (role !== "moderator" && role !== "admin") {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+    const count = await PostModel.countDocuments({});
+    res.json({ count });
+    return;
+  }
+  const count = await PostModel.countDocuments({ authorId });
+  res.json({ count });
 }
 
 export async function listPosts(req: Request, res: Response): Promise<void> {
@@ -281,10 +391,11 @@ export async function listPosts(req: Request, res: Response): Promise<void> {
     res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
     return;
   }
-  const { authorId, cursor, limit } = parsed.data;
+  const { authorId, tag, cursor, limit } = parsed.data;
 
   const filter: Record<string, unknown> = {};
   if (authorId) filter.authorId = authorId;
+  if (tag) filter.tags = tag.toLowerCase(); // tags stockés en lowercase
   // _id décroissant ≈ createdAt décroissant (ObjectId monotone), curseur stable.
   if (cursor) filter._id = { $lt: cursor };
 
@@ -334,31 +445,6 @@ export async function getPost(req: Request, res: Response): Promise<void> {
   res.json({ post: enriched });
 }
 
-export async function updatePost(req: Request, res: Response): Promise<void> {
-  const { id } = req.params;
-  if (!isValidObjectId(id)) {
-    res.status(400).json({ error: "Invalid post id" });
-    return;
-  }
-  const parsed = updateSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
-    return;
-  }
-  const post = await PostModel.findById(id);
-  if (!post) {
-    res.status(404).json({ error: "Post not found" });
-    return;
-  }
-  if (post.authorId !== req.user!.sub) {
-    res.status(403).json({ error: "Forbidden" });
-    return;
-  }
-  post.content = parsed.data.content;
-  await post.save();
-  res.json({ post });
-}
-
 export async function deletePost(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
@@ -370,7 +456,9 @@ export async function deletePost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
-  if (post.authorId !== req.user!.sub) {
+  // Auteur, ou modérateur/admin (modération de contenu, Fx20).
+  const role = req.user!.role;
+  if (post.authorId !== req.user!.sub && role !== "moderator" && role !== "admin") {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
@@ -394,6 +482,19 @@ export async function likePost(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Post not found" });
     return;
   }
+
+  if (post.authorId !== req.user!.sub) {
+    notifyNotificationService(
+      {
+        type: "like",
+        recipientId: post.authorId,
+        actorId: req.user!.sub,
+        postId: id!,
+      },
+      forwardAuth(req),
+    );
+  }
+
   res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: true });
 }
 
@@ -414,4 +515,47 @@ export async function unlikePost(req: Request, res: Response): Promise<void> {
     return;
   }
   res.json({ likeCount: (post.likedBy ?? []).length, likedByMe: false });
+}
+
+// liste paginée des utilisateurs ayant liké le post.
+export async function listPostLikers(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+  const parsed = likesQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const post = await PostModel.findById(id).select({ likedBy: 1 }).lean();
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  const { cursor, limit } = parsed.data;
+  const result = await buildLikers(post.likedBy ?? [], cursor, limit, req);
+  res.json(result);
+}
+
+// Posts likés par un user (userId absent = user courant).
+export async function listLikedPosts(req: Request, res: Response): Promise<void> {
+  const parsed = likedQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+  const { userId, cursor, limit } = parsed.data;
+  const target = userId ?? req.user!.sub;
+
+  const filter: Record<string, unknown> = { likedBy: target };
+  if (cursor) filter._id = { $lt: cursor };
+
+  const posts = await PostModel.find(filter).sort({ _id: -1 }).limit(limit).lean();
+  const last = posts[posts.length - 1];
+  const nextCursor = posts.length === limit && last ? String(last._id) : null;
+
+  const enriched = await enrichForViewer(posts, req);
+  res.json({ posts: enriched, nextCursor });
 }

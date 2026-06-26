@@ -2,32 +2,42 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Plus, Check } from "lucide-react";
 import { followUser, unfollowUser } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
+import { useFollowing, setFollowing as setFollowingStore } from "@/lib/follow-store";
+import { cn } from "@/lib/cn";
 
 type Props = {
-  /** ID de l'utilisateur à suivre — sera passé à l'API (POST /users/:id/follow). */
   userId: string;
   initialFollowing?: boolean;
   size?: "sm" | "md";
+  onFollow?: () => void;
+  onUnfollow?: () => void;
 };
 
-/**
- * Bouton Suivre / Suivi avec toggle optimiste.
- * En mode mock, l'état est local. Le back-end n'a qu'à brancher onFollow/onUnfollow.
- */
-export function FollowButton({ userId, initialFollowing = false, size = "sm" }: Props) {
+export function FollowButton({ userId, initialFollowing = false, size = "sm", onFollow, onUnfollow }: Props) {
   const t = useTranslations("app.rightRail");
-  const [following, setFollowing] = useState(initialFollowing);
-  const [hovered, setHovered] = useState(false);
+  // État partagé par userId → toutes les instances (hover, post, profil, suggestions) restent synchro.
+  const following = useFollowing(userId, initialFollowing);
+  const [pending, setPending] = useState(false);
 
-  // Toggle optimiste : on bascule l'UI tout de suite, on revient en arrière si l'API échoue.
   async function toggle() {
+    if (pending) return;
+    setPending(true);
     const next = !following;
-    setFollowing(next);
+    setFollowingStore(userId, next);
     try {
       await (next ? followUser(userId) : unfollowUser(userId));
-    } catch {
-      setFollowing(!next);
+      if (next) onFollow?.(); else onUnfollow?.();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 400) {
+        // 400 = déjà dans l'état cible — on garde l'UI optimiste.
+        return;
+      }
+      setFollowingStore(userId, !next);
+    } finally {
+      setPending(false);
     }
   }
 
@@ -35,27 +45,26 @@ export function FollowButton({ userId, initialFollowing = false, size = "sm" }: 
     ? "px-4 py-1.5 text-sm"
     : "px-5 py-2 text-base";
 
-  const label = following
-    ? hovered ? t("unfollow") : t("following")
-    : t("follow");
-
+  // Abonné = contour + coche (badge style LinkedIn) ; sinon plein brun + plus.
   const colorClass = following
-    ? hovered
-      ? "border border-live/40 bg-live/10 text-live hover:bg-live/15"
-      : "border border-border bg-card text-brown"
-    : "bg-brown text-canvas hover:bg-brown/90";
+    ? "border border-border bg-card text-brown"
+    : "bg-brown text-canvas";
 
   return (
     <button
       type="button"
       aria-pressed={following}
-      aria-label={label}
+      aria-label={following ? t("unfollow") : t("follow")}
+      disabled={pending}
       onClick={toggle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={`shrink-0 rounded-full font-semibold transition-colors ${sizeClass} ${colorClass}`}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full font-bold transition-colors disabled:opacity-60",
+        sizeClass,
+        colorClass,
+      )}
     >
-      {label}
+      {following ? <Check className="size-4" /> : <Plus className="size-4" />}
+      {following ? t("following") : t("follow")}
     </button>
   );
 }
