@@ -40,7 +40,7 @@ export function NotificationItem({
 
   return (
     <li
-      className={cn("flex gap-3 border-b border-border px-5 py-4 transition-colors", !read && "bg-gold/5")}
+      className={cn("flex gap-3 border-b border-brown-sec/20 px-5 py-4 transition-colors hover:bg-card", !read && "bg-gold/5")}
     >
       <div className="relative shrink-0">
         <Avatar initial={actor.initial} src={actor.avatarUrl} alt={actor.name} />
