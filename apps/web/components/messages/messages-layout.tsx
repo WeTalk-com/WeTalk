@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { io } from "socket.io-client";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Send, ArrowLeft, Loader2, SquarePen, Search, X, Smile } from "lucide-react";
+import { Send, ArrowLeft, Loader2, SquarePen, Search, X } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Conversation, Message, User } from "@/lib/types";
@@ -12,6 +12,7 @@ import { sendMessage, getConversationMessages, markConversationRead, searchUsers
 import { formatTimeAgo } from "@/lib/format-time";
 import { Avatar } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/icons/brand";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { cn } from "@/lib/cn";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -395,6 +396,23 @@ export function MessagesLayout({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selected?.messages.length]);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Insère l'emoji choisi à la position du curseur dans le champ de message.
+  function insertEmoji(native: string) {
+    const el = inputRef.current;
+    const start = el?.selectionStart ?? input.length;
+    const end = el?.selectionEnd ?? input.length;
+    const next = input.slice(0, start) + native + input.slice(end);
+    setInput(next);
+    requestAnimationFrame(() => {
+      if (el) {
+        const pos = start + native.length;
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      }
+    });
+  }
+
   // Real-time incoming messages via Socket.io.
   useEffect(() => {
     const socket = io({ path: "/api/socket.io/messages/", withCredentials: true });
@@ -623,14 +641,9 @@ export function MessagesLayout({
 
               {/* Input */}
               <div className="flex items-center gap-2 border-t border-brown-sec/20 px-3 py-3 pb-28 lg:pb-3">
-                <button
-                  type="button"
-                  aria-label="Emoji"
-                  className="grid size-9 shrink-0 place-items-center rounded-full text-brown-sec transition-colors hover:bg-canvas hover:text-brown"
-                >
-                  <Smile className="size-5" />
-                </button>
+                <EmojiPicker onSelect={insertEmoji} label={t("emoji")} />
                 <input
+                  ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
