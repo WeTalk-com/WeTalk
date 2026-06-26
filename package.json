@@ -10,8 +10,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "prettier": "^3.7.4",
-    "turbo": "^2.9.16",
+    "prettier": "^3.8.5",
+    "turbo": "^2.10.0",
     "typescript": "5.9.2",
     "vitest": "^4.1.9"
   },
