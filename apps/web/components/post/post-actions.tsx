@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { Heart, MessageCircle } from "lucide-react";
+import { ReplyIcon, HeartIcon } from "@/components/icons/actions";
 import { likePost, unlikePost } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { useOptimisticLike } from "@/hooks/use-optimistic-like";
@@ -39,7 +39,7 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             onClick={onComment}
             className="flex items-center gap-[7px] text-[14px] transition-colors"
           >
-            <MessageCircle className="size-[19px]" />
+            <ReplyIcon className="size-[19px]" />
             <span className="tabular-nums">{formatCount(comments)}</span>
           </button>
         </Tooltip.Trigger>
@@ -60,7 +60,7 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             aria-label={t("like")}
             className={cn("flex items-center gap-[7px] text-[14px] transition-colors", liked && "text-live")}
           >
-            <Heart className={cn("size-[19px] transition-colors", liked && "fill-live like-pop")} />
+            <HeartIcon className={cn("size-[19px] transition-colors", liked && "fill-live like-pop")} />
             <span className="tabular-nums">{formatCount(likeCount)}</span>
           </button>
         </Tooltip.Trigger>
