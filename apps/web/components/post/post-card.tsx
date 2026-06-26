@@ -22,7 +22,7 @@ function PostText({ text }: { text: string }) {
   // Les #hashtags sont déjà inline dans le contenu : MentionText les met en
   // valeur (avec les @mentions). Pas de chips séparés pour éviter les doublons.
   return (
-    <p className="break-words text-ink leading-relaxed">
+    <p className="break-words text-[18px] leading-[1.55] text-ink">
       <MentionText text={text} />
     </p>
   );
@@ -145,7 +145,7 @@ export function PostCard({ post, isFollowingAuthor }: { post: Post; isFollowingA
     <>
       <article
         onClick={handleCardClick}
-        className="cursor-pointer rounded-2xl border border-border bg-card p-4 transition-colors"
+        className="cursor-pointer rounded-[24px] bg-card p-[22px_24px] shadow-post transition duration-[240ms] ease-[cubic-bezier(.2,.8,.3,1)] hover:-translate-y-[5px] hover:shadow-post-hover"
       >
         {/* En-tête */}
         <div className="flex items-center gap-3">
