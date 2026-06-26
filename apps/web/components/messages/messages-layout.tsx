@@ -55,6 +55,12 @@ function formatMessageTime(iso: string, locale: string): string {
   });
 }
 
+// Aperçu de conversation : 4 mots max + ellipse (l'ellipsis CSS gère le reste).
+function teaser(text: string, maxWords = 4): string {
+  const words = text.trim().split(/\s+/);
+  return words.length <= maxWords ? text : `${words.slice(0, maxWords).join(" ")}…`;
+}
+
 function buildRenderItems(
   messages: Message[],
   locale: string,
@@ -203,7 +209,7 @@ function ConversationRow({
             (conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec",
           )}
         >
-          {conv.lastMessage}
+          {teaser(conv.lastMessage)}
         </p>
       </div>
     </button>
@@ -500,7 +506,7 @@ export function MessagesLayout({
             mobileShowChat ? "hidden lg:flex" : "flex",
           )}
         >
-          <div className="flex items-center justify-between border-b border-brown-sec/20 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-brown-sec/20 px-5 pb-4 pt-6">
             <h1 className="font-display text-3xl font-bold text-brown">{t("title")}</h1>
             <button
               type="button"

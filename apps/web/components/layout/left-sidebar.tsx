@@ -83,8 +83,8 @@ export function LeftSidebar({ user }: { user: UserModel }) {
               <span className="relative">
                 <Icon className={cn("size-[25px]", active && "text-gold")} />
                 {badge !== undefined && badge > 0 && (
-                  <span className="absolute -right-2 -top-2 grid size-[18px] place-items-center rounded-full bg-live text-[10px] font-bold text-white">
-                    {badge}
+                  <span className="absolute -right-1.5 -top-1.5 grid size-[17px] place-items-center rounded-full bg-live text-[10px] font-bold leading-none text-white ring-2 ring-canvas">
+                    {badge > 9 ? "9+" : badge}
                   </span>
                 )}
               </span>

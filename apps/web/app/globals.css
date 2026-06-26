@@ -68,6 +68,11 @@
 }
 
 /* Base */
+html {
+  /* Réserve la gouttière de scroll : pas de décalage du layout centré
+     quand une modale verrouille le scroll (Radix Dialog). */
+  scrollbar-gutter: stable;
+}
 body {
   background-color: var(--canvas);
   color: var(--brown);
