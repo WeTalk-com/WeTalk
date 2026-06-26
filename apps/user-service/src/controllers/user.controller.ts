@@ -640,7 +640,8 @@ export async function getLastFollowedUsers(req: Request, res: Response): Promise
 			limit: 5,
 			order: [['createdAt', 'DESC'], ['followingId', 'DESC']],
 			// On inclut le modèle User lié pour récupérer les infos du compte suivi
-			include: [{ model: User, as: 'Following', attributes: ['id', 'username'] }]
+			// (displayName + profileImage requis par le front pour le nom et la photo).
+			include: [{ model: User, as: 'Following', attributes: ['id', 'username', 'displayName', 'profileImage'] }]
 		});
 		
 		res.json({
