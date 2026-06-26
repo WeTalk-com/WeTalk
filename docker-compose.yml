@@ -229,7 +229,9 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_GIPHY_KEY: ${NEXT_PUBLIC_GIPHY_KEY:-}
+        # Clé Giphy publique (exposée côté client par conception). Valeur par défaut en dur
+        # car l'interpolation du .env n'est pas fiable au build Dokploy → garantit le bake.
+        NEXT_PUBLIC_GIPHY_KEY: ${NEXT_PUBLIC_GIPHY_KEY:-LnSVpI5Ejk5h8ei37J1ETYnwJkyT4g39}
     container_name: wetalk-web
     restart: unless-stopped
     env_file:
