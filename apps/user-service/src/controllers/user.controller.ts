@@ -421,7 +421,7 @@ export async function getFollowing(req: Request, res: Response): Promise<void> {
 			limit: limit,
 			order: [['createdAt', 'DESC'], ['followingId', 'DESC']],
 			// On inclut le modèle User lié pour récupérer les infos du compte suivi
-			include: [{ model: User, as: 'Following', attributes: ['id', 'username'] }]
+			include: [{ model: User, as: 'Following', attributes: ['id', 'username', 'displayName', 'profileImage'] }]
 		});
 
 		res.json({
@@ -453,7 +453,7 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 			limit: limit,
 			order: [['createdAt', 'DESC'], ['followerId', 'DESC']],
 			// On inclut le User abonné (followerId) pour récupérer ses infos
-			include: [{ model: User, as: 'Follower', attributes: ['id', 'username'] }]
+			include: [{ model: User, as: 'Follower', attributes: ['id', 'username', 'displayName', 'profileImage'] }]
 		});
 
 		res.json({
