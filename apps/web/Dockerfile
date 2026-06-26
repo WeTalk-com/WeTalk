@@ -26,7 +26,9 @@ COPY apps/web ./apps/web
 # NEXT_PUBLIC_* doit etre present au build : Next l'inline dans le bundle client.
 ENV NEXT_PUBLIC_API_URL=/api
 # Cle Giphy (publique cote client) passee en build-arg depuis .env via compose.
-ARG NEXT_PUBLIC_GIPHY_KEY
+# Défaut en dur sur l'ARG : Dokploy n'honore pas les build.args du compose, donc on garantit
+# que la clé (publique côté client) est présente au `next build` pour être inlinée par Next.
+ARG NEXT_PUBLIC_GIPHY_KEY=LnSVpI5Ejk5h8ei37J1ETYnwJkyT4g39
 ENV NEXT_PUBLIC_GIPHY_KEY=$NEXT_PUBLIC_GIPHY_KEY
 RUN npm run build --workspace=web
 
