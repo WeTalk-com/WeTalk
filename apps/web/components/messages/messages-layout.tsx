@@ -139,12 +139,12 @@ function MessageGroup({
           <div
             key={msg.id}
             className={cn(
-              "flex min-w-14 max-w-[75%] flex-col px-3.5 py-2 text-sm",
+              "flex min-w-14 max-w-[75%] flex-col overflow-hidden px-3.5 py-2 text-sm",
               bubbleRadius(mine, position),
               mine ? "bg-gold text-white" : "bg-cream text-brown",
             )}
           >
-            <span className="break-words leading-[1.45]">{msg.text}</span>
+            <span className="break-words [overflow-wrap:anywhere] leading-[1.45]">{msg.text}</span>
             <span
               className={cn(
                 "mt-0.5 self-end text-[10px]",
@@ -501,7 +501,7 @@ export function MessagesLayout({
           )}
         >
           <div className="flex items-center justify-between border-b border-brown-sec/20 px-5 py-4">
-            <h1 className="font-display text-2xl font-bold text-brown">{t("title")}</h1>
+            <h1 className="font-display text-3xl font-bold text-brown">{t("title")}</h1>
             <button
               type="button"
               aria-label={t("compose")}

@@ -11,7 +11,6 @@ import {
 import { refreshUnreadCount } from "@/lib/use-unread-count";
 import { getSocket } from "@/lib/socket";
 import type { Notification } from "@/lib/types";
-import { TopBar } from "@/components/layout/top-bar";
 import { NotificationItem } from "@/components/notifications/notification-item";
 
 export default function NotificationsPage() {
@@ -89,10 +88,8 @@ export default function NotificationsPage() {
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-      <TopBar />
-
-      <div className="px-5 pb-4 pt-4">
-        <h1 className="font-display text-2xl font-bold text-brown">
+      <div className="px-5 pb-4 pt-6">
+        <h1 className="font-display text-3xl font-bold text-brown">
           {t("title")}
         </h1>
       </div>

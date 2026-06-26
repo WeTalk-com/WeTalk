@@ -82,12 +82,12 @@ export function ExploreContent({
 
   return (
     <Tabs.Root value={tab} onValueChange={setTab}>
-      <Tabs.List className="flex border-b border-brown-sec/20">
+      <Tabs.List className="flex divide-x divide-brown-sec/20 border-b border-brown-sec/20">
         {tabList.map(({ key, label }) => (
           <Tabs.Trigger
             key={key}
             value={key}
-            className="relative flex-1 py-4 text-sm font-semibold text-brown-sec transition-colors hover:text-brown data-[state=active]:text-brown"
+            className="relative flex-1 py-4 text-lg font-semibold text-brown-sec transition-colors hover:text-brown data-[state=active]:text-brown"
           >
             {label}
             <span className="absolute bottom-0 left-1/2 h-0.75 w-12 -translate-x-1/2 rounded-full bg-gold opacity-0 transition-opacity data-[state=active]:opacity-100" />

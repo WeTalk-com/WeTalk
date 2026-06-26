@@ -60,14 +60,14 @@ export function LeftSidebar({ user }: { user: UserModel }) {
     <aside className="sticky top-0 hidden h-dvh w-[256px] shrink-0 flex-col px-3.5 py-6 lg:flex">
       <Link
         href="/home"
-        className="flex items-center gap-2.5 px-3 pb-[26px] text-[23px] font-extrabold tracking-[-0.02em] text-brown"
+        className="flex items-center gap-2.5 px-3 pb-[26px] text-[26px] font-extrabold tracking-[-0.02em] text-brown"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="" aria-hidden className="h-[34px] w-[34px]" />
+        <img src="/logo.png" alt="" aria-hidden className="h-[38px] w-[38px]" />
         WeTalk
       </Link>
 
-      <nav className="flex flex-col gap-[3px]">
+      <nav className="flex flex-col gap-1">
         {NAV.map(({ key, Icon, href, badge }) => {
           const active = pathname === href;
           return (
@@ -76,12 +76,12 @@ export function LeftSidebar({ user }: { user: UserModel }) {
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-              "flex items-center gap-[13px] rounded-[14px] px-[15px] py-[11px] text-base transition-colors",
+              "flex items-center gap-[14px] rounded-[14px] px-[16px] py-[13px] text-[18px] transition-colors",
               active ? "bg-card font-semibold text-gold shadow-soft" : "font-medium text-brown-sec",
             )}
             >
               <span className="relative">
-                <Icon className={cn("size-[22px]", active && "text-gold")} />
+                <Icon className={cn("size-[25px]", active && "text-gold")} />
                 {badge !== undefined && badge > 0 && (
                   <span className="absolute -right-2 -top-2 grid size-[18px] place-items-center rounded-full bg-live text-[10px] font-bold text-white">
                     {badge}

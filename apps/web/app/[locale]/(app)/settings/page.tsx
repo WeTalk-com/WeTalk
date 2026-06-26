@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { TopBar } from "@/components/layout/top-bar";
 import { Card } from "@/components/ui/card";
 import { LanguageSwitcher } from "@/components/settings/language-switcher";
 import { ThemeSwitcher } from "@/components/settings/theme-switcher";
@@ -45,10 +44,8 @@ export default function SettingsPage() {
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-      <TopBar />
-
-      <div className="px-5 pt-4">
-        <h1 className="font-display text-2xl font-bold text-brown">
+      <div className="px-5 pt-6">
+        <h1 className="font-display text-3xl font-bold text-brown">
           {t("title")}
         </h1>
       </div>

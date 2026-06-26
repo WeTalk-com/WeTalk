@@ -37,9 +37,9 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             type="button"
             aria-label={t("comment")}
             onClick={onComment}
-            className="flex items-center gap-[7px] text-[13px] transition-colors"
+            className="flex items-center gap-[7px] text-[14px] transition-colors"
           >
-            <MessageCircle className="size-[18px]" />
+            <MessageCircle className="size-[19px]" />
             <span className="tabular-nums">{formatCount(comments)}</span>
           </button>
         </Tooltip.Trigger>
@@ -58,9 +58,9 @@ export function PostActions({ postId, likes, likedByMe, comments, onComment }: P
             onClick={toggleLike}
             aria-pressed={liked}
             aria-label={t("like")}
-            className={cn("flex items-center gap-[7px] text-[13px] transition-colors", liked && "text-live")}
+            className={cn("flex items-center gap-[7px] text-[14px] transition-colors", liked && "text-live")}
           >
-            <Heart className={cn("size-[18px] transition-colors", liked && "fill-live like-pop")} />
+            <Heart className={cn("size-[19px] transition-colors", liked && "fill-live like-pop")} />
             <span className="tabular-nums">{formatCount(likeCount)}</span>
           </button>
         </Tooltip.Trigger>

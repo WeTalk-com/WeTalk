@@ -22,7 +22,7 @@ function PostText({ text }: { text: string }) {
   // Les #hashtags sont déjà inline dans le contenu : MentionText les met en
   // valeur (avec les @mentions). Pas de chips séparés pour éviter les doublons.
   return (
-    <p className="break-words text-[17px] leading-[1.55] text-ink">
+    <p className="break-words text-[18px] leading-[1.55] text-ink">
       <MentionText text={text} />
     </p>
   );
