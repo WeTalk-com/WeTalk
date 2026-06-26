@@ -21,10 +21,10 @@ function Section({
 export function RightRail({ topics }: { topics: TrendingTopic[] }) {
   const t = useTranslations("app.rightRail");
   const footerLinks = [
-    t("linkAbout"),
-    t("linkHelp"),
-    t("linkTerms"),
-    t("linkPrivacy"),
+    { label: t("linkAbout"), href: "/about" as const },
+    { label: t("linkHelp"), href: "/help" as const },
+    { label: t("linkTerms"), href: "/terms" as const },
+    { label: t("linkPrivacy"), href: "/privacy" as const },
   ];
 
   return (
@@ -50,10 +50,10 @@ export function RightRail({ topics }: { topics: TrendingTopic[] }) {
       <footer className="mt-auto px-2 text-xs text-brown-sec">
         <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
           {footerLinks.map((l, i) => (
-            <span key={l} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-              <a href="#" className="transition-colors">
-                {l}
-              </a>
+            <span key={l.href} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+              <Link href={l.href} className="transition-colors hover:text-brown">
+                {l.label}
+              </Link>
               {i < footerLinks.length - 1 && <span aria-hidden>·</span>}
             </span>
           ))}

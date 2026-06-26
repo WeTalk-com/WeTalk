@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/api";
+import { getCurrentUser, getConversations } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { CreateModalProvider } from "@/components/create/create-modal-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
@@ -24,6 +24,11 @@ export default async function AppLayout({
     throw err;
   }
 
+  // Total des messages non lus pour la pastille de la sidebar (initial, côté serveur).
+  const unreadMessages = await getConversations()
+    .then((cs) => cs.reduce((n, c) => n + (c.unread ?? 0), 0))
+    .catch(() => 0);
+
   return (
     <TooltipProvider>
     <CreateModalProvider user={user}>
@@ -31,7 +36,7 @@ export default async function AppLayout({
       <SessionWatcher />
       <div className="min-h-dvh bg-canvas">
         <div className="mx-auto flex w-full max-w-[1240px]">
-          <LeftSidebar user={user} />
+          <LeftSidebar user={user} unreadMessages={unreadMessages} />
           {children}
         </div>
         <MobileNav />

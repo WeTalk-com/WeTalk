@@ -211,6 +211,8 @@
       "composePlaceholder": "Rechercher des personnes…",
       "composeNoResults": "Aucun utilisateur trouvé.",
       "composeSuggestions": "Abonnements récents",
+      "emoji": "Emoji",
+      "youPrefix": "Vous :",
       "today": "Aujourd'hui",
       "yesterday": "Hier"
     },
@@ -334,6 +336,24 @@
   },
   "ui": {
     "toastClose": "Fermer la notification"
+  },
+  "pages": {
+    "about": {
+      "title": "À propos",
+      "body": "WeTalk est un réseau social pensé pour des échanges au calme : pas d'algorithme qui s'emballe, pas de course aux vues. On prend le temps de se parler, à son rythme."
+    },
+    "help": {
+      "title": "Aide",
+      "body": "Besoin d'un coup de main ? Parcourez votre profil pour gérer votre compte, ou contactez l'équipe pour toute question. Nous répondons dès que possible."
+    },
+    "terms": {
+      "title": "Conditions",
+      "body": "En utilisant WeTalk, vous acceptez de respecter les autres membres et de ne pas publier de contenu illégal ou haineux. Ces conditions peuvent évoluer ; nous vous préviendrons en cas de changement important."
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "body": "Nous respectons votre vie privée. Vos données ne sont jamais revendues. Vous pouvez consulter, modifier ou supprimer vos informations à tout moment depuis vos paramètres."
+    }
   },
   "errors": {
     "notFoundLabel": "INTROUVABLE",

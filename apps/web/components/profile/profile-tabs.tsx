@@ -2,6 +2,7 @@
 
 import * as Tabs from "@radix-ui/react-tabs";
 import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { Post, Comment } from "@/lib/types";
 import { PostCard } from "@/components/post/post-card";
 import { Avatar } from "@/components/ui/avatar";
@@ -23,7 +24,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
 // Carte commentaire : auteur + texte, alignée sur le rendu de comment-thread.
 function CommentItem({ comment }: { comment: Comment }) {
   const locale = useLocale();
-  return (
+  const body = (
     <div className="flex gap-3 border-b border-border pb-4 last:border-0">
       <Avatar initial={comment.author.initial} src={comment.author.avatarUrl} alt={comment.author.name} size={36} />
       <div className="min-w-0 flex-1">
@@ -36,6 +37,13 @@ function CommentItem({ comment }: { comment: Comment }) {
         <p className="mt-0.5 text-sm text-ink"><MentionText text={comment.text} /></p>
       </div>
     </div>
+  );
+
+  if (!comment.postId) return body;
+  return (
+    <Link href={{ pathname: "/posts/[id]", params: { id: comment.postId } }} className="block">
+      {body}
+    </Link>
   );
 }
 

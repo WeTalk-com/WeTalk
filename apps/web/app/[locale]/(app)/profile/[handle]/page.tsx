@@ -9,7 +9,6 @@ import {
   getLikedPosts,
   getUserComments,
 } from "@/lib/api";
-import { TopBar } from "@/components/layout/top-bar";
 import { ProfileInteractive } from "@/components/profile/profile-interactive";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 
@@ -34,7 +33,6 @@ export default async function UserProfilePage({
   if (profile.isBanned && !isSelf) {
     return (
       <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-        <TopBar />
         <div className="h-40 bg-gold/15 bg-[repeating-linear-gradient(45deg,transparent,transparent_14px,rgba(186,117,23,0.12)_14px,rgba(186,117,23,0.12)_28px)]" />
         <div className="px-5 pt-4 pb-2">
           <div className="mb-4 size-16 rounded-full bg-border" />
@@ -61,8 +59,6 @@ export default async function UserProfilePage({
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-      <TopBar />
-
       {profile.bannerUrl ? (
         <div className="h-40 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
