@@ -6,6 +6,7 @@ import * as ScrollArea from "@radix-ui/react-scroll-area";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Send, ArrowLeft, Loader2, SquarePen, Search, X, Smile } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { Conversation, Message, User } from "@/lib/types";
 import { sendMessage, getConversationMessages, markConversationRead, searchUsers, getLatestFollowing } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
@@ -565,14 +566,19 @@ export function MessagesLayout({
                 >
                   <ArrowLeft className="size-5" />
                 </button>
-                <Avatar initial={selected.user.initial} src={selected.user.avatarUrl} size={40} />
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1 truncate font-semibold leading-tight text-brown">
-                    <span className="truncate">{selected.user.name}</span>
-                    {selected.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
-                  </p>
-                  <p className="truncate text-xs text-brown-sec">@{selected.user.handle}</p>
-                </div>
+                <Link
+                  href={{ pathname: "/profile/[handle]", params: { handle: selected.user.handle } }}
+                  className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-80"
+                >
+                  <Avatar initial={selected.user.initial} src={selected.user.avatarUrl} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1 truncate font-semibold leading-tight text-brown">
+                      <span className="truncate">{selected.user.name}</span>
+                      {selected.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
+                    </p>
+                    <p className="truncate text-xs text-brown-sec">@{selected.user.handle}</p>
+                  </div>
+                </Link>
               </div>
 
               {/* Messages */}
