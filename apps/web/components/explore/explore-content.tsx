@@ -82,7 +82,7 @@ export function ExploreContent({
 
   return (
     <Tabs.Root value={tab} onValueChange={setTab}>
-      <Tabs.List className="flex border-b border-border">
+      <Tabs.List className="flex border-b border-brown-sec/20">
         {tabList.map(({ key, label }) => (
           <Tabs.Trigger
             key={key}
@@ -99,7 +99,7 @@ export function ExploreContent({
       <Tabs.Content value="trending">
         <ul>
           {filteredTrending.map((topic, i) => (
-            <li key={topic.tag} className="border-b border-border last:border-0">
+            <li key={topic.tag} className="border-b border-brown-sec/20 last:border-0">
               <Link
                 href={{ pathname: "/explore", query: { tag: topic.tag } }}
                 className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-card"
@@ -136,7 +136,7 @@ export function ExploreContent({
           ) : shownUsers.length > 0 ? (
             <>
               {shownUsers.map((u) => (
-                <li key={u.id} className="flex items-center gap-4 border-b border-border px-5 py-4 last:border-0">
+                <li key={u.id} className="flex items-center gap-4 border-b border-brown-sec/20 px-5 py-4 transition-colors last:border-0 hover:bg-card">
                   <Link href={{ pathname: "/profile/[handle]", params: { handle: u.handle } }} className="min-w-0 flex-1">
                     <UserChip user={u} />
                   </Link>

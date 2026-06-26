@@ -144,7 +144,7 @@ function MessageGroup({
               mine ? "bg-gold text-white" : "bg-cream text-brown",
             )}
           >
-            <span className="leading-[1.45]">{msg.text}</span>
+            <span className="break-words leading-[1.45]">{msg.text}</span>
             <span
               className={cn(
                 "mt-0.5 self-end text-[10px]",
@@ -496,11 +496,11 @@ export function MessagesLayout({
         {/* Conversation list */}
         <div
           className={cn(
-            "flex w-full flex-col border-r border-border lg:w-85 lg:shrink-0",
+            "flex w-full flex-col border-r border-brown-sec/20 lg:w-85 lg:shrink-0",
             mobileShowChat ? "hidden lg:flex" : "flex",
           )}
         >
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div className="flex items-center justify-between border-b border-brown-sec/20 px-5 py-4">
             <h1 className="font-display text-2xl font-bold text-brown">{t("title")}</h1>
             <button
               type="button"
@@ -550,7 +550,7 @@ export function MessagesLayout({
           {selected ? (
             <>
               {/* Chat header */}
-              <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+              <div className="flex items-center gap-3 border-b border-brown-sec/20 px-4 py-3">
                 <button
                   type="button"
                   aria-label={t("back")}
@@ -561,11 +561,11 @@ export function MessagesLayout({
                 </button>
                 <Avatar initial={selected.user.initial} src={selected.user.avatarUrl} size={40} />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1 font-semibold leading-tight text-brown">
-                    {selected.user.name}
+                  <p className="flex items-center gap-1 truncate font-semibold leading-tight text-brown">
+                    <span className="truncate">{selected.user.name}</span>
                     {selected.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
                   </p>
-                  <p className="text-xs text-brown-sec">@{selected.user.handle}</p>
+                  <p className="truncate text-xs text-brown-sec">@{selected.user.handle}</p>
                 </div>
               </div>
 
@@ -610,7 +610,7 @@ export function MessagesLayout({
               </ScrollArea.Root>
 
               {/* Input */}
-              <div className="flex items-center gap-2 border-t border-border px-3 py-3 pb-28 lg:pb-3">
+              <div className="flex items-center gap-2 border-t border-brown-sec/20 px-3 py-3 pb-28 lg:pb-3">
                 <button
                   type="button"
                   aria-label="Emoji"

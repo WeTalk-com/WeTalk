@@ -48,7 +48,7 @@ export default function SettingsPage() {
       <TopBar />
 
       <div className="px-5 pt-4">
-        <h1 className="font-display text-4xl font-bold text-brown">
+        <h1 className="font-display text-2xl font-bold text-brown">
           {t("title")}
         </h1>
       </div>
