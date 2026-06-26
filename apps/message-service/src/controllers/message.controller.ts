@@ -54,6 +54,7 @@ export async function getConversationList(req: Request, res: Response) {
 					})).data),
 					lastMessage: lastMsg?.content ?? "",
 					lastMessageAt: lastMsg?.createdAt ?? null,
+					lastMessageMine: lastMsg?.senderId === myId,
 					unread: conversations.filter(msg => msg.senderId === id && msg.receiverId === myId && !msg.isRead).length,
 				};
 			}));

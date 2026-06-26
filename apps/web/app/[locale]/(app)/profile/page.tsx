@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { getProfile, getPostsByAuthor, getLikedPosts, getUserComments } from "@/lib/api";
-import { TopBar } from "@/components/layout/top-bar";
 import { ProfileInteractive } from "@/components/profile/profile-interactive";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 
@@ -29,8 +28,6 @@ export default async function ProfilePage() {
 
   return (
     <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-      <TopBar />
-
       {profile.bannerUrl ? (
         <div className="h-40 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}

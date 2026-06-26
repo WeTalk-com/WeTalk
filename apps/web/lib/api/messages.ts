@@ -14,6 +14,7 @@ type BackendConvEntry = {
   user: BackendConvUser;
   lastMessage: string;
   lastMessageAt: string | null;
+  lastMessageMine?: boolean;
   unread: number;
 };
 
@@ -52,6 +53,7 @@ export async function getConversations(): Promise<Conversation[]> {
     user: mapConvUser(c.user),
     lastMessage: c.lastMessage,
     lastMessageAt: c.lastMessageAt ?? new Date().toISOString(),
+    lastMessageMine: c.lastMessageMine,
     unread: c.unread,
     messages: [],
   }));

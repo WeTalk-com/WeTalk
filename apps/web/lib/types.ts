@@ -53,6 +53,7 @@ export type Comment = {
   likes: number;
   likedByMe?: boolean;
   replies: Reply[];
+  postId?: string;
 };
 
 export type TrendingTopic = {
@@ -97,6 +98,7 @@ export type Conversation = {
   user: User;
   lastMessage: string;
   lastMessageAt: string;
+  lastMessageMine?: boolean;
   unread?: number;
   messages: Message[];
 };

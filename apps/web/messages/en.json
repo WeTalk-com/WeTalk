@@ -217,6 +217,7 @@
       "composeNoResults": "No users found.",
       "composeSuggestions": "Recent follows",
       "emoji": "Emoji",
+      "youPrefix": "You:",
       "today": "Today",
       "yesterday": "Yesterday"
     },

@@ -38,7 +38,7 @@ export async function getUserComments(userId: string): Promise<Comment[]> {
   const data = await apiFetch<{ comments: BackendComment[] }>(
     `/comments?userId=${encodeURIComponent(userId)}`,
   );
-  return data.comments.map((c) => ({ ...mapReply(c), replies: [] }));
+  return data.comments.map((c) => ({ ...mapReply(c), replies: [], postId: c.postId }));
 }
 
 /** Posts portant un #hashtag */

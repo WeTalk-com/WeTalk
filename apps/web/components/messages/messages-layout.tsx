@@ -178,13 +178,14 @@ function ConversationRow({
   onClick: () => void;
 }) {
   const locale = useLocale();
+  const t = useTranslations("app.messages");
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : "hover:bg-canvas/50",
+        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5 hover:bg-gold/10" : "hover:bg-card",
       )}
     >
       <div className="relative shrink-0">
@@ -211,6 +212,9 @@ function ConversationRow({
             (conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec",
           )}
         >
+          {conv.lastMessageMine && conv.lastMessage && (
+            <span className="text-brown-sec">{t("youPrefix")} </span>
+          )}
           {teaser(conv.lastMessage)}
         </p>
       </div>
@@ -436,6 +440,7 @@ export function MessagesLayout({
                   ...c,
                   lastMessage: data.content,
                   lastMessageAt: data.createdAt,
+                  lastMessageMine: false,
                   unread:
                     selectedRef.current?.id === data.senderId ? 0 : (c.unread ?? 0) + 1,
                 }
@@ -499,7 +504,7 @@ export function MessagesLayout({
       setConversations((prev) =>
         prev.map((c) =>
           c.id === selected.id
-            ? { ...c, lastMessage: text, lastMessageAt: msg.createdAt }
+            ? { ...c, lastMessage: text, lastMessageAt: msg.createdAt, lastMessageMine: true }
             : c,
         ),
       );
