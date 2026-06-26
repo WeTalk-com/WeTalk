@@ -1,8 +1,17 @@
-import type { Conversation, Message } from "@/lib/types";
+import type { Conversation, Message, User } from "@/lib/types";
 import { apiFetch } from "./client";
 
+type BackendConvUser = {
+  id: string;
+  name: string;
+  handle: string;
+  initial: string;
+  profileImage?: string | null;
+  verified: boolean;
+};
+
 type BackendConvEntry = {
-  user: { id: string; name: string; handle: string; initial: string; verified: boolean };
+  user: BackendConvUser;
   lastMessage: string;
   lastMessageAt: string | null;
   unread: number;
@@ -16,19 +25,31 @@ type BackendMessage = {
 };
 
 type BackendConversation = {
-  user: { id: string; name: string; handle: string; initial: string; verified: boolean };
+  user: BackendConvUser;
   lastMessage: string;
   lastMessageAt: string;
   unread: number;
   messages: BackendMessage[];
 };
 
+// Le back expose la photo via `profileImage` ; le modèle front attend `avatarUrl`.
+function mapConvUser(u: BackendConvUser): User {
+  return {
+    id: u.id,
+    name: u.name,
+    handle: u.handle,
+    initial: u.initial,
+    avatarUrl: u.profileImage ?? undefined,
+    verified: u.verified,
+  };
+}
+
 /** Liste des conversations de l'utilisateur courant. */
 export async function getConversations(): Promise<Conversation[]> {
   const data = await apiFetch<{ data: BackendConvEntry[] }>("/messages");
   return (data.data ?? []).map((c) => ({
     id: c.user.id,
-    user: c.user,
+    user: mapConvUser(c.user),
     lastMessage: c.lastMessage,
     lastMessageAt: c.lastMessageAt ?? new Date().toISOString(),
     unread: c.unread,

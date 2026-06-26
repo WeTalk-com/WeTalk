@@ -24,16 +24,18 @@ export default function middleware(req: NextRequest) {
     const hasSession = req.cookies.has(SESSION_COOKIE);
     const matchedLocale = req.nextUrl.pathname.match(localePrefix)?.[1] ?? routing.defaultLocale;
 
+    if (pathWithoutLocale === "/") {
+      const dest = hasSession ? "home" : "welcome";
+      return NextResponse.redirect(new URL(`/${matchedLocale}/${dest}`, req.url));
+    }
+
     // Utilisateur authentifié sur la page de login → redirige vers /home
     if (isAuthOnly && hasSession) {
       return NextResponse.redirect(new URL(`/${matchedLocale}/home`, req.url));
     }
 
-    // Utilisateur non authentifié sur une route protégée → redirige vers /login
     if (!isPublic && !hasSession) {
-      const loginUrl = new URL(`/${matchedLocale}/login`, req.url);
-      loginUrl.searchParams.set("redirect", pathWithoutLocale);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(new URL(`/${matchedLocale}/welcome`, req.url));
     }
   }
 

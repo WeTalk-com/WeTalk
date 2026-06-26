@@ -137,7 +137,8 @@
       "actionFollow": "a commencé à vous suivre",
       "actionMention": "vous a mentionné dans un post",
       "loading": "Chargement…",
-      "empty": "Aucune notification pour l'instant"
+      "empty": "Aucune notification pour l'instant",
+      "loadMore": "Voir plus"
     },
     "profile": {
       "editProfile": "Modifier le profil",
@@ -214,6 +215,7 @@
       "composeClose": "Fermer",
       "composePlaceholder": "Rechercher des personnes…",
       "composeNoResults": "Aucun utilisateur trouvé.",
+      "composeSuggestions": "Abonnements récents",
       "today": "Aujourd'hui",
       "yesterday": "Hier"
     },
