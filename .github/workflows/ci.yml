@@ -44,7 +44,7 @@ jobs:
         run: npm run check-types
       - id: test
         name: Test
-        run: npm test -- --reporter=default --reporter=junit --outputFile=junit.xml
+        run: npm test
       - name: Test report
         uses: dorny/test-reporter@v1
         if: always()
