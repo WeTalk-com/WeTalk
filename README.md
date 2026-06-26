@@ -289,12 +289,20 @@ Chaque microservice expose sa doc OpenAPI via Swagger UI, accessible derrière l
 Assistant conversationnel basé sur un LLM local (Ollama). Trois briques :
 
 - **RAG** (`apps/agent/rag/`) : les documents `docs/*.txt` sont indexés
-- **Agent** (`apps/agent/agent.py`) : classe `ConversationAgent` qui garde l'historique (10 derniers messages), interroge le LLM et exécute les outils demandés.
-- **Serveur MCP** (`apps/agent/mcp-server/server.py`) : expose les outils.
+- **Agent** (`apps/agent/agent.py`) :
+  - `AgentRuntime` — ressources **partagées** par tous les utilisateurs (connexion MCP, catalogue d'outils, client LLM). Une seule instance, sans état conversationnel.
+  - `Conversation` — historique **propre à chaque utilisateur** (10 derniers messages), avec un lock par session pour l'intégrité.
+  - Boucle ReAct : interroge le LLM et exécute les outils demandés (appels LLM/RAG sortis de l'event loop → concurrence multi-utilisateurs).
+- **Serveur MCP** (`apps/agent/mcp-server/server.py`) : expose les outils, appelés via la gateway avec le JWT de l'utilisateur (`ctx_token`, injecté par le code, masqué au LLM) :
+  - `create_post(text)` → `POST /posts` : publie un message.
+  - `get_my_briefing()` → agrège `/notifications/unread` + `/notifications` + `/posts/feed` : résume ce que l'utilisateur a manqué.
+  - `search_users(query)` → `/users?search=` : recherche d'utilisateurs.
 
-> Modèle : `qwen3:4b` (compatible tool-calling).
+> Modèle : `qwen3:4b` par défaut (compatible tool-calling), configurable via `AGENT_MODEL` dans `.env`. Sur CPU/laptop, préférer `qwen3:1.7b`. Le raisonnement `<think>` est coupé par défaut (`OLLAMA_THINK=1` pour le réactiver) ; contexte borné via `OLLAMA_NUM_CTX`.
 
 Services IA : `agent` (FastAPI, `POST /chat` sur le port 8000) → `ollama` + `chromadb`, tous sur `wetalk-net`. Ingestion ChromaDB automatique au démarrage (`init-chromadb.sh`) si la collection `kg_b` n'existe pas.
+
+> **Auth** : `POST /api/chat` exige un JWT valide (cookie `wetalk_session` ou header Bearer). Chaque utilisateur a son propre historique, keyé sur le `sub` du token ; les sessions inactives sont évincées (TTL + LRU).
 
 ```
 # Après le docker compose up --build -d

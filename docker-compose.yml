@@ -336,6 +336,7 @@ services:
       OLLAMA_HOST: http://ollama:11434
       CHROMA_HOST: chromadb
       CHROMA_PORT: 8000
+      API_BASE: http://gateway
     depends_on:
       ollama:
         condition: service_healthy

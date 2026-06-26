@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Home, Compass, Bell, User, MessageSquare } from "lucide-react";
+import { Home, Compass, Bell, User, MessageSquare, Sparkles } from "lucide-react";
 import { CreateButton } from "../create/create-button";
 import { useUnreadCount } from "@/lib/use-unread-count";
 
@@ -28,6 +28,14 @@ export function MobileNav() {
         className={cls("/home")}
       >
         <Home className="size-6" />
+      </Link>
+      <Link
+        href="/assistant"
+        aria-label={t("assistant")}
+        aria-current={pathname === "/assistant" ? "page" : undefined}
+        className={cls("/assistant")}
+      >
+        <Sparkles className="size-6" />
       </Link>
       <Link
         href="/explore"

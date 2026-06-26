@@ -1,0 +1,8 @@
+# Force LF sur les scripts shell : un checkout Windows en CRLF casse le shebang
+# (`exec ...: no such file or directory`) dans les conteneurs Linux.
+*.sh text eol=lf
+*.bash text eol=lf
+init-chromadb.sh text eol=lf
+
+# Scripts Windows en CRLF.
+*.ps1 text eol=crlf
