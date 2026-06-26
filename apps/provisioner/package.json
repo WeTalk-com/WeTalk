@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "pg": "^8.13.0",
-    "mongoose": "^8.9.0",
-    "bcryptjs": "^2.4.3"
+    "mongoose": "^9.7.3",
+    "bcryptjs": "^3.0.3"
   }
 }
