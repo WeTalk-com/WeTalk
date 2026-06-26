@@ -2,7 +2,6 @@ import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "../ui/button";
 import { PhoneDemo } from "./phone-demo";
-import { HeroStats } from "./hero-stats";
 
 export function Hero() {
   const t = useTranslations("landing.hero");
@@ -52,8 +51,6 @@ export function Hero() {
             </Button>
           </div>
 
-          {/* STATS (client) */}
-          <HeroStats />
         </div>
 
         {/* DROITE : le film (client) */}

@@ -21,8 +21,10 @@ export async function generateMetadata({
     notFound();
   }
   const t = await getTranslations({ locale: locale as Locale, namespace: "metadata" });
+  // Titre constant sur toute l'app : le template sans %s écrase les titres
+  // définis par les pages enfants → toujours "WeTalk".
   return {
-    title: t("rootTitle"),
+    title: { default: t("rootTitle"), template: t("rootTitle") },
     description: t("rootDescription"),
   };
 }

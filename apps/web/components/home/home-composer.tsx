@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { User } from "@/lib/types";
 import { createPost } from "@/lib/api";
 import { Avatar } from "../ui/avatar";
 import { useToast } from "@/components/ui/toast-provider";
+import { MentionDropdown } from "@/components/ui/mention-dropdown";
+import { useMentionAutocomplete } from "@/lib/use-mention-autocomplete";
 import { cn } from "@/lib/cn";
 
 const MAX_CHARS = 280;
@@ -22,11 +24,24 @@ export function HomeComposer({ user }: { user: User }) {
   const t = useTranslations("app.create");
   const router = useRouter();
   const toast = useToast();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { users, mention, loading, update, insertMention, clear } =
+    useMentionAutocomplete();
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
 
   const remaining = MAX_CHARS - text.length;
+  const tags = parseTags(text);
   const canPost = text.trim().length > 0 && remaining >= 0 && !pending;
+
+  // Insère la @mention choisie à la position du curseur.
+  function pickMention(username: string) {
+    const el = textareaRef.current;
+    if (!el) return;
+    setText(insertMention(username, text, el.selectionStart));
+    clear();
+    el.focus();
+  }
 
   async function publish() {
     if (!canPost) return;
@@ -46,13 +61,32 @@ export function HomeComposer({ user }: { user: User }) {
   return (
     <div className="mb-[26px] flex gap-[14px] rounded-[26px] bg-card p-[18px_22px] shadow-post">
       <Avatar initial={user.initial} src={user.avatarUrl} size={44} solid />
-      <div className="min-w-0 flex-1">
+      <div className="relative min-w-0 flex-1">
         <textarea
+          ref={textareaRef}
           value={text}
-          onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
+          onChange={(e) => {
+            setText(e.target.value.slice(0, MAX_CHARS));
+            update(e.target.value, e.target.selectionStart);
+          }}
+          onKeyDown={(e) => {
+            if (mention && users.length > 0 && e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              pickMention(users[0]?.username ?? "");
+            }
+            if (mention && e.key === "Escape") clear();
+          }}
+          onClick={() => update(text, textareaRef.current?.selectionStart ?? 0)}
+          onKeyUp={() => update(text, textareaRef.current?.selectionStart ?? 0)}
           placeholder={t("placeholder")}
           rows={1}
           className="w-full resize-none bg-transparent pt-2 text-lg leading-normal text-brown outline-none placeholder:text-placeholder"
+        />
+        <MentionDropdown
+          users={users}
+          loading={loading}
+          mention={mention}
+          onSelect={pickMention}
         />
         <div className="mt-2 flex items-center justify-end gap-4">
           <span className="text-sm tabular-nums text-placeholder">{remaining}</span>
@@ -68,6 +102,20 @@ export function HomeComposer({ user }: { user: User }) {
             {t("post")}
           </button>
         </div>
+
+        {/* Tags détectés */}
+        {tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-gold/10 px-2.5 py-0.5 text-xs font-medium text-gold"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

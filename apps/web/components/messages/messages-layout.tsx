@@ -4,13 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import { io } from "socket.io-client";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Send, ArrowLeft, Loader2, SquarePen, Search, X, Smile } from "lucide-react";
+import { Send, ArrowLeft, Loader2, SquarePen, Search, X } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { Conversation, Message, User } from "@/lib/types";
 import { sendMessage, getConversationMessages, markConversationRead, searchUsers, getLatestFollowing } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format-time";
 import { Avatar } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/icons/brand";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { cn } from "@/lib/cn";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -176,13 +178,14 @@ function ConversationRow({
   onClick: () => void;
 }) {
   const locale = useLocale();
+  const t = useTranslations("app.messages");
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5" : "hover:bg-canvas/50",
+        active ? "bg-card" : (conv.unread ?? 0) > 0 ? "bg-gold/5 hover:bg-gold/10" : "hover:bg-card",
       )}
     >
       <div className="relative shrink-0">
@@ -209,6 +212,9 @@ function ConversationRow({
             (conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec",
           )}
         >
+          {conv.lastMessageMine && conv.lastMessage && (
+            <span className="text-brown-sec">{t("youPrefix")} </span>
+          )}
           {teaser(conv.lastMessage)}
         </p>
       </div>
@@ -394,6 +400,23 @@ export function MessagesLayout({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selected?.messages.length]);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Insère l'emoji choisi à la position du curseur dans le champ de message.
+  function insertEmoji(native: string) {
+    const el = inputRef.current;
+    const start = el?.selectionStart ?? input.length;
+    const end = el?.selectionEnd ?? input.length;
+    const next = input.slice(0, start) + native + input.slice(end);
+    setInput(next);
+    requestAnimationFrame(() => {
+      if (el) {
+        const pos = start + native.length;
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      }
+    });
+  }
+
   // Real-time incoming messages via Socket.io.
   useEffect(() => {
     const socket = io({ path: "/api/socket.io/messages/", withCredentials: true });
@@ -417,6 +440,7 @@ export function MessagesLayout({
                   ...c,
                   lastMessage: data.content,
                   lastMessageAt: data.createdAt,
+                  lastMessageMine: false,
                   unread:
                     selectedRef.current?.id === data.senderId ? 0 : (c.unread ?? 0) + 1,
                 }
@@ -480,7 +504,7 @@ export function MessagesLayout({
       setConversations((prev) =>
         prev.map((c) =>
           c.id === selected.id
-            ? { ...c, lastMessage: text, lastMessageAt: msg.createdAt }
+            ? { ...c, lastMessage: text, lastMessageAt: msg.createdAt, lastMessageMine: true }
             : c,
         ),
       );
@@ -565,14 +589,19 @@ export function MessagesLayout({
                 >
                   <ArrowLeft className="size-5" />
                 </button>
-                <Avatar initial={selected.user.initial} src={selected.user.avatarUrl} size={40} />
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1 truncate font-semibold leading-tight text-brown">
-                    <span className="truncate">{selected.user.name}</span>
-                    {selected.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
-                  </p>
-                  <p className="truncate text-xs text-brown-sec">@{selected.user.handle}</p>
-                </div>
+                <Link
+                  href={{ pathname: "/profile/[handle]", params: { handle: selected.user.handle } }}
+                  className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-80"
+                >
+                  <Avatar initial={selected.user.initial} src={selected.user.avatarUrl} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1 truncate font-semibold leading-tight text-brown">
+                      <span className="truncate">{selected.user.name}</span>
+                      {selected.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
+                    </p>
+                    <p className="truncate text-xs text-brown-sec">@{selected.user.handle}</p>
+                  </div>
+                </Link>
               </div>
 
               {/* Messages */}
@@ -617,14 +646,9 @@ export function MessagesLayout({
 
               {/* Input */}
               <div className="flex items-center gap-2 border-t border-brown-sec/20 px-3 py-3 pb-28 lg:pb-3">
-                <button
-                  type="button"
-                  aria-label="Emoji"
-                  className="grid size-9 shrink-0 place-items-center rounded-full text-brown-sec transition-colors hover:bg-canvas hover:text-brown"
-                >
-                  <Smile className="size-5" />
-                </button>
+                <EmojiPicker onSelect={insertEmoji} label={t("emoji")} />
                 <input
+                  ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}

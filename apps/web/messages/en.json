@@ -37,11 +37,6 @@
       "paragraph": "Share your golden hours, follow people you actually like, and talk slower. WeTalk is the feed that feels good to come back to.",
       "cta": "Let's Talk →"
     },
-    "stats": {
-      "creators": "creators",
-      "goldenHours": "golden hours",
-      "comeBackDaily": "come back daily"
-    },
     "phone": {
       "sceneHome": "Home feed",
       "sceneExplore": "Explore",
@@ -218,6 +213,8 @@
       "composePlaceholder": "Search people…",
       "composeNoResults": "No users found.",
       "composeSuggestions": "Recent follows",
+      "emoji": "Emoji",
+      "youPrefix": "You:",
       "today": "Today",
       "yesterday": "Yesterday"
     },
@@ -353,6 +350,24 @@
   },
   "ui": {
     "toastClose": "Close notification"
+  },
+  "pages": {
+    "about": {
+      "title": "About",
+      "body": "WeTalk is a social network built for calm conversations: no runaway algorithm, no race for views. We take the time to talk, at our own pace."
+    },
+    "help": {
+      "title": "Help",
+      "body": "Need a hand? Browse your profile to manage your account, or reach out to the team with any question. We answer as soon as we can."
+    },
+    "terms": {
+      "title": "Terms",
+      "body": "By using WeTalk, you agree to respect other members and not to post illegal or hateful content. These terms may change; we will let you know of any significant update."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "body": "We respect your privacy. Your data is never sold. You can review, edit or delete your information at any time from your settings."
+    }
   },
   "errors": {
     "notFoundLabel": "NOT FOUND",

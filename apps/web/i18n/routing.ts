@@ -18,6 +18,10 @@ export const routing = defineRouting({
     "/posts/[id]": "/posts/[id]",
     "/settings": "/settings",
     "/admin": "/admin",
+    "/about": "/about",
+    "/help": "/help",
+    "/terms": "/terms",
+    "/privacy": "/privacy",
   },
 });
 

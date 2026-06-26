@@ -41,7 +41,7 @@ type NavItem = {
   badge?: number;
 };
 
-export function LeftSidebar({ user }: { user: UserModel }) {
+export function LeftSidebar({ user, unreadMessages = 0 }: { user: UserModel; unreadMessages?: number }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const { count: unreadCount } = useUnreadCount();
