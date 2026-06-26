@@ -31,6 +31,7 @@ export function HomeComposer({ user }: { user: User }) {
   const [pending, setPending] = useState(false);
 
   const remaining = MAX_CHARS - text.length;
+  const tags = parseTags(text);
   const canPost = text.trim().length > 0 && remaining >= 0 && !pending;
 
   // Insère la @mention choisie à la position du curseur.
@@ -101,6 +102,20 @@ export function HomeComposer({ user }: { user: User }) {
             {t("post")}
           </button>
         </div>
+
+        {/* Tags détectés */}
+        {tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-gold/10 px-2.5 py-0.5 text-xs font-medium text-gold"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
