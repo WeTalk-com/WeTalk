@@ -30,7 +30,7 @@ export default async function AppLayout({
       <ToastProvider>
       <SessionWatcher />
       <div className="min-h-dvh bg-canvas">
-        <div className="flex w-full">
+        <div className="mx-auto flex w-full max-w-[1240px]">
           <LeftSidebar user={user} />
           {children}
         </div>

@@ -57,17 +57,17 @@ export function LeftSidebar({ user }: { user: UserModel }) {
   ];
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col px-4 py-6 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-[256px] shrink-0 flex-col px-3.5 py-6 lg:flex">
       <Link
         href="/home"
-        className="flex items-center gap-2 px-3 font-display text-3xl font-bold italic text-brown"
+        className="flex items-center gap-2.5 px-3 pb-[26px] text-[23px] font-extrabold tracking-[-0.02em] text-brown"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="" aria-hidden className="h-9 w-auto" />
+        <img src="/logo.png" alt="" aria-hidden className="h-[34px] w-[34px]" />
         WeTalk
       </Link>
 
-      <nav className="mt-8 flex flex-col gap-1">
+      <nav className="flex flex-col gap-[3px]">
         {NAV.map(({ key, Icon, href, badge }) => {
           const active = pathname === href;
           return (
@@ -76,12 +76,12 @@ export function LeftSidebar({ user }: { user: UserModel }) {
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-              "flex items-center gap-4 rounded-2xl px-4 py-3 text-lg font-semibold transition-colors",
-              active ? "bg-card text-brown shadow-soft" : "text-brown-sec",
+              "flex items-center gap-[13px] rounded-[14px] px-[15px] py-[11px] text-base transition-colors",
+              active ? "bg-card font-semibold text-gold shadow-soft" : "font-medium text-brown-sec",
             )}
             >
               <span className="relative">
-                <Icon className={cn("size-6", active && "text-gold")} />
+                <Icon className={cn("size-[22px]", active && "text-gold")} />
                 {badge !== undefined && badge > 0 && (
                   <span className="absolute -right-2 -top-2 grid size-[18px] place-items-center rounded-full bg-live text-[10px] font-bold text-white">
                     {badge}
