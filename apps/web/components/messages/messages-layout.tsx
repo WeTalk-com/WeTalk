@@ -55,6 +55,12 @@ function formatMessageTime(iso: string, locale: string): string {
   });
 }
 
+// Aperçu de conversation : 4 mots max + ellipse (l'ellipsis CSS gère le reste).
+function teaser(text: string, maxWords = 4): string {
+  const words = text.trim().split(/\s+/);
+  return words.length <= maxWords ? text : `${words.slice(0, maxWords).join(" ")}…`;
+}
+
 function buildRenderItems(
   messages: Message[],
   locale: string,
@@ -139,12 +145,12 @@ function MessageGroup({
           <div
             key={msg.id}
             className={cn(
-              "flex min-w-14 max-w-[75%] flex-col px-3.5 py-2 text-sm",
+              "flex min-w-14 max-w-[75%] flex-col overflow-hidden px-3.5 py-2 text-sm",
               bubbleRadius(mine, position),
               mine ? "bg-gold text-white" : "bg-cream text-brown",
             )}
           >
-            <span className="leading-[1.45]">{msg.text}</span>
+            <span className="break-words [overflow-wrap:anywhere] leading-[1.45]">{msg.text}</span>
             <span
               className={cn(
                 "mt-0.5 self-end text-[10px]",
@@ -189,8 +195,8 @@ function ConversationRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1 truncate font-semibold text-brown">
-            {conv.user.name}
+          <span className="flex min-w-0 items-center gap-1 font-semibold text-brown">
+            <span className="truncate">{conv.user.name}</span>
             {conv.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
           </span>
           <span className="shrink-0 text-xs text-brown-sec">
@@ -203,7 +209,7 @@ function ConversationRow({
             (conv.unread ?? 0) > 0 ? "font-medium text-brown" : "text-brown-sec",
           )}
         >
-          {conv.lastMessage}
+          {teaser(conv.lastMessage)}
         </p>
       </div>
     </button>
@@ -219,12 +225,12 @@ function UserRow({ user, onSelect }: { user: User; onSelect: () => void }) {
         className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-canvas"
       >
         <Avatar initial={user.initial} src={user.avatarUrl} size={40} />
-        <div className="min-w-0">
-          <p className="flex items-center gap-1 font-semibold text-brown">
-            {user.name}
+        <div className="min-w-0 flex-1">
+          <p className="flex min-w-0 items-center gap-1 font-semibold text-brown">
+            <span className="truncate">{user.name}</span>
             {user.verified && <VerifiedBadge className="size-4 shrink-0" />}
           </p>
-          <p className="text-sm text-brown-sec">@{user.handle}</p>
+          <p className="truncate text-sm text-brown-sec">@{user.handle}</p>
         </div>
       </button>
     </li>
@@ -496,12 +502,12 @@ export function MessagesLayout({
         {/* Conversation list */}
         <div
           className={cn(
-            "flex w-full flex-col border-r border-border lg:w-85 lg:shrink-0",
+            "flex w-full flex-col border-r border-brown-sec/20 lg:w-85 lg:shrink-0",
             mobileShowChat ? "hidden lg:flex" : "flex",
           )}
         >
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h1 className="font-display text-2xl font-bold text-brown">{t("title")}</h1>
+          <div className="flex items-center justify-between border-b border-brown-sec/20 px-5 pb-4 pt-6">
+            <h1 className="font-display text-3xl font-bold text-brown">{t("title")}</h1>
             <button
               type="button"
               aria-label={t("compose")}
@@ -550,7 +556,7 @@ export function MessagesLayout({
           {selected ? (
             <>
               {/* Chat header */}
-              <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+              <div className="flex items-center gap-3 border-b border-brown-sec/20 px-4 py-3">
                 <button
                   type="button"
                   aria-label={t("back")}
@@ -561,11 +567,11 @@ export function MessagesLayout({
                 </button>
                 <Avatar initial={selected.user.initial} src={selected.user.avatarUrl} size={40} />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1 font-semibold leading-tight text-brown">
-                    {selected.user.name}
+                  <p className="flex items-center gap-1 truncate font-semibold leading-tight text-brown">
+                    <span className="truncate">{selected.user.name}</span>
                     {selected.user.verified && <VerifiedBadge className="size-4 shrink-0" />}
                   </p>
-                  <p className="text-xs text-brown-sec">@{selected.user.handle}</p>
+                  <p className="truncate text-xs text-brown-sec">@{selected.user.handle}</p>
                 </div>
               </div>
 
@@ -610,7 +616,7 @@ export function MessagesLayout({
               </ScrollArea.Root>
 
               {/* Input */}
-              <div className="flex items-center gap-2 border-t border-border px-3 py-3 pb-28 lg:pb-3">
+              <div className="flex items-center gap-2 border-t border-brown-sec/20 px-3 py-3 pb-28 lg:pb-3">
                 <button
                   type="button"
                   aria-label="Emoji"

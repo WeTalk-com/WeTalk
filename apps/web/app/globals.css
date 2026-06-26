@@ -56,6 +56,9 @@
   --shadow-gold: 0 8px 20px rgba(186, 117, 23, 0.32);
   --shadow-soft: 0 2px 10px rgba(65, 36, 2, 0.06);
   --shadow-card: 0 24px 60px rgba(65, 36, 2, 0.1);
+  /* Cartes de post (mockup) : ombre au repos + ombre au survol */
+  --shadow-post: 0 12px 32px rgba(86, 54, 16, 0.08);
+  --shadow-post-hover: 0 22px 46px rgba(86, 54, 16, 0.18);
 
   /* Polices (variables injectees par next/font dans layout.tsx) */
   --font-head: var(--font-playfair), Georgia, serif;
@@ -65,6 +68,11 @@
 }
 
 /* Base */
+html {
+  /* Réserve la gouttière de scroll : pas de décalage du layout centré
+     quand une modale verrouille le scroll (Radix Dialog). */
+  scrollbar-gutter: stable;
+}
 body {
   background-color: var(--canvas);
   color: var(--brown);
@@ -75,20 +83,6 @@ body {
    Themes utilisateur — surcharge des variables brutes (--gold, --canvas, ...).
    next-themes pose data-theme sur <html>. "amber" = valeurs par defaut.
 --------------------------------------------------------------------------- */
-
-/* Rose : clair, accent terracotta */
-:root[data-theme="rose"] {
-  --gold: #c0552e;
-  --gold-bright: #e07a4e;
-  --gold-dark: #9e3f1e;
-  --canvas: #f3ebe5;
-  --cream: #fbf5f1;
-  --card: #ffffff;
-  --brown: #3d231b;
-  --brown-sec: #8a4b36;
-  --placeholder: #bb9685;
-  --border: #ecd9cf;
-}
 
 /* Dark : sombre chaud */
 :root[data-theme="dark"] {

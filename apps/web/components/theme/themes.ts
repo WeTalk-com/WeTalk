@@ -1,4 +1,4 @@
-export type ThemeId = "amber" | "rose" | "dark";
+export type ThemeId = "amber" | "dark";
 
 /**
  * Themes disponibles (id technique + pastille de couleur).
@@ -6,7 +6,6 @@ export type ThemeId = "amber" | "rose" | "dark";
  */
 export const THEMES: { id: ThemeId; swatch: string }[] = [
   { id: "amber", swatch: "#ba7517" },
-  { id: "rose", swatch: "#c0552e" },
   { id: "dark", swatch: "#1a1411" },
 ];
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { getPosts, getTrendingHome, getCurrentUser, getFollowingIds } from "@/lib/api";
-import { TopBar } from "@/components/layout/top-bar";
+import { HomeComposer } from "@/components/home/home-composer";
 import { RightRail } from "@/components/home/right-rail";
 import { PostCard } from "@/components/post/post-card";
 
@@ -29,17 +29,19 @@ export default async function HomePage() {
 
   return (
     <>
-      <main className="min-w-0 flex-1 lg:border-x lg:border-border">
-        <TopBar />
+      <main className="min-w-0 flex-1 px-4 pb-24 pt-7 lg:px-8 lg:pb-[90px]">
+        <div className="mx-auto max-w-[600px]">
+          <HomeComposer user={me} />
 
-        <div className="flex flex-col gap-5 px-4 pb-24 pt-4 lg:pb-10">
-          {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              isFollowingAuthor={followingIds.includes(post.author.id)}
-            />
-          ))}
+          <div className="flex flex-col gap-[22px]">
+            {posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                isFollowingAuthor={followingIds.includes(post.author.id)}
+              />
+            ))}
+          </div>
         </div>
       </main>
 
